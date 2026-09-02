@@ -12,7 +12,7 @@ and how to run it, and the master plan for the full design).
 | 2 | Assessment (`/test`) + conversation with corrections | ✅ Done |
 | 3 | Spaced-repetition practice loop (`/practice`, `/review`, `/remind`) | ✅ Done |
 | 4 | Document-driven learning (PDF upload, term extraction, `/learn`) | ✅ Done |
-| 5 | Deployment & Ollama activation | ⬜ **Not started** |
+| 5 | Deployment & Ollama activation | 🟡 **Artifacts ready; run on OptiPlex** |
 
 ## What works today
 
@@ -31,36 +31,38 @@ and how to run it, and the master plan for the full design).
 - Gemini quota (429) handled everywhere with a friendly message.
 - Tests: `python -m unittest` (SM-2 + router fallback).
 
-## Phase 5 — Remaining work (do this ON the target machine / OptiPlex 3020M)
+## Phase 5 — Deployment & Ollama
 
-The LLM router already has Ollama hooks built and dormant; it health-checks on
-startup and routes everything to Gemini while Ollama is unreachable. Phase 5 is
-about deployment and turning Ollama on.
+**Deploy model chosen:** the OptiPlex runs the bot as a `systemd --user` service;
+you develop on your main PC and deploy over **LAN SSH** with a one-command
+script. All artifacts are committed:
 
-### 5a. Setup-from-scratch (already partly in README)
-- [ ] Verify `README.md` steps on a fresh clone: venv, `pip install -r
-      requirements.txt`, `.env` from `.env.example`, BotFather token, Gemini key.
-- [ ] Confirm first run auto-creates `karly.db`.
+- `deploy/karly.service` — systemd user unit
+- `deploy/deploy.sh` + `Makefile` — one-command `make deploy` (push + remote
+  pull + restart), plus `make logs/status/restart/stop`
+- `deploy/SETUP_OPTIPLEX.md` — full step-by-step runbook (SSH, clone, venv,
+  `.env`, service, linger, Ollama)
 
-### 5b. systemd user service (survive reboots, no public IP needed)
-- [ ] Add `deploy/karly.service` (systemd **user** unit) running
-      `python -m bot.main` with the project venv, `WorkingDirectory` set, and
-      `Restart=on-failure`.
-- [ ] Install instructions:
-      `systemctl --user enable --now karly` and
-      `loginctl enable-linger $USER` (so it runs without an active login).
+Remaining is **operational** — run the runbook on the OptiPlex once it's ready:
 
-### 5c. Ollama activation
+### 5a. Prep the OptiPlex (SETUP_OPTIPLEX.md Parts A–B)
+- [ ] Enable SSH, install git/python; note its LAN IP → `KARLY_HOST`.
+- [ ] `ssh-copy-id` from this PC; clone the private repo (PAT over HTTPS).
+- [ ] venv + `pip install -r requirements.txt`; copy `.env` (`scp`).
+
+### 5b. Install the service (Part B6–B7)
+- [ ] Copy `karly.service` into `~/.config/systemd/user/`,
+      `systemctl --user enable --now karly`.
+- [ ] `loginctl enable-linger $USER`; reboot and confirm it comes back.
+
+### 5c. Ollama activation (Part D)
 - [ ] Install Ollama; `ollama pull qwen2.5:3b-instruct`.
-- [ ] Confirm `OLLAMA_BASE_URL` / `OLLAMA_MODEL` in `.env` match.
-- [ ] On startup the router health-check flips Ollama **active** automatically —
-      verify `lookup` / `check` tasks route locally.
-- [ ] Verify Gemini-quota fallback now lands on Ollama (temporarily break the
-      Gemini key and confirm the bot still answers via Ollama).
+- [ ] `make restart`; confirm logs show "Ollama is available".
+- [ ] Verify quota fallback lands on Ollama (temporarily break the Gemini key).
 
 ### 5d. Final verification
-- [ ] Fresh-machine dry run of the README.
-- [ ] Reboot; confirm the service comes back up.
+- [ ] `make deploy` round-trip works from this PC.
+- [ ] Reboot survives; bot responds on Telegram.
 
 ## Known deviations from the original plan
 

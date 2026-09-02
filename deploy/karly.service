@@ -1,0 +1,18 @@
+[Unit]
+Description=Karly — German tutor Telegram bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# %h expands to the user's home directory. Adjust if you clone elsewhere.
+WorkingDirectory=%h/Karly
+ExecStart=%h/Karly/.venv/bin/python -m bot.main
+# config.py loads .env via python-dotenv, so no EnvironmentFile is needed.
+Restart=on-failure
+RestartSec=5
+# Give the bot a moment to shut down cleanly on stop/restart.
+TimeoutStopSec=15
+
+[Install]
+WantedBy=default.target

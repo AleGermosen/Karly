@@ -31,6 +31,22 @@ python -m bot.main
 
 The SQLite database (`karly.db`) is created automatically on first run.
 
+## Deployment (run on another machine, develop from yours)
+
+Karly uses long polling, so the host needs no public IP — just power and
+internet. To run it 24/7 on a dedicated box (e.g. the OptiPlex) while you keep
+editing from your main PC, see **[deploy/SETUP_OPTIPLEX.md](deploy/SETUP_OPTIPLEX.md)**.
+
+Once set up, the daily loop from your dev machine is:
+
+```bash
+make deploy    # push + pull + restart the remote service
+make logs      # follow live logs
+make status    # is it running?
+```
+
+(Requires `export KARLY_HOST=user@host` and a one-time setup on the target.)
+
 ## Single-user access
 
 Set `ALLOWED_USER_ID` in `.env` to your Telegram user id to lock the bot to you.
