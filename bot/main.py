@@ -11,7 +11,7 @@ from telegram.ext import (
 )
 
 import config
-from bot.handlers import conversation, start
+from bot.handlers import assessment, conversation, start
 from db.session import init_db
 from llm import ollama_client
 
@@ -28,6 +28,12 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("start", start.start))
     app.add_handler(CommandHandler("help", start.help_cmd))
     app.add_handler(CommandHandler("profile", start.profile))
+
+    # /assess conversation flow (registered before the catch-all handler).
+    app.add_handler(assessment.build_handler())
+
+    app.add_handler(CommandHandler("topic", conversation.topic))
+    app.add_handler(CommandHandler("english", conversation.english))
 
     # Any non-command text goes to the tutor conversation handler.
     app.add_handler(
