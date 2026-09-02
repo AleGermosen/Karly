@@ -13,6 +13,7 @@ from telegram.ext import (
 import config
 from bot.handlers import conversation, start
 from db.session import init_db
+from llm import ollama_client
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -28,18 +29,24 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("help", start.help_cmd))
     app.add_handler(CommandHandler("profile", start.profile))
 
-    # Any non-command text goes to the conversation handler (echo in Phase 0).
+    # Any non-command text goes to the tutor conversation handler.
     app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, conversation.echo)
+        MessageHandler(filters.TEXT & ~filters.COMMAND, conversation.chat)
     )
 
     return app
+
+
+async def _post_init(app: Application) -> None:
+    """Startup hooks: probe Ollama (dormant until Phase 5)."""
+    await ollama_client.health_check()
 
 
 def main() -> None:
     init_db()
     logger.info("Database ready.")
     app = build_application()
+    app.post_init = _post_init
     logger.info("Starting Karly (long polling)...")
     app.run_polling()
 

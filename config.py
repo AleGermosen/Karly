@@ -28,7 +28,7 @@ GEMINI_API_KEY: str = _require("GEMINI_API_KEY")
 _allowed = os.getenv("ALLOWED_USER_ID", "").strip()
 ALLOWED_USER_ID: int | None = int(_allowed) if _allowed else None
 
-GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.6-flash").strip()
 
 OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip()
 OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "qwen2.5:3b-instruct").strip()
