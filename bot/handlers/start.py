@@ -19,6 +19,7 @@ WELCOME = (
     "/remind HH:MM — tägliche Erinnerung\n"
     "/topic <x> — Thema steuern\n"
     "/english <q> — eine Frage auf Englisch stellen\n"
+    "📄 Schick mir eine Technik-PDF → /learn, /docs\n"
     "/help — Hilfe"
 )
 
@@ -33,8 +34,12 @@ HELP = (
     "/remind HH:MM — tägliche Erinnerung (/remind off zum Ausschalten)\n"
     "/topic <x> — Gespräch auf ein Thema lenken (/topic clear zum Zurücksetzen)\n"
     "/english <q> — Meta-Frage auf Englisch\n\n"
-    "Sonst: schreib einfach auf Deutsch und ich korrigiere dich.\n"
-    "Coming later: PDF-Uploads."
+    "📄 Dokumente:\n"
+    "Schick mir eine deutsche Technik-PDF — ich extrahiere Fachbegriffe.\n"
+    "/docs — deine Dokumente\n"
+    "/learn <id> — Lektion aus einem Dokument\n"
+    "/docfocus on|off — Gespräche aufs neueste Dokument lenken\n\n"
+    "Sonst: schreib einfach auf Deutsch und ich korrigiere dich."
 )
 
 

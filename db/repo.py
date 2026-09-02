@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 from db.models import (
     Assessment,
+    Document,
     Message,
     PracticeLog,
     User,
@@ -276,6 +277,68 @@ def set_reminder(user_id: int, hhmm: str | None) -> None:
         user = session.get(User, user_id)
         if user is not None:
             user.reminder_time = hhmm
+
+
+# --- Documents -------------------------------------------------------------
+
+def create_document(user_id: int, filename: str, summary: str | None) -> int:
+    with get_session() as session:
+        doc = Document(user_id=user_id, filename=filename, summary=summary)
+        session.add(doc)
+        session.flush()
+        return doc.id
+
+
+def set_document_term_count(document_id: int, count: int) -> None:
+    with get_session() as session:
+        doc = session.get(Document, document_id)
+        if doc is not None:
+            doc.extracted_terms_count = count
+
+
+def list_documents(user_id: int) -> list[dict]:
+    with get_session() as session:
+        rows = (
+            session.query(Document)
+            .filter(Document.user_id == user_id)
+            .order_by(Document.upload_date.desc(), Document.id.desc())
+            .all()
+        )
+        return [
+            {
+                "id": d.id,
+                "filename": d.filename,
+                "summary": d.summary,
+                "terms": d.extracted_terms_count,
+            }
+            for d in rows
+        ]
+
+
+def get_document(user_id: int, document_id: int) -> dict | None:
+    with get_session() as session:
+        d = session.get(Document, document_id)
+        if d is None or d.user_id != user_id:
+            return None
+        terms = (
+            session.query(VocabItem)
+            .filter(VocabItem.document_id == document_id)
+            .all()
+        )
+        return {
+            "id": d.id,
+            "filename": d.filename,
+            "summary": d.summary,
+            "terms": [
+                {"term": t.term, "translation": t.translation}
+                for t in terms
+            ],
+        }
+
+
+def recent_document(user_id: int) -> dict | None:
+    docs = list_documents(user_id)
+    return docs[0] if docs else None
 
 
 def users_with_reminders() -> list[tuple[int, int, str]]:

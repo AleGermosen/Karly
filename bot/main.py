@@ -11,7 +11,14 @@ from telegram.ext import (
 )
 
 import config
-from bot.handlers import assessment, conversation, practice, reminders, start
+from bot.handlers import (
+    assessment,
+    conversation,
+    documents,
+    practice,
+    reminders,
+    start,
+)
 from db.session import init_db
 from llm import ollama_client
 
@@ -37,6 +44,12 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("remind", reminders.remind))
     app.add_handler(CommandHandler("topic", conversation.topic))
     app.add_handler(CommandHandler("english", conversation.english))
+
+    # Documents (Phase 4).
+    app.add_handler(CommandHandler("docs", documents.docs))
+    app.add_handler(CommandHandler("learn", documents.learn))
+    app.add_handler(CommandHandler("docfocus", documents.docfocus))
+    app.add_handler(MessageHandler(filters.Document.ALL, documents.handle_document))
 
     # Any non-command text goes to the tutor conversation handler.
     app.add_handler(

@@ -23,6 +23,7 @@ from db.repo import (
     add_message,
     add_vocab_items,
     get_user_by_telegram_id,
+    recent_document,
     recent_history,
 )
 from llm import prompts
@@ -86,6 +87,14 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     topic = context.user_data.get("topic")
     if topic:
         system += f"\n- Current focus topic: steer toward '{topic}'."
+
+    if context.user_data.get("docfocus"):
+        doc = recent_document(user.id)
+        if doc and doc.get("summary"):
+            system += (
+                f"\n- AJ is studying the document '{doc['filename']}'. When it "
+                f"fits, steer toward its topic. Summary: {doc['summary']}"
+            )
 
     await context.bot.send_chat_action(chat_id=message.chat_id, action="typing")
 
