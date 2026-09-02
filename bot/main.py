@@ -11,7 +11,7 @@ from telegram.ext import (
 )
 
 import config
-from bot.handlers import assessment, conversation, start
+from bot.handlers import assessment, conversation, practice, reminders, start
 from db.session import init_db
 from llm import ollama_client
 
@@ -29,9 +29,12 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("help", start.help_cmd))
     app.add_handler(CommandHandler("profile", start.profile))
 
-    # /assess conversation flow (registered before the catch-all handler).
+    # Conversation flows (registered before the catch-all handler).
     app.add_handler(assessment.build_handler())
+    app.add_handler(practice.build_handler())
 
+    app.add_handler(CommandHandler("review", practice.review))
+    app.add_handler(CommandHandler("remind", reminders.remind))
     app.add_handler(CommandHandler("topic", conversation.topic))
     app.add_handler(CommandHandler("english", conversation.english))
 
@@ -44,8 +47,9 @@ def build_application() -> Application:
 
 
 async def _post_init(app: Application) -> None:
-    """Startup hooks: probe Ollama (dormant until Phase 5)."""
+    """Startup hooks: probe Ollama (dormant until Phase 5); restore reminders."""
     await ollama_client.health_check()
+    await reminders.reschedule_all(app)
 
 
 def main() -> None:

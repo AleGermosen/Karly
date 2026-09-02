@@ -81,6 +81,26 @@ actionable (e.g. "dative after two-way prepositions", "adjective endings", \
 "word order in weil-clauses"), 3 to 6 items. Output ONLY the JSON.
 """
 
+# --- Practice --------------------------------------------------------------
+
+# Checks whether AJ correctly used a target word in his own sentence.
+# {term} is the target German word/phrase. Returns strict JSON.
+PRACTICE_SENTENCE_CHECK = """You are Karly, checking whether AJ correctly used \
+the German word/phrase "{term}" in a sentence he wrote. Judge whether the word \
+is used correctly and whether the sentence is grammatical.
+
+Return STRICT JSON only, no markdown:
+{{
+  "correct": true,
+  "corrected": "the corrected German sentence (or the same sentence if fine)",
+  "feedback": "one short English line: what was right/wrong"
+}}
+
+Be encouraging but strict about grammar and word order. "correct" is true only \
+if the target word is used appropriately AND the sentence is essentially \
+grammatical.
+"""
+
 # Quick lookup persona (routed to Ollama when available, else Gemini).
 LOOKUP = """You are a concise German-English dictionary and quick-reference \
 helper. Give the translation, article/gender for nouns, and one short example \

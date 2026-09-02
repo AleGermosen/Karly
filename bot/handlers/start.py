@@ -12,8 +12,11 @@ WELCOME = (
     "Schreib mir einfach auf Deutsch — ich antworte und korrigiere jeden "
     "Fehler (❌ falsch → ✅ richtig — warum).\n\n"
     "Commands:\n"
-    "/assess — Einstufungstest (find your level)\n"
+    "/test — Einstufungstest (find your level)\n"
     "/profile — dein Lernprofil\n"
+    "/practice — Vokabeln üben\n"
+    "/review — Übungs-Statistik\n"
+    "/remind HH:MM — tägliche Erinnerung\n"
     "/topic <x> — Thema steuern\n"
     "/english <q> — eine Frage auf Englisch stellen\n"
     "/help — Hilfe"
@@ -22,13 +25,16 @@ WELCOME = (
 HELP = (
     "Karly — dein Deutsch-Tutor.\n\n"
     "/start — Willkommen\n"
-    "/assess — adaptiver Einstufungstest (~10-15 Fragen); /done früher fertig, "
+    "/test — adaptiver Einstufungstest (~10-15 Fragen); /done früher fertig, "
     "/cancel abbrechen\n"
     "/profile — Level, Schwächen, Vokabelzahl\n"
+    "/practice — Vokabeln üben (Spaced Repetition); /stop beendet\n"
+    "/review — Statistik: fällig, Streak, schwerste Vokabeln\n"
+    "/remind HH:MM — tägliche Erinnerung (/remind off zum Ausschalten)\n"
     "/topic <x> — Gespräch auf ein Thema lenken (/topic clear zum Zurücksetzen)\n"
     "/english <q> — Meta-Frage auf Englisch\n\n"
     "Sonst: schreib einfach auf Deutsch und ich korrigiere dich.\n"
-    "Coming later: /practice, PDF-Uploads."
+    "Coming later: PDF-Uploads."
 )
 
 
@@ -67,7 +73,7 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 lines.append(f"  • {g}")
     else:
         lines.append(
-            "Noch kein Einstufungstest gemacht. Starte mit /assess."
+            "Noch kein Einstufungstest gemacht. Starte mit /test."
         )
     lines.append(f"\nGespeicherte Vokabeln/Korrekturen: *{count}*")
 

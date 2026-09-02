@@ -38,6 +38,8 @@ class User(Base):
     name: Mapped[str | None] = mapped_column(String, nullable=True)
     # JSON string: per-skill CEFR estimate.
     cefr_estimate: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Daily practice reminder time as "HH:MM" (local), or None if disabled.
+    reminder_time: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
     assessments: Mapped[list["Assessment"]] = relationship(back_populates="user")
@@ -108,3 +110,13 @@ class Document(Base):
 
     user: Mapped["User"] = relationship(back_populates="documents")
     vocab_items: Mapped[list["VocabItem"]] = relationship(back_populates="document")
+
+
+class PracticeLog(Base):
+    """One row per practice session, used to compute the daily streak."""
+
+    __tablename__ = "practice_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)

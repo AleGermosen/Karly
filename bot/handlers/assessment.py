@@ -32,7 +32,7 @@ MIN_EXCHANGES = 10
 MAX_EXCHANGES = 15
 
 QUOTA_MSG = "Tageslimit erreicht — versuch es später. 🙏 (Gemini quota reached.)"
-ERROR_MSG = "Da ging etwas schief bei der Einstufung. Versuch es später mit /assess."
+ERROR_MSG = "Da ging etwas schief bei der Einstufung. Versuch es später mit /test."
 
 
 def _transcript_text(transcript: list[dict]) -> str:
@@ -200,7 +200,7 @@ async def assess_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 def build_handler() -> ConversationHandler:
     return ConversationHandler(
-        entry_points=[CommandHandler("assess", assess_start)],
+        entry_points=[CommandHandler(["test", "assess"], assess_start)],
         states={
             ASSESSING: [
                 CommandHandler("done", assess_done),

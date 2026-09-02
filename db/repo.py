@@ -2,9 +2,18 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta
 
-from db.models import Assessment, Message, User, VocabItem, VocabSource
+from db.models import (
+    Assessment,
+    Message,
+    PracticeLog,
+    User,
+    VocabItem,
+    VocabSource,
+)
 from db.session import get_session
+from srs import sm2
 
 
 def get_user_by_telegram_id(telegram_id: int) -> User | None:
@@ -154,3 +163,127 @@ def latest_assessment(user_id: int) -> dict | None:
             return json.loads(row.verdict_json)
         except ValueError:
             return None
+
+
+# --- Practice / SRS --------------------------------------------------------
+
+def _vocab_to_dict(v: VocabItem) -> dict:
+    return {
+        "id": v.id,
+        "term": v.term,
+        "translation": v.translation,
+        "context_sentence": v.context_sentence,
+        "easiness": v.sm2_easiness,
+        "interval": v.sm2_interval,
+        "repetitions": v.sm2_repetitions,
+    }
+
+
+def due_vocab(user_id: int, limit: int = 10, now: datetime | None = None) -> list[dict]:
+    now = now or datetime.utcnow()
+    with get_session() as session:
+        rows = (
+            session.query(VocabItem)
+            .filter(
+                VocabItem.user_id == user_id,
+                VocabItem.next_review_at <= now,
+            )
+            .order_by(VocabItem.next_review_at.asc())
+            .limit(limit)
+            .all()
+        )
+        return [_vocab_to_dict(v) for v in rows]
+
+
+def count_due(user_id: int, now: datetime | None = None) -> int:
+    now = now or datetime.utcnow()
+    with get_session() as session:
+        return (
+            session.query(VocabItem)
+            .filter(
+                VocabItem.user_id == user_id,
+                VocabItem.next_review_at <= now,
+            )
+            .count()
+        )
+
+
+def apply_grade(vocab_id: int, quality: int, now: datetime | None = None) -> datetime | None:
+    """Apply an SM-2 grade to a vocab item. Returns the new next_review_at."""
+    with get_session() as session:
+        v = session.get(VocabItem, vocab_id)
+        if v is None:
+            return None
+        state = sm2.update(
+            v.sm2_easiness, v.sm2_interval, v.sm2_repetitions, quality, now=now
+        )
+        v.sm2_easiness = state.easiness
+        v.sm2_interval = state.interval
+        v.sm2_repetitions = state.repetitions
+        v.next_review_at = state.next_review_at
+        return state.next_review_at
+
+
+def hardest_items(user_id: int, limit: int = 5) -> list[dict]:
+    with get_session() as session:
+        rows = (
+            session.query(VocabItem)
+            .filter(
+                VocabItem.user_id == user_id,
+                VocabItem.sm2_repetitions > 0,
+            )
+            .order_by(VocabItem.sm2_easiness.asc())
+            .limit(limit)
+            .all()
+        )
+        return [_vocab_to_dict(v) for v in rows]
+
+
+def record_practice(user_id: int) -> None:
+    with get_session() as session:
+        session.add(PracticeLog(user_id=user_id))
+
+
+def practice_streak(user_id: int, now: datetime | None = None) -> int:
+    """Consecutive days (up to today) with at least one practice session."""
+    now = now or datetime.utcnow()
+    with get_session() as session:
+        rows = (
+            session.query(PracticeLog.created_at)
+            .filter(PracticeLog.user_id == user_id)
+            .all()
+        )
+    days = {r[0].date() for r in rows}
+    if not days:
+        return 0
+    today = now.date()
+    # Allow the streak to count from today or yesterday (not yet practiced today).
+    start = today if today in days else today - timedelta(days=1)
+    if start not in days:
+        return 0
+    streak = 0
+    cur = start
+    while cur in days:
+        streak += 1
+        cur -= timedelta(days=1)
+    return streak
+
+
+# --- Reminders -------------------------------------------------------------
+
+def set_reminder(user_id: int, hhmm: str | None) -> None:
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if user is not None:
+            user.reminder_time = hhmm
+
+
+def users_with_reminders() -> list[tuple[int, int, str]]:
+    """Return (user_id, telegram_id, hhmm) for users with a reminder set."""
+    with get_session() as session:
+        rows = (
+            session.query(User.id, User.telegram_id, User.reminder_time)
+            .filter(User.reminder_time.isnot(None))
+            .all()
+        )
+        return [(r[0], r[1], r[2]) for r in rows]
