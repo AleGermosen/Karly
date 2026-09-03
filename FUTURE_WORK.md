@@ -14,6 +14,11 @@ Living plan for Karly's evolution. Updated 2026-09-03.
 3. Assessment JSON hardening — retry/skip on bad output instead of raw dump
 4. Manual grade override buttons on typed answers
 
+**Next phase under design:** a Test-English-style structured curriculum — a named,
+ordered syllabus per CEFR level with lesson cards, an exercise item bank, level
+checkpoints, and reading/listening/writing tracks. Full design in
+[`CURRICULUM_PHASE_PLAN.md`](CURRICULUM_PHASE_PLAN.md).
+
 **When you're ready to open to other users:**
 → Multi-tenant foundation → Usage metering → Entitlements → Telegram Stars payments
 
