@@ -1,8 +1,7 @@
-"""/quiz — rapid-fire MCQ drill targeting your weakest skills.
+"""/quiz — rapid-fire MCQ drill targeting weakest skills.
 
-One LLM call generates N MCQ items focused on the skills where BKT mastery is
-lowest. The user taps answer buttons for instant feedback; no typing required.
-Each answer updates BKT so the profile improves in real time.
+Works in German mode and English mode. In English mode all UI strings are in
+Spanish; the quiz items themselves are in English.
 """
 from __future__ import annotations
 
@@ -36,19 +35,11 @@ from srs import bkt as bkt_mod
 logger = logging.getLogger(__name__)
 
 IN_QUIZ = 1
-QUIZ_SIZE = 7        # number of MCQ items per session
-WEAK_SKILLS = 3      # how many lowest-mastery skills to target
-
-QUOTA_MSG = "Tageslimit erreicht — versuch es später. 🙏 (All LLM quotas reached.)"
-ERROR_MSG = "Quiz konnte nicht erstellt werden. Versuch es später. (Could not build quiz.)"
+QUIZ_SIZE = 7
+WEAK_SKILLS = 3
 
 
 def _weakest_skills(bkt_state: dict[str, dict]) -> list[tuple[str, str | None]]:
-    """Return up to WEAK_SKILLS skills ordered by mastery probability ascending.
-
-    Returns list of (skill, level_or_None) so the prompt can target the right
-    CEFR level per skill.
-    """
     ordered = sorted(
         ((s, e.get("p", bkt_mod.P_L0), e.get("level")) for s, e in bkt_state.items()),
         key=lambda x: x[1],
@@ -57,7 +48,6 @@ def _weakest_skills(bkt_state: dict[str, dict]) -> list[tuple[str, str | None]]:
 
 
 def _target_level(weak: list[tuple[str, str | None]], fallback: str) -> str:
-    """Pick the most common level among weak skills, or fall back to assessment."""
     levels = [lvl for _, lvl in weak if lvl]
     if not levels:
         return fallback
@@ -93,48 +83,58 @@ def _cefr_from_user(user) -> str:
     return "A2"
 
 
+def _en(context: ContextTypes.DEFAULT_TYPE) -> bool:
+    return context.user_data.get("quiz_mode") == "english"
+
+
 @require_auth
 async def quiz_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user = get_user_by_telegram_id(update.effective_user.id)
     if user is None:
         return ConversationHandler.END
-    if getattr(user, "learning_mode", "german") == "english":
-        await update.effective_message.reply_text(
-            "Este comando es solo para el modo alemán. "
-            "Usa /language para cambiar de idioma."
-        )
-        return ConversationHandler.END
+
+    mode = getattr(user, "learning_mode", "german") or "german"
+    en = mode == "english"
+    context.user_data["quiz_mode"] = mode
 
     bkt_state = get_bkt_state(user.id)
     weak = _weakest_skills(bkt_state)
     fallback_level = _cefr_from_user(user)
     target_level = _target_level(weak, fallback_level)
     skills_focus = ", ".join(s for s, _ in weak) if weak else "grammar, vocab"
-
-    # Show which skills we're drilling
     skill_labels = [s.capitalize() for s, _ in weak]
-    intro = (
-        f"⚡ Quiz — {QUIZ_SIZE} Fragen, fokussiert auf: {', '.join(skill_labels)}.\n"
-        f"Tippe auf eine Zahl zum Antworten. /stop zum Abbrechen."
-    )
+
+    if en:
+        intro = (
+            f"⚡ Quiz — {QUIZ_SIZE} preguntas, enfocadas en: {', '.join(skill_labels)}.\n"
+            f"Toca un número para responder. /stop para cancelar."
+        )
+    else:
+        intro = (
+            f"⚡ Quiz — {QUIZ_SIZE} Fragen, fokussiert auf: {', '.join(skill_labels)}.\n"
+            f"Tippe auf eine Zahl zum Antworten. /stop zum Abbrechen."
+        )
     await update.effective_message.reply_text(intro)
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
 
+    system_prompt = (prompts.ENGLISH_QUIZ_ITEMS if en else prompts.QUIZ_ITEMS).format(
+        level=target_level,
+        skills_focus=skills_focus,
+        n=QUIZ_SIZE,
+    )
     try:
         parsed, _ = await generate_json(
             Task.generate,
             f"Focus skills: {skills_focus}. Level: {target_level}.",
-            system=prompts.QUIZ_ITEMS.format(
-                level=target_level,
-                skills_focus=skills_focus,
-                n=QUIZ_SIZE,
-            ),
+            system=system_prompt,
         )
     except QuotaExceeded:
-        await update.effective_message.reply_text(QUOTA_MSG)
+        msg = "Límite alcanzado — inténtalo más tarde. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏 (All LLM quotas reached.)"
+        await update.effective_message.reply_text(msg)
         return ConversationHandler.END
     except LLMUnavailable:
-        await update.effective_message.reply_text(ERROR_MSG)
+        msg = "No se pudo crear el quiz. Inténtalo más tarde." if en else "Quiz konnte nicht erstellt werden. Versuch es später. (Could not build quiz.)"
+        await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
     items = parsed.get("items") if isinstance(parsed, dict) else None
@@ -146,7 +146,8 @@ async def quiz_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         and isinstance(it.get("answer_index"), int)
     ]
     if not items:
-        await update.effective_message.reply_text(ERROR_MSG)
+        msg = "No se pudo crear el quiz. Inténtalo más tarde." if en else "Quiz konnte nicht erstellt werden. Versuch es später."
+        await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
     context.user_data["quiz_queue"] = items
@@ -180,9 +181,10 @@ async def quiz_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     await query.answer()
     _, raw_q, raw_idx = query.data.split(":")
     q_no, choice = int(raw_q), int(raw_idx)
+    en = _en(context)
 
     if q_no != context.user_data.get("quiz_q_no"):
-        return IN_QUIZ  # stale tap
+        return IN_QUIZ
 
     queue: list[dict] = context.user_data.get("quiz_queue", [])
     if not queue:
@@ -192,19 +194,20 @@ async def quiz_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     options = item.get("options") or []
     answer_index = item.get("answer_index")
     correct = choice == answer_index
-    chosen = options[choice] if 0 <= choice < len(options) else "?"
 
     context.user_data["quiz_correct"] = context.user_data.get("quiz_correct", 0) + (1 if correct else 0)
     context.user_data["quiz_total"] = context.user_data.get("quiz_total", 0) + 1
 
-    # Update BKT with the level from the item.
     user_id = context.user_data.get("quiz_user_id")
     skill = item.get("skill")
     level = item.get("level")
     if user_id and skill:
         update_bkt_state(user_id, skill, correct, level=level)
 
-    mark = "✅ Richtig!" if correct else f"❌ Richtig wäre: {options[answer_index]}"
+    if en:
+        mark = "✅ ¡Correcto!" if correct else f"❌ Correcto era: {options[answer_index]}"
+    else:
+        mark = "✅ Richtig!" if correct else f"❌ Richtig wäre: {options[answer_index]}"
     await query.edit_message_text(_item_text(item) + f"\n\n{mark}")
 
     queue.pop(0)
@@ -214,28 +217,37 @@ async def quiz_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 async def _finish(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     correct = context.user_data.get("quiz_correct", 0)
     total = context.user_data.get("quiz_total", 0)
+    en = _en(context)
     _clear(context)
     pct = round(correct / total * 100) if total else 0
-    await update.effective_message.reply_text(
-        f"🎯 Quiz fertig! {correct}/{total} richtig ({pct}%). "
-        "BKT-Mastery aktualisiert — check /profile.\n"
-        "(Quiz done — mastery updated.)"
-    )
+    if en:
+        await update.effective_message.reply_text(
+            f"🎯 ¡Quiz completado! {correct}/{total} correctas ({pct}%). "
+            "Dominio BKT actualizado — revisa /profile."
+        )
+    else:
+        await update.effective_message.reply_text(
+            f"🎯 Quiz fertig! {correct}/{total} richtig ({pct}%). "
+            "BKT-Mastery aktualisiert — check /profile.\n"
+            "(Quiz done — mastery updated.)"
+        )
     return ConversationHandler.END
 
 
 @require_auth
 async def quiz_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     done = context.user_data.get("quiz_total", 0)
+    en = _en(context)
     _clear(context)
-    await update.effective_message.reply_text(
-        f"Quiz abgebrochen. {done} Fragen beantwortet. (Stopped.)"
-    )
+    if en:
+        await update.effective_message.reply_text(f"Quiz cancelado. {done} preguntas respondidas.")
+    else:
+        await update.effective_message.reply_text(f"Quiz abgebrochen. {done} Fragen beantwortet. (Stopped.)")
     return ConversationHandler.END
 
 
 def _clear(context: ContextTypes.DEFAULT_TYPE) -> None:
-    for k in ("quiz_queue", "quiz_user_id", "quiz_correct", "quiz_total", "quiz_q_no"):
+    for k in ("quiz_queue", "quiz_user_id", "quiz_correct", "quiz_total", "quiz_q_no", "quiz_mode"):
         context.user_data.pop(k, None)
 
 

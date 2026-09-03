@@ -33,10 +33,13 @@ WELCOME_ENGLISH = (
     "¡Hola! Soy Karly, tu tutora de inglés. 🇺🇸\n\n"
     "Escríbeme en inglés — te respondo y te corrijo.\n\n"
     "Comandos principales:\n"
+    "/practice — tarjetas de vocabulario (también /flashcards)\n"
+    "/daily — reto diario: 3 ejercicios cortos\n"
+    "/quiz — quiz rápido sobre tus puntos más débiles\n"
+    "/roleplay — escena de conversación en inglés\n"
+    "/test — prueba de nivel adaptativa\n"
     "/profile — tu perfil de aprendizaje\n"
-    "/corrections — activar/desactivar correcciones\n"
-    "/spanish — hacer una pregunta en español\n"
-    "/language — cambiar el idioma que aprendes\n\n"
+    "/weekly — informe semanal de progreso\n\n"
     "/help — todos los comandos"
 )
 
@@ -96,20 +99,38 @@ HELP_ENGLISH = (
     "Karly — tu tutora de inglés.\n"
     "Escríbeme en inglés; te corrijo. Todos los comandos:\n\n"
 
-    "── Conversación ──\n"
-    "Escribe cualquier cosa en inglés y te respondo.\n"
-    "/corrections strict|relaxed|off — nivel de correcciones\n"
-    "/topic <tema> — enfocar la conversación en un tema\n"
-    "/spanish <pregunta> — hacer una pregunta meta en español\n"
-    "/summary — analizar tus errores recientes\n\n"
+    "── Aprender ──\n"
+    "/practice — tarjetas de vocabulario (también /flashcards): elige mazo y dirección\n"
+    "/flip — cambiar dirección EN↔ES (dentro de /practice)\n"
+    "/daily — reto diario: espacio en blanco + traducir + responder\n"
+    "/quiz — 7 preguntas MCQ sobre tus habilidades más débiles\n"
+    "/roleplay — escena de conversación: elige escenario, /done para feedback\n"
+    "/test — prueba de nivel adaptativa (~10 preguntas); /done para terminar antes, /cancel para cancelar\n\n"
 
-    "── Perfil ──\n"
-    "/profile — tu perfil de aprendizaje\n"
+    "── Perfil y estadísticas ──\n"
+    "/profile — nivel, dominio de habilidades, tarjetas pendientes\n"
+    "/review — racha, tarjetas pendientes, vocabulario más difícil\n"
+    "/weekly — informe semanal: sesiones, precisión, correcciones, dominio\n"
+    "/summary — analizar tus errores recientes y guardarlos para practicar\n\n"
+
+    "── Conversación ──\n"
+    "/corrections strict|relaxed|off — nivel de correcciones (sin arg = estado actual)\n"
+    "/topic <tema> — enfocar la conversación en un tema (/topic clear para borrar)\n"
+    "/spanish <pregunta> — hacer una pregunta en español\n"
     "/remind HH:MM — recordatorio diario (/remind off para desactivar)\n\n"
 
+    "── Documentos ──\n"
+    "/docs — tus PDFs subidos\n"
+    "/learn <id> — lección a partir de un documento\n"
+    "/docfocus on|off — orientar la conversación hacia el último documento\n"
+    "📄 Envía un PDF en inglés → se extrae el vocabulario automáticamente\n\n"
+
     "── Sistema ──\n"
-    "/language — cambiar de inglés a alemán\n"
-    "/status — estado del backend\n"
+    "/language — cambiar a modo alemán\n"
+    "/status — estado del backend y cuota de Groq\n"
+    "/backend on|off — mostrar el modelo activo en cada respuesta\n"
+    "/cancel — cancelar la sesión activa\n"
+    "/stop — terminar el ejercicio en curso (/practice, /quiz, /daily, /roleplay)\n"
     "/start — mensaje de bienvenida\n"
     "/help — este resumen"
 )
@@ -177,45 +198,71 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.effective_message.reply_text("Kein Profil gefunden.")
         return
 
+    en = getattr(user, "learning_mode", "german") == "english"
     verdict = latest_assessment(user.id)
     count = vocab_count(user.id)
 
-    lines = ["📋 *Dein Profil*\n"]
-    if verdict:
-        lines.append(f"Level (overall): *{verdict.get('overall', '?')}*")
-        skills = verdict.get("skills") or {}
-        if skills:
-            lines.append("Per skill:")
-            for k, v in skills.items():
-                lines.append(f"  • {k.capitalize()}: {v}")
-        gaps = verdict.get("gaps") or []
-        if gaps:
-            lines.append("\nTop gaps:")
-            for g in gaps[:5]:
-                lines.append(f"  • {g}")
+    if en:
+        lines = ["📋 *Tu Perfil*\n"]
+        if verdict:
+            lines.append(f"Nivel (general): *{verdict.get('overall', '?')}*")
+            skills = verdict.get("skills") or {}
+            if skills:
+                lines.append("Por habilidad:")
+                for k, v in skills.items():
+                    lines.append(f"  • {k.capitalize()}: {v}")
+            gaps = verdict.get("gaps") or []
+            if gaps:
+                lines.append("\nPuntos débiles:")
+                for g in gaps[:5]:
+                    lines.append(f"  • {g}")
+        else:
+            lines.append("Todavía no has hecho la prueba de nivel. Empieza con /test.")
+        lines.append(f"\nVocabulario/correcciones guardados: *{count}*")
+        due = count_due(user.id)
+        if due:
+            lines.append(f"🃏 Pendientes para practicar: *{due}* — /flashcards")
+        bkt_state = get_bkt_state(user.id)
+        active = {s: e for s, e in bkt_state.items() if e.get("p", 0) > bkt_mod.P_L0 + 0.001}
+        if active:
+            lines.append("\n🧠 *Dominio de habilidades (BKT):*")
+            for skill, entry in active.items():
+                p = entry.get("p", 0.0)
+                lvl = entry.get("level")
+                label = f"{skill.capitalize()} ({lvl})" if lvl else skill.capitalize()
+                bar = bkt_mod.mastery_bar(p)
+                star = " ✅" if bkt_mod.mastered(p) else ""
+                lines.append(f"  {label}: {bar}{star}")
     else:
-        lines.append(
-            "Noch kein Einstufungstest gemacht. Starte mit /test."
-        )
-    lines.append(f"\nGespeicherte Vokabeln/Korrekturen: *{count}*")
-    due = count_due(user.id)
-    if due:
-        lines.append(f"🃏 Fällig zum Üben: *{due}* — /flashcards")
-
-    # BKT mastery bars — only show skills that have received at least one update.
-    bkt_state = get_bkt_state(user.id)
-    active = {
-        s: entry for s, entry in bkt_state.items()
-        if entry.get("p", 0) > bkt_mod.P_L0 + 0.001
-    }
-    if active:
-        lines.append("\n🧠 *Skill mastery (BKT):*")
-        for skill, entry in active.items():
-            p = entry.get("p", 0.0)
-            lvl = entry.get("level")
-            label = f"{skill.capitalize()} ({lvl})" if lvl else skill.capitalize()
-            bar = bkt_mod.mastery_bar(p)
-            star = " ✅" if bkt_mod.mastered(p) else ""
-            lines.append(f"  {label}: {bar}{star}")
+        lines = ["📋 *Dein Profil*\n"]
+        if verdict:
+            lines.append(f"Level (overall): *{verdict.get('overall', '?')}*")
+            skills = verdict.get("skills") or {}
+            if skills:
+                lines.append("Per skill:")
+                for k, v in skills.items():
+                    lines.append(f"  • {k.capitalize()}: {v}")
+            gaps = verdict.get("gaps") or []
+            if gaps:
+                lines.append("\nTop gaps:")
+                for g in gaps[:5]:
+                    lines.append(f"  • {g}")
+        else:
+            lines.append("Noch kein Einstufungstest gemacht. Starte mit /test.")
+        lines.append(f"\nGespeicherte Vokabeln/Korrekturen: *{count}*")
+        due = count_due(user.id)
+        if due:
+            lines.append(f"🃏 Fällig zum Üben: *{due}* — /flashcards")
+        bkt_state = get_bkt_state(user.id)
+        active = {s: e for s, e in bkt_state.items() if e.get("p", 0) > bkt_mod.P_L0 + 0.001}
+        if active:
+            lines.append("\n🧠 *Skill mastery (BKT):*")
+            for skill, entry in active.items():
+                p = entry.get("p", 0.0)
+                lvl = entry.get("level")
+                label = f"{skill.capitalize()} ({lvl})" if lvl else skill.capitalize()
+                bar = bkt_mod.mastery_bar(p)
+                star = " ✅" if bkt_mod.mastered(p) else ""
+                lines.append(f"  {label}: {bar}{star}")
 
     await update.effective_message.reply_text("\n".join(lines))

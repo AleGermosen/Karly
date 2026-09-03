@@ -87,40 +87,61 @@ async def weekly_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     )
     bkt_block = _bkt_block(bkt_state)
 
+    en = getattr(user, "learning_mode", "german") == "english"
+
     # Always show the hard stats first so the user sees them immediately.
-    stats_msg = (
-        "📊 *Wochenbericht*\n\n"
-        f"Übungssessions: *{sessions}*\n"
-        f"Karten geübt: *{this_t}* — Genauigkeit: *{accuracy_line}*\n"
-        f"Streak: *{streak}* Tage 🔥\n\n"
-        "🧠 *Skill mastery:*\n"
-        + "\n".join(
-            f"  {s.capitalize()}" + (f" ({e.get('level')})" if e.get("level") else "")
-            + f": {bkt_mod.mastery_bar(e.get('p', 0))}"
-            for s, e in bkt_state.items()
-            if e.get("p", 0) > bkt_mod.P_L0 + 0.001
-        )
+    mastery_lines = "\n".join(
+        f"  {s.capitalize()}" + (f" ({e.get('level')})" if e.get("level") else "")
+        + f": {bkt_mod.mastery_bar(e.get('p', 0))}"
+        for s, e in bkt_state.items()
+        if e.get("p", 0) > bkt_mod.P_L0 + 0.001
     )
+    if en:
+        stats_msg = (
+            "📊 *Informe semanal*\n\n"
+            f"Sesiones de práctica: *{sessions}*\n"
+            f"Tarjetas repasadas: *{this_t}* — Precisión: *{accuracy_line}*\n"
+            f"Racha: *{streak}* días 🔥\n\n"
+            "🧠 *Dominio de habilidades:*\n"
+            + mastery_lines
+        )
+    else:
+        stats_msg = (
+            "📊 *Wochenbericht*\n\n"
+            f"Übungssessions: *{sessions}*\n"
+            f"Karten geübt: *{this_t}* — Genauigkeit: *{accuracy_line}*\n"
+            f"Streak: *{streak}* Tage 🔥\n\n"
+            "🧠 *Skill mastery:*\n"
+            + mastery_lines
+        )
     await update.effective_message.reply_text(stats_msg)
 
     # LLM synthesis — best-effort; skip gracefully on quota.
     if not corrections and this_t == 0:
-        await update.effective_message.reply_text(
-            "Noch keine Daten diese Woche. Üb ein bisschen und schau morgen nochmal! "
-            "(No data yet this week — practice a bit and check back.)"
-        )
+        if en:
+            await update.effective_message.reply_text(
+                "Todavía no hay datos esta semana. ¡Practica un poco y vuelve mañana!"
+            )
+        else:
+            await update.effective_message.reply_text(
+                "Noch keine Daten diese Woche. Üb ein bisschen und schau morgen nochmal! "
+                "(No data yet this week — practice a bit and check back.)"
+            )
         return
 
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+    synthesis_prompt = (
+        prompts.ENGLISH_WEEKLY_REPORT_SYNTHESIS if en else prompts.WEEKLY_REPORT_SYNTHESIS
+    ).format(
+        stats_block=stats_block,
+        corrections_block=corrections_block,
+        bkt_block=bkt_block,
+    )
     try:
         summary = await route(
             Task.generate,
             "Synthesise the weekly report.",
-            system=prompts.WEEKLY_REPORT_SYNTHESIS.format(
-                stats_block=stats_block,
-                corrections_block=corrections_block,
-                bkt_block=bkt_block,
-            ),
+            system=synthesis_prompt,
         )
         await update.effective_message.reply_text(f"💬 {summary.strip()}")
     except (QuotaExceeded, LLMUnavailable):

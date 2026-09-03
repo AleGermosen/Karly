@@ -1,8 +1,9 @@
 """/assess — adaptive placement interview ending in a JSON verdict.
 
-Implemented as a ConversationHandler. The interview transcript lives in
-context.user_data during the session. After enough exchanges the model produces
-a strict-JSON verdict, which is stored and used to update the user's level.
+Implemented as a ConversationHandler. Works in both German mode and English mode.
+German mode: tests German grammar/reading/production for an English speaker.
+English mode: tests English grammar/reading/production for a Spanish speaker;
+              all instructions to the user are in Spanish.
 """
 from __future__ import annotations
 
@@ -34,10 +35,8 @@ MAX_EXCHANGES = 12
 CEFR_LADDER = ["A1", "A2", "B1", "B2", "C1", "C2"]
 START_LEVEL = "A2"
 
-# Grade open (typed) answers in batches of this many, to save LLM round-trips.
 OPEN_BATCH_SIZE = 5
 
-# Target number of items per skill across a full session (sums to MAX_EXCHANGES).
 SKILL_QUOTA = {
     "grammar": 2,
     "reading": 2,
@@ -47,9 +46,27 @@ SKILL_QUOTA = {
     "vocab": 2,
 }
 
+# ── mode helpers ───────────────────────────────────────────────────────────────
+
+def _is_english(context: ContextTypes.DEFAULT_TYPE) -> bool:
+    return context.user_data.get("assess_mode") == "english"
+
+
+def _interview_prompt(context: ContextTypes.DEFAULT_TYPE) -> str:
+    return prompts.ENGLISH_ASSESS_INTERVIEW if _is_english(context) else prompts.ASSESS_INTERVIEW
+
+
+def _verdict_prompt(context: ContextTypes.DEFAULT_TYPE) -> str:
+    return prompts.ENGLISH_ASSESS_VERDICT if _is_english(context) else prompts.ASSESS_VERDICT
+
+
+def _grade_prompt(context: ContextTypes.DEFAULT_TYPE) -> str:
+    return prompts.ENGLISH_ASSESS_GRADE_OPEN_BATCH if _is_english(context) else prompts.ASSESS_GRADE_OPEN_BATCH
+
+
+# ── shared helpers ─────────────────────────────────────────────────────────────
 
 def _step_level(level: str, delta: int) -> str:
-    """Move a CEFR level up/down the ladder, clamped to the ends."""
     try:
         i = CEFR_LADDER.index(level)
     except ValueError:
@@ -58,7 +75,6 @@ def _step_level(level: str, delta: int) -> str:
 
 
 def _skills_needed(results: list[dict]) -> list[str]:
-    """Skills still under their quota, most-needed first."""
     served: dict[str, int] = {}
     for r in results:
         skill = r.get("skill")
@@ -71,48 +87,16 @@ def _skills_needed(results: list[dict]) -> list[str]:
     needed.sort(key=lambda s: remaining[s], reverse=True)
     return needed
 
-QUOTA_MSG = "Tageslimit erreicht — versuch es später. 🙏 (Gemini quota reached.)"
-ERROR_MSG = "Da ging etwas schief bei der Einstufung. Versuch es später mit /test."
-
 
 def _transcript_text(transcript: list[dict]) -> str:
     lines = []
     for t in transcript:
-        who = "KARLY" if t["role"] == "assistant" else "AJ"
+        who = "KARLY" if t["role"] == "assistant" else "USER"
         lines.append(f"{who}: {t['text']}")
     return "\n".join(lines)
 
 
-async def _next_item(
-    transcript: list[dict], needed_skills: list[str], target_level: str
-) -> dict:
-    """Ask the model for the next structured interview item.
-
-    Returns a dict following the ASSESS_INTERVIEW contract. On malformed
-    output we degrade gracefully to an open free-text item so the session
-    never stalls.
-    """
-    prompt = (
-        "Interview transcript so far:\n"
-        + (_transcript_text(transcript) or "(none yet — this is the first item)")
-        + f"\n\nTarget difficulty for this item: CEFR {target_level}."
-        + "\n\nChoose the item's skill from these still-needed skills (pick the "
-        "first that fits naturally): "
-        + (", ".join(needed_skills) if needed_skills else "(any skill)")
-        + "\n\nGive the next interview item as JSON."
-    )
-    parsed, raw = await generate_json(
-        Task.assess, prompt, system=prompts.ASSESS_INTERVIEW
-    )
-    if not isinstance(parsed, dict) or not parsed.get("prompt"):
-        logger.warning("Assessment item was not valid JSON; using open fallback.")
-        skill = needed_skills[0] if needed_skills else "production"
-        return {"type": "open", "skill": skill, "level": target_level, "prompt": raw.strip()}
-    return parsed
-
-
 def _item_text(item: dict) -> str:
-    """Human-facing text for an item (question + numbered MCQ options)."""
     parts = []
     passage = (item.get("passage") or "").strip()
     if passage:
@@ -133,15 +117,73 @@ def _mcq_keyboard(item_no: int, options: list) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([row])
 
 
+# ── LLM calls ─────────────────────────────────────────────────────────────────
+
+async def _next_item(
+    transcript: list[dict], needed_skills: list[str], target_level: str,
+    context: ContextTypes.DEFAULT_TYPE,
+) -> dict:
+    prompt = (
+        "Interview transcript so far:\n"
+        + (_transcript_text(transcript) or "(none yet — this is the first item)")
+        + f"\n\nTarget difficulty for this item: CEFR {target_level}."
+        + "\n\nChoose the item's skill from these still-needed skills (pick the "
+        "first that fits naturally): "
+        + (", ".join(needed_skills) if needed_skills else "(any skill)")
+        + "\n\nGive the next interview item as JSON."
+    )
+    parsed, raw = await generate_json(
+        Task.assess, prompt, system=_interview_prompt(context)
+    )
+    if not isinstance(parsed, dict) or not parsed.get("prompt"):
+        logger.warning("Assessment item was not valid JSON; using open fallback.")
+        skill = needed_skills[0] if needed_skills else "production"
+        return {"type": "open", "skill": skill, "level": target_level, "prompt": raw.strip()}
+    return parsed
+
+
+async def _grade_open_batch(
+    pending: list[dict], context: ContextTypes.DEFAULT_TYPE,
+) -> dict[int, tuple[bool, str | None]]:
+    if not pending:
+        return {}
+    if _is_english(context):
+        blocks = [
+            f"[{p['q_no']}] Question: {p['question']}\nAnswer: {p['answer']}"
+            for p in pending
+        ]
+    else:
+        blocks = [
+            f"[{p['q_no']}] Frage: {p['question']}\nAntwort: {p['answer']}"
+            for p in pending
+        ]
+    prompt = "Grade each numbered answer.\n\n" + "\n\n".join(blocks)
+    try:
+        parsed, _ = await generate_json(
+            Task.assess, prompt, system=_grade_prompt(context)
+        )
+    except (QuotaExceeded, LLMUnavailable):
+        return {}
+    if not isinstance(parsed, list):
+        return {}
+    graded: dict[int, tuple[bool, str | None]] = {}
+    for obj in parsed:
+        if isinstance(obj, dict) and "n" in obj and "correct" in obj:
+            try:
+                graded[int(obj["n"])] = (bool(obj["correct"]), obj.get("feedback"))
+            except (ValueError, TypeError):
+                continue
+    return graded
+
+
+# ── handlers ───────────────────────────────────────────────────────────────────
+
 @require_auth
 async def assess_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user = get_user_by_telegram_id(update.effective_user.id)
-    if user and getattr(user, "learning_mode", "german") == "english":
-        await update.effective_message.reply_text(
-            "Este comando es solo para el modo alemán. "
-            "Usa /language para cambiar de idioma."
-        )
-        return ConversationHandler.END
+    mode = getattr(user, "learning_mode", "german") if user else "german"
+    en = mode == "english"
+
     context.user_data["assess_transcript"] = []
     context.user_data["assess_results"] = []
     context.user_data["assess_count"] = 0
@@ -150,20 +192,30 @@ async def assess_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     context.user_data["assess_open_no"] = 0
     context.user_data["assess_pending_open"] = []
     context.user_data["assess_user_id"] = user.id if user else None
-    await update.effective_message.reply_text(
-        "Los geht's — kurze Einstufung (~8-12 Fragen), gemischt: Grammatik, "
-        "Lesen, freies Schreiben. Bei Auswahlfragen tippe auf einen Button. "
-        "/cancel bricht ab.\n(Starting your placement — tap a button for "
-        "multiple-choice, or type your answer for open questions.)"
-    )
+    context.user_data["assess_mode"] = mode
+
+    if en:
+        await update.effective_message.reply_text(
+            "¡Vamos! Prueba de nivel corta (~8-12 preguntas): gramática, lectura "
+            "y escritura libre. Toca un botón para preguntas de opción múltiple, "
+            "o escribe tu respuesta para las preguntas abiertas.\n"
+            "/cancel para cancelar."
+        )
+    else:
+        await update.effective_message.reply_text(
+            "Los geht's — kurze Einstufung (~8-12 Fragen), gemischt: Grammatik, "
+            "Lesen, freies Schreiben. Bei Auswahlfragen tippe auf einen Button. "
+            "/cancel bricht ab.\n(Starting your placement — tap a button for "
+            "multiple-choice, or type your answer for open questions.)"
+        )
     return await _serve_next(update, context)
 
 
 async def _serve_next(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Fetch and render the next item, or finish if we've hit the max."""
     transcript: list[dict] = context.user_data["assess_transcript"]
     results: list[dict] = context.user_data["assess_results"]
     count = context.user_data["assess_count"]
+    en = _is_english(context)
 
     if count >= MAX_EXCHANGES:
         return await _finish(update, context, transcript)
@@ -174,12 +226,14 @@ async def _serve_next(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     needed = _skills_needed(results)
     target_level = context.user_data.get("assess_level", START_LEVEL)
     try:
-        item = await _next_item(transcript, needed, target_level)
+        item = await _next_item(transcript, needed, target_level, context)
     except QuotaExceeded:
-        await context.bot.send_message(update.effective_chat.id, QUOTA_MSG)
+        msg = "Límite alcanzado — inténtalo más tarde. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏"
+        await context.bot.send_message(update.effective_chat.id, msg)
         return ConversationHandler.END
     except LLMUnavailable:
-        await context.bot.send_message(update.effective_chat.id, ERROR_MSG)
+        msg = "Algo falló. Inténtalo más tarde con /test." if en else "Da ging etwas schief bei der Einstufung. Versuch es später mit /test."
+        await context.bot.send_message(update.effective_chat.id, msg)
         return ConversationHandler.END
 
     item_no = context.user_data["assess_item_no"] + 1
@@ -192,17 +246,15 @@ async def _serve_next(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     if item.get("type") == "mcq" and item.get("options"):
         keyboard = _mcq_keyboard(item_no, item["options"])
     else:
-        # Number open questions so batched feedback can refer back to them.
         q_no = context.user_data.get("assess_open_no", 0) + 1
         context.user_data["assess_open_no"] = q_no
         item["_q_no"] = q_no
-        text = f"✍️ Offene Frage {q_no}:\n{text}"
+        label = f"✍️ Pregunta abierta {q_no}:" if en else f"✍️ Offene Frage {q_no}:"
+        text = f"{label}\n{text}"
 
     if count >= MIN_EXCHANGES:
-        await context.bot.send_message(
-            update.effective_chat.id,
-            "(Fast fertig — antworte weiter, oder /done für die Auswertung.)",
-        )
+        hint = "(¡Casi listo! Sigue respondiendo o usa /done para ver tu resultado.)" if en else "(Fast fertig — antworte weiter, oder /done für die Auswertung.)"
+        await context.bot.send_message(update.effective_chat.id, hint)
     await context.bot.send_message(
         update.effective_chat.id, text, reply_markup=keyboard
     )
@@ -211,13 +263,12 @@ async def _serve_next(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
 @require_auth
 async def assess_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Handle a tap on an MCQ option button."""
     query = update.callback_query
     await query.answer()
     _, raw_no, raw_idx = query.data.split(":")
     item_no, choice = int(raw_no), int(raw_idx)
+    en = _is_english(context)
 
-    # Ignore taps on a stale (already-answered) question.
     if item_no != context.user_data.get("assess_item_no"):
         return ASSESSING
     item = context.user_data.get("assess_item")
@@ -237,64 +288,37 @@ async def assess_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     )
     context.user_data["assess_count"] += 1
 
-    # BKT: update skill mastery with this observation, recording the CEFR level.
     skill = item.get("skill")
     user_id = context.user_data.get("assess_user_id")
     if skill and user_id:
         update_bkt_state(user_id, skill, correct, level=item.get("level"))
 
-    # Adapt difficulty: harder on a correct answer, easier on a wrong one.
     context.user_data["assess_level"] = _step_level(
         context.user_data.get("assess_level", START_LEVEL), 1 if correct else -1
     )
 
-    mark = "✅ Richtig!" if correct else "❌ Leider falsch."
-    if not correct and isinstance(answer_index, int) and 0 <= answer_index < len(options):
-        mark += f" Richtige Antwort: {options[answer_index]}"
+    if en:
+        mark = "✅ ¡Correcto!" if correct else "❌ Incorrecto."
+        if not correct and isinstance(answer_index, int) and 0 <= answer_index < len(options):
+            mark += f" Respuesta correcta: {options[answer_index]}"
+    else:
+        mark = "✅ Richtig!" if correct else "❌ Leider falsch."
+        if not correct and isinstance(answer_index, int) and 0 <= answer_index < len(options):
+            mark += f" Richtige Antwort: {options[answer_index]}"
+
     await query.edit_message_text(_item_text(item) + f"\n\n{mark}")
     return await _serve_next(update, context)
 
 
-async def _grade_open_batch(
-    pending: list[dict],
-) -> dict[int, tuple[bool, str | None]]:
-    """Grade a batch of open answers in one LLM call. Returns {q_no: (correct,
-    feedback)}. Items that fail to grade are omitted (left unscored)."""
-    if not pending:
-        return {}
-    blocks = [
-        f"[{p['q_no']}] Frage: {p['question']}\nAntwort: {p['answer']}"
-        for p in pending
-    ]
-    prompt = "Grade each numbered answer.\n\n" + "\n\n".join(blocks)
-    try:
-        parsed, _ = await generate_json(
-            Task.assess, prompt, system=prompts.ASSESS_GRADE_OPEN_BATCH
-        )
-    except (QuotaExceeded, LLMUnavailable):
-        return {}
-    if not isinstance(parsed, list):
-        return {}
-    graded: dict[int, tuple[bool, str | None]] = {}
-    for obj in parsed:
-        if isinstance(obj, dict) and "n" in obj and "correct" in obj:
-            try:
-                graded[int(obj["n"])] = (bool(obj["correct"]), obj.get("feedback"))
-            except (ValueError, TypeError):
-                continue
-    return graded
-
-
 async def _flush_open(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Grade all buffered open answers at once, apply scores, adapt difficulty,
-    and report the results to AJ."""
     pending = context.user_data.get("assess_pending_open") or []
     if not pending:
         return
+    en = _is_english(context)
     await context.bot.send_chat_action(
         chat_id=update.effective_chat.id, action="typing"
     )
-    graded = await _grade_open_batch(pending)
+    graded = await _grade_open_batch(pending, context)
     results = context.user_data["assess_results"]
     transcript = context.user_data["assess_transcript"]
 
@@ -312,15 +336,14 @@ async def _flush_open(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         )
         net += 1 if correct else -1
         mark = "✅" if correct else "❌"
-        lines.append(f"Frage {p['q_no']}: {mark}" + (f" {feedback}" if feedback else ""))
+        label = f"Pregunta {p['q_no']}" if en else f"Frage {p['q_no']}"
+        lines.append(f"{label}: {mark}" + (f" {feedback}" if feedback else ""))
 
-        # BKT: update skill mastery for this open item, recording the CEFR level.
         result_entry = results[p["result_idx"]]
         skill = result_entry.get("skill")
         if skill and user_id:
             update_bkt_state(user_id, skill, correct, level=result_entry.get("level"))
 
-    # Adapt difficulty once, in the batch's net direction.
     if net:
         context.user_data["assess_level"] = _step_level(
             context.user_data.get("assess_level", START_LEVEL), 1 if net > 0 else -1
@@ -332,7 +355,6 @@ async def _flush_open(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 @require_auth
 async def assess_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Buffer a typed free-text answer; grade in batches to save LLM calls."""
     item = context.user_data.get("assess_item") or {}
     answer = (update.effective_message.text or "").strip()
 
@@ -360,11 +382,11 @@ async def assess_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 @require_auth
 async def assess_done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    en = _is_english(context)
     transcript: list[dict] = context.user_data.get("assess_transcript", [])
     if context.user_data.get("assess_count", 0) < 3:
-        await update.effective_message.reply_text(
-            "Beantworte bitte noch ein paar Fragen zuerst. (A few more first.)"
-        )
+        msg = "Por favor responde unas preguntas más primero." if en else "Beantworte bitte noch ein paar Fragen zuerst. (A few more first.)"
+        await update.effective_message.reply_text(msg)
         return ASSESSING
     return await _finish(update, context, transcript)
 
@@ -372,10 +394,9 @@ async def assess_done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 async def _finish(
     update: Update, context: ContextTypes.DEFAULT_TYPE, transcript: list[dict]
 ) -> int:
-    await update.effective_message.reply_text(
-        "Danke! Ich werte deine Antworten aus… (Scoring your answers…)"
-    )
-    # Grade any open answers still buffered below the batch size.
+    en = _is_english(context)
+    msg = "¡Gracias! Evaluando tus respuestas…" if en else "Danke! Ich werte deine Antworten aus… (Scoring your answers…)"
+    await update.effective_message.reply_text(msg)
     await _flush_open(update, context)
     prompt = (
         "Full interview transcript:\n"
@@ -386,27 +407,26 @@ async def _finish(
     )
     try:
         verdict, raw = await generate_json(
-            Task.assess, prompt, system=prompts.ASSESS_VERDICT
+            Task.assess, prompt, system=_verdict_prompt(context)
         )
     except QuotaExceeded:
-        await update.effective_message.reply_text(QUOTA_MSG)
+        msg = "Límite alcanzado — inténtalo más tarde. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏"
+        await update.effective_message.reply_text(msg)
         return ConversationHandler.END
     except LLMUnavailable:
-        await update.effective_message.reply_text(ERROR_MSG)
+        msg = "Algo falló. Inténtalo más tarde." if en else "Da ging etwas schief bei der Einstufung. Versuch es später mit /test."
+        await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
     user = get_user_by_telegram_id(update.effective_user.id)
     if not isinstance(verdict, dict):
-        # Defensive fallback: store raw text so nothing is lost.
         logger.warning("Verdict was not valid JSON; storing raw.")
         if user:
             save_assessment(
                 user.id, {"overall": None, "raw": raw, "gaps": []}, transcript
             )
-        await update.effective_message.reply_text(
-            "Ich konnte die Auswertung nicht sauber strukturieren, aber hier ist "
-            "meine Einschätzung:\n\n" + raw[:1500]
-        )
+        fallback = "No pude estructurar bien la evaluación, pero aquí está mi valoración:\n\n" if en else "Ich konnte die Auswertung nicht sauber strukturieren, aber hier ist meine Einschätzung:\n\n"
+        await update.effective_message.reply_text(fallback + raw[:1500])
         _clear(context)
         return ConversationHandler.END
 
@@ -417,36 +437,45 @@ async def _finish(
     if user:
         save_assessment(user.id, verdict, transcript)
 
-    message = _format_verdict(verdict)
-    breakdown = _scored_breakdown(scores)
+    message = _format_verdict(verdict, en)
+    breakdown = _scored_breakdown(scores, en)
     if breakdown:
-        message += "\n\nDeine Auswahlfragen (auto-scored):\n" + breakdown
+        label = "\nTus preguntas de opción múltiple (auto-calificadas):\n" if en else "\nDeine Auswahlfragen (auto-scored):\n"
+        message += label + breakdown
     await update.effective_message.reply_text(message)
     _clear(context)
     return ConversationHandler.END
 
 
-def _format_verdict(v: dict) -> str:
+def _format_verdict(v: dict, en: bool) -> str:
     skills = v.get("skills") or {}
     skill_lines = "\n".join(
         f"  • {k.capitalize()}: {val}" for k, val in skills.items()
     )
     gaps = v.get("gaps") or []
     gap_lines = "\n".join(f"  • {g}" for g in gaps)
-    parts = [f"📊 *Einstufung fertig!*\n\nOverall: *{v.get('overall', '?')}*"]
-    if skill_lines:
-        parts.append("\nPer skill:\n" + skill_lines)
-    if gap_lines:
-        parts.append("\nGaps to work on:\n" + gap_lines)
-    if v.get("summary"):
-        parts.append("\n" + v["summary"])
-    parts.append("\nSieh dir /profile an. Jetzt einfach drauflos schreiben!")
+    if en:
+        parts = [f"📊 *¡Prueba completada!*\n\nNivel general: *{v.get('overall', '?')}*"]
+        if skill_lines:
+            parts.append("\nPor habilidad:\n" + skill_lines)
+        if gap_lines:
+            parts.append("\nÁreas a mejorar:\n" + gap_lines)
+        if v.get("summary"):
+            parts.append("\n" + v["summary"])
+        parts.append("\nRevisa /profile. ¡Ahora practica escribiendo en inglés!")
+    else:
+        parts = [f"📊 *Einstufung fertig!*\n\nOverall: *{v.get('overall', '?')}*"]
+        if skill_lines:
+            parts.append("\nPer skill:\n" + skill_lines)
+        if gap_lines:
+            parts.append("\nGaps to work on:\n" + gap_lines)
+        if v.get("summary"):
+            parts.append("\n" + v["summary"])
+        parts.append("\nSieh dir /profile an. Jetzt einfach drauflos schreiben!")
     return "\n".join(parts)
 
 
 def _scored_counts(results: list[dict]) -> dict[str, dict[str, int]]:
-    """Per-skill {correct, total} over items that were auto-scored (MCQ and
-    graded open answers). Items with correct=None are excluded."""
     counts: dict[str, dict[str, int]] = {}
     for r in results:
         if r.get("correct") is None:
@@ -458,8 +487,7 @@ def _scored_counts(results: list[dict]) -> dict[str, dict[str, int]]:
     return counts
 
 
-def _scored_breakdown(scores: dict[str, dict[str, int]]) -> str:
-    """User-facing per-skill correct/total lines."""
+def _scored_breakdown(scores: dict[str, dict[str, int]], en: bool = False) -> str:
     return "\n".join(
         f"  • {skill.capitalize()}: {c['correct']}/{c['total']}"
         for skill, c in scores.items()
@@ -467,7 +495,6 @@ def _scored_breakdown(scores: dict[str, dict[str, int]]) -> str:
 
 
 def _results_summary(results: list[dict]) -> str:
-    """Per-skill correct/total for the verdict prompt."""
     if not results:
         return "(no auto-scored items)"
     scores = _scored_counts(results)
@@ -483,25 +510,19 @@ def _results_summary(results: list[dict]) -> str:
 
 def _clear(context: ContextTypes.DEFAULT_TYPE) -> None:
     for key in (
-        "assess_transcript",
-        "assess_results",
-        "assess_count",
-        "assess_item_no",
-        "assess_item",
-        "assess_level",
-        "assess_open_no",
-        "assess_pending_open",
-        "assess_user_id",
+        "assess_transcript", "assess_results", "assess_count",
+        "assess_item_no", "assess_item", "assess_level",
+        "assess_open_no", "assess_pending_open", "assess_user_id", "assess_mode",
     ):
         context.user_data.pop(key, None)
 
 
 @require_auth
 async def assess_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    en = _is_english(context)
     _clear(context)
-    await update.effective_message.reply_text(
-        "Einstufung abgebrochen. (Assessment cancelled.)"
-    )
+    msg = "Prueba cancelada." if en else "Einstufung abgebrochen. (Assessment cancelled.)"
+    await update.effective_message.reply_text(msg)
     return ConversationHandler.END
 
 

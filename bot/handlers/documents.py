@@ -86,7 +86,12 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if user is None:
         return
 
-    await message.reply_text(f"📄 Analysiere *{filename}*… einen Moment.")
+    en = getattr(user, "learning_mode", "german") == "english"
+
+    if en:
+        await message.reply_text(f"📄 Analizando *{filename}*… un momento.")
+    else:
+        await message.reply_text(f"📄 Analysiere *{filename}*… einen Moment.")
     await context.bot.send_chat_action(chat_id=message.chat_id, action="typing")
 
     try:
@@ -95,48 +100,59 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         text = _extract_pdf_text(data)
     except Exception as exc:
         logger.exception("PDF download/extract failed")
-        await message.reply_text(
-            "Konnte die PDF nicht lesen. Ist sie beschädigt? (Couldn't read the PDF.)"
-        )
+        if en:
+            await message.reply_text("No pude leer el PDF. ¿Está dañado?")
+        else:
+            await message.reply_text(
+                "Konnte die PDF nicht lesen. Ist sie beschädigt? (Couldn't read the PDF.)"
+            )
         return
 
     if len(text) < 40:
-        await message.reply_text(
-            "Diese PDF enthält keinen extrahierbaren Text — wahrscheinlich ein "
-            "Scan. OCR kann ich (noch) nicht. Schick mir eine Text-PDF. 🙏\n"
-            "(No extractable text — looks scanned; OCR is out of scope.)"
-        )
+        if en:
+            await message.reply_text(
+                "Este PDF no tiene texto extraíble — probablemente es un escaneo. "
+                "Envíame un PDF con texto. 🙏"
+            )
+        else:
+            await message.reply_text(
+                "Diese PDF enthält keinen extrahierbaren Text — wahrscheinlich ein "
+                "Scan. OCR kann ich (noch) nicht. Schick mir eine Text-PDF. 🙏\n"
+                "(No extractable text — looks scanned; OCR is out of scope.)"
+            )
         return
 
     # --- extract terms chunk by chunk ---
+    extract_prompt = prompts.ENGLISH_DOC_EXTRACT_TERMS if en else prompts.DOC_EXTRACT_TERMS
+    summary_prompt = prompts.ENGLISH_DOC_SUMMARY if en else prompts.DOC_SUMMARY
     collected: dict[str, dict] = {}
     try:
         for chunk in _chunks(text, CHUNK_CHARS, MAX_CHUNKS):
-            result, _ = await generate_json(
-                Task.analyze, chunk, system=prompts.DOC_EXTRACT_TERMS
-            )
+            result, _ = await generate_json(Task.analyze, chunk, system=extract_prompt)
             terms = (result or {}).get("terms", []) if isinstance(result, dict) else []
             for t in terms:
                 term = (t.get("term") or "").strip()
                 if term and term not in collected:
                     collected[term] = t
 
-        summary = await route(
-            Task.analyze, text[:SUMMARY_CHARS], system=prompts.DOC_SUMMARY
-        )
+        summary = await route(Task.analyze, text[:SUMMARY_CHARS], system=summary_prompt)
     except QuotaExceeded:
-        await message.reply_text(QUOTA_MSG)
+        await message.reply_text(
+            "Límite alcanzado — inténtalo más tarde. 🙏" if en else QUOTA_MSG
+        )
         return
     except LLMUnavailable:
-        await message.reply_text(
-            "Die Analyse hat nicht geklappt. Versuch es später nochmal."
-        )
+        if en:
+            await message.reply_text("El análisis no funcionó. Inténtalo más tarde.")
+        else:
+            await message.reply_text("Die Analyse hat nicht geklappt. Versuch es später nochmal.")
         return
 
     if not collected:
-        await message.reply_text(
-            "Ich habe keine nützlichen Fachbegriffe gefunden. 🤔"
-        )
+        if en:
+            await message.reply_text("No encontré términos útiles en este documento. 🤔")
+        else:
+            await message.reply_text("Ich habe keine nützlichen Fachbegriffe gefunden. 🤔")
         return
 
     ordered = sorted(
@@ -161,14 +177,24 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     set_document_term_count(document_id, inserted)
 
     top = ordered[:10]
-    lines = [f"✅ *{filename}* analysiert!", "", summary.strip(), "", "🔑 Top-Begriffe:"]
-    for t in top:
-        tr = f" — {t['translation']}" if t.get("translation") else ""
-        lines.append(f"  • {t['term']}{tr}")
-    lines.append(
-        f"\n{inserted} neue Vokabeln gespeichert (Doc #{document_id}). "
-        f"Nutze /learn {document_id} für eine Lektion, oder /practice zum Üben."
-    )
+    if en:
+        lines = [f"✅ *{filename}* analizado!", "", summary.strip(), "", "🔑 Términos clave:"]
+        for t in top:
+            tr = f" — {t['translation']}" if t.get("translation") else ""
+            lines.append(f"  • {t['term']}{tr}")
+        lines.append(
+            f"\n{inserted} nuevas palabras guardadas (Doc #{document_id}). "
+            f"Usa /learn {document_id} para una lección, o /practice para repasar."
+        )
+    else:
+        lines = [f"✅ *{filename}* analysiert!", "", summary.strip(), "", "🔑 Top-Begriffe:"]
+        for t in top:
+            tr = f" — {t['translation']}" if t.get("translation") else ""
+            lines.append(f"  • {t['term']}{tr}")
+        lines.append(
+            f"\n{inserted} neue Vokabeln gespeichert (Doc #{document_id}). "
+            f"Nutze /learn {document_id} für eine Lektion, oder /practice zum Üben."
+        )
     await message.reply_text("\n".join(lines))
 
 
@@ -177,16 +203,28 @@ async def docs(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = get_user_by_telegram_id(update.effective_user.id)
     if user is None:
         return
+    en = getattr(user, "learning_mode", "german") == "english"
     documents = list_documents(user.id)
     if not documents:
-        await update.effective_message.reply_text(
-            "Noch keine Dokumente. Schick mir eine deutsche Technik-PDF! 📄"
-        )
+        if en:
+            await update.effective_message.reply_text(
+                "Todavía no hay documentos. ¡Envíame un PDF en inglés! 📄"
+            )
+        else:
+            await update.effective_message.reply_text(
+                "Noch keine Dokumente. Schick mir eine deutsche Technik-PDF! 📄"
+            )
         return
-    lines = ["📚 *Deine Dokumente:*"]
-    for d in documents:
-        lines.append(f"  • #{d['id']} — {d['filename']} ({d['terms']} Begriffe)")
-    lines.append("\n/learn <id> für eine Lektion.")
+    if en:
+        lines = ["📚 *Tus documentos:*"]
+        for d in documents:
+            lines.append(f"  • #{d['id']} — {d['filename']} ({d['terms']} términos)")
+        lines.append("\n/learn <id> para una lección.")
+    else:
+        lines = ["📚 *Deine Dokumente:*"]
+        for d in documents:
+            lines.append(f"  • #{d['id']} — {d['filename']} ({d['terms']} Begriffe)")
+        lines.append("\n/learn <id> für eine Lektion.")
     await update.effective_message.reply_text("\n".join(lines))
 
 
@@ -196,6 +234,7 @@ async def learn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if user is None:
         return
 
+    en = getattr(user, "learning_mode", "german") == "english"
     document = None
     if context.args:
         try:
@@ -203,46 +242,63 @@ async def learn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         except ValueError:
             document = None
         if document is None:
-            await update.effective_message.reply_text(
-                "Kein Dokument mit dieser ID. /docs zeigt deine Dokumente."
-            )
+            if en:
+                await update.effective_message.reply_text(
+                    "No hay documento con esa ID. /docs muestra tus documentos."
+                )
+            else:
+                await update.effective_message.reply_text(
+                    "Kein Dokument mit dieser ID. /docs zeigt deine Dokumente."
+                )
             return
     else:
         recent = recent_document(user.id)
         if recent is None:
-            await update.effective_message.reply_text(
-                "Noch keine Dokumente. Schick mir zuerst eine PDF. 📄"
-            )
+            if en:
+                await update.effective_message.reply_text(
+                    "Todavía no hay documentos. Envíame un PDF primero. 📄"
+                )
+            else:
+                await update.effective_message.reply_text(
+                    "Noch keine Dokumente. Schick mir zuerst eine PDF. 📄"
+                )
             return
         document = get_document(user.id, recent["id"])
 
     from bot.handlers.conversation import _user_level
 
     level = _user_level(user.cefr_estimate)
-    terms = ", ".join(t["term"] for t in document["terms"][:25]) or "(keine)"
+    terms_str = ", ".join(t["term"] for t in document["terms"][:25]) or ("(ninguno)" if en else "(keine)")
 
-    await update.effective_message.reply_text(
-        f"🎓 Ich baue eine Lektion aus *{document['filename']}*… einen Moment."
-    )
+    if en:
+        await update.effective_message.reply_text(
+            f"🎓 Construyendo una lección de *{document['filename']}*… un momento."
+        )
+    else:
+        await update.effective_message.reply_text(
+            f"🎓 Ich baue eine Lektion aus *{document['filename']}*… einen Moment."
+        )
     await context.bot.send_chat_action(
         chat_id=update.effective_message.chat_id, action="typing"
     )
-    prompt = "Generate the lesson now."
-    system = prompts.LEARN_LESSON.format(
-        level=level, summary=document.get("summary") or "(no summary)", terms=terms
+    lesson_prompt_tpl = prompts.ENGLISH_LEARN_LESSON if en else prompts.LEARN_LESSON
+    system = lesson_prompt_tpl.format(
+        level=level, summary=document.get("summary") or "(no summary)", terms=terms_str
     )
     try:
-        lesson = await route(Task.generate, prompt, system=system)
+        lesson = await route(Task.generate, "Generate the lesson now.", system=system)
     except QuotaExceeded:
-        await update.effective_message.reply_text(QUOTA_MSG)
-        return
-    except LLMUnavailable:
         await update.effective_message.reply_text(
-            "Die Lektion hat nicht geklappt. Versuch es später."
+            "Límite alcanzado — inténtalo más tarde. 🙏" if en else QUOTA_MSG
         )
         return
+    except LLMUnavailable:
+        if en:
+            await update.effective_message.reply_text("La lección no funcionó. Inténtalo más tarde.")
+        else:
+            await update.effective_message.reply_text("Die Lektion hat nicht geklappt. Versuch es später.")
+        return
 
-    # Telegram messages cap at 4096 chars; split if needed.
     for i in range(0, len(lesson), 4000):
         await update.effective_message.reply_text(lesson[i : i + 4000])
 
@@ -250,20 +306,33 @@ async def learn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @require_auth
 async def docfocus(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """🔀 option: bias conversation toward the latest document's topic."""
+    user = get_user_by_telegram_id(update.effective_user.id)
+    en = getattr(user, "learning_mode", "german") == "english" if user else False
     arg = (context.args[0].lower() if context.args else "").strip()
     if arg in ("on", "an", "ein"):
         context.user_data["docfocus"] = True
-        await update.effective_message.reply_text(
-            "Dokument-Fokus AN — ich lenke Gespräche zum neuesten Dokument. "
-            "(/docfocus off zum Ausschalten.)"
-        )
+        if en:
+            await update.effective_message.reply_text(
+                "Foco en documento ACTIVADO — oriento la conversación hacia el último documento. "
+                "(/docfocus off para desactivar.)"
+            )
+        else:
+            await update.effective_message.reply_text(
+                "Dokument-Fokus AN — ich lenke Gespräche zum neuesten Dokument. "
+                "(/docfocus off zum Ausschalten.)"
+            )
     elif arg in ("off", "aus"):
         context.user_data["docfocus"] = False
-        await update.effective_message.reply_text(
-            "Dokument-Fokus AUS. (Off.)"
-        )
+        msg = "Foco en documento DESACTIVADO." if en else "Dokument-Fokus AUS. (Off.)"
+        await update.effective_message.reply_text(msg)
     else:
-        state = "AN" if context.user_data.get("docfocus") else "AUS"
-        await update.effective_message.reply_text(
-            f"Dokument-Fokus ist {state}. Nutze /docfocus on oder /docfocus off."
-        )
+        if en:
+            state = "ACTIVADO" if context.user_data.get("docfocus") else "DESACTIVADO"
+            await update.effective_message.reply_text(
+                f"Foco en documento está {state}. Usa /docfocus on o /docfocus off."
+            )
+        else:
+            state = "AN" if context.user_data.get("docfocus") else "AUS"
+            await update.effective_message.reply_text(
+                f"Dokument-Fokus ist {state}. Nutze /docfocus on oder /docfocus off."
+            )

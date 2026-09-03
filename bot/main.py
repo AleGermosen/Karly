@@ -18,6 +18,7 @@ from bot.handlers import (
     conversation,
     daily,
     documents,
+    game,
     practice,
     quiz,
     reminders,
@@ -80,6 +81,10 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("docfocus", documents.docfocus))
     app.add_handler(MessageHandler(filters.Document.ALL, documents.handle_document))
 
+    # The Impostor game.
+    for handler in game.build_handlers():
+        app.add_handler(handler)
+
     # Inline action buttons attached to corrected replies (📖/➕/🎯).
     app.add_handler(
         CallbackQueryHandler(conversation.on_correction_action, pattern=r"^corr:")
@@ -111,6 +116,7 @@ MENU_COMMANDS = [
     BotCommand("corrections", "Korrekturen ein/aus"),
     BotCommand("docs", "Deine Dokumente"),
     BotCommand("remind", "Tägliche Erinnerung setzen"),
+    BotCommand("impostor", "🎮 Play The Impostor with friends"),
     BotCommand("start", "Willkommen / neu starten"),
     BotCommand("help", "Alle Befehle anzeigen"),
 ]

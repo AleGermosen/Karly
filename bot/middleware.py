@@ -14,7 +14,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 import config
-from db.repo import any_user_exists, get_or_create_user, get_user_by_telegram_id
+from db.repo import get_or_create_user, get_user_by_telegram_id
 
 logger = logging.getLogger(__name__)
 
@@ -22,17 +22,11 @@ Handler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
 
 def _is_authorized(telegram_id: int) -> bool:
-    # Explicit allow-list via env wins.
+    # Explicit allow-list via env wins (private deployments).
     if config.ALLOWED_USER_ID is not None:
         return telegram_id == config.ALLOWED_USER_ID
-
-    # Otherwise: adopt the first user, then restrict to them.
-    known = get_user_by_telegram_id(telegram_id)
-    if known is not None:
-        return True
-    if not any_user_exists():
-        return True  # first-ever user is adopted
-    return False
+    # Open: any Telegram user may use the bot.
+    return True
 
 
 def require_auth(handler: Handler) -> Handler:
