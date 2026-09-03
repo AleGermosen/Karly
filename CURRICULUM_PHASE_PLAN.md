@@ -102,7 +102,7 @@ Three options for where units come from:
 |---|---|---|
 | **A. Hand-authored** syllabus + exercises committed to the repo | Deterministic, free at runtime, exact CEFR control | Weeks of authoring per level per language |
 | **B. Fully LLM-generated** on demand, every time | Zero authoring | Nondeterministic, no stable IDs → **can't track mastery per topic**, can't cache, pays tokens on every view, quality varies per call |
-| **C. Hybrid — authored skeleton, generated item bank, cached** ← **recommended** | Stable IDs and ordering, one-time generation cost, deterministic grading, near-zero runtime LLM cost, quality reviewable before it ships | Needs a build step and a review pass |
+| **C. Hybrid — authored skeleton, generated item bank, cached** ← **recommended, specified in [`CURRICULUM_HYBRID_SPEC.md`](CURRICULUM_HYBRID_SPEC.md)** | Stable IDs and ordering, one-time generation cost, deterministic grading, near-zero runtime LLM cost, quality reviewable before it ships | Needs a build step and a review pass |
 
 **Recommendation: C.** The syllabus (unit IDs, titles, CEFR level, order,
 prerequisites, explanation, examples, pitfalls) is generated *once* by a batch
@@ -261,6 +261,10 @@ The hybrid model was chosen mostly for this:
 
 Each stage is independently shippable and leaves the bot working.
 
+> **C0–C2 are superseded by the H0–H6 stages in
+> [`CURRICULUM_HYBRID_SPEC.md`](CURRICULUM_HYBRID_SPEC.md) §7**, which break the same
+> work down along the hybrid model's three layers. C3–C6 below still stand and follow H6.
+
 ### C0 — Syllabus spike
 *No bot changes.* Define the YAML schema (§4.2). Write the generation script that
 produces a level's units from a prompt + the CEFR contents list, and run it for **one
@@ -278,7 +282,8 @@ Unlock/prereq logic. Exercises temporarily stubbed to the existing quiz generato
 The four item types (mcq / cloze / transform / produce). Offline batch generator +
 `exercise_items` cache. Local grading for the closed types. Per-unit mastery via the
 BKT update. Missed items auto-added to flashcards. Pass threshold enforced.
-**Exit:** a unit can be passed or failed on merit, and a warm unit makes zero LLM calls.
+**Exit:** a unit can be passed or failed on merit, and a warm 15-item unit makes exactly
+two LLM calls — the two `produce` items. Lesson card and all closed items are free.
 
 ### C3 — Checkpoints and browsing
 `/leveltest` (15 items, level promotion, weak-unit study plan on failure). `/browse`
