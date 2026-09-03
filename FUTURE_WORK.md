@@ -14,12 +14,10 @@ Living plan for Karly's evolution. Updated 2026-09-03.
 3. Assessment JSON hardening — retry/skip on bad output instead of raw dump
 4. Manual grade override buttons on typed answers
 
-**Next phase under design:** a Test-English-style structured curriculum — a named,
-ordered syllabus per CEFR level with lesson cards, an exercise item bank, level
-checkpoints, and reading/listening/writing tracks. Full design in
-[`CURRICULUM_PHASE_PLAN.md`](CURRICULUM_PHASE_PLAN.md); the content model that
-makes it work — authored spine, generated item bank, cached in git — is specified in
-[`CURRICULUM_HYBRID_SPEC.md`](CURRICULUM_HYBRID_SPEC.md).
+**Next phase, planned:** give Karly a course — a topic list per CEFR level with a short
+lesson and a set of exercises each, the way test-english.com is organised, written once
+into the repo instead of invented live. Plan and pending tasks in
+[`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md).
 
 **When you're ready to open to other users:**
 → Multi-tenant foundation → Usage metering → Entitlements → Telegram Stars payments

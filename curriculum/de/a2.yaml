@@ -1,8 +1,8 @@
 # German A2 — spine.
 #
-# GOLDEN UNIT ONLY. This file currently holds the single hand-written reference
-# unit from stage H0 of CURRICULUM_HYBRID_SPEC.md. The remaining ~23 A2 units are
-# generated at H1 (`make curriculum-spine LANG=de LEVEL=a2`) and reviewed by hand.
+# REFERENCE UNIT ONLY. This file holds the single hand-written unit from stage H0
+# of CURRICULUM_PLAN.md. The remaining ~23 A2 units get written at H1 and reviewed
+# by hand.
 #
 # spine_hash is sha256 (first 16 hex chars) over compact JSON with sorted keys of
 # {title_target, level, skill, exercises}. Deliberately excludes explain,
