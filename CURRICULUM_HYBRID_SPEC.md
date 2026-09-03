@@ -151,7 +151,7 @@ One JSONL line per item. `id` is derived and stable: `<unit_id>.<type>.<NN>`.
 
 ### 2.2 Generation pipeline — `make curriculum-build LANG=de LEVEL=a2`
 
-Runs offline on the dev machine, never on the bot's request path. Uses the existing
+Seven gates, run offline on the dev machine, never on the bot's request path. Uses the existing
 `llm/structured.py` `generate_json` with `Task.generate` — the ladder's Gemini rung is
 perfectly fine here because nobody is waiting.
 
@@ -165,11 +165,16 @@ perfectly fine here because nobody is waiting.
    dominant failure mode.
 4. **Distractor gate** (mcq only). Reject if any two options are equivalent, if the
    correct option is the longest by more than 40%, or if options differ only in
-   punctuation.
+   punctuation. **Auxiliary rule** (from H0, §10): in a past-tense gap, `hatte`/`war`
+   distractors form a valid Plusquamperfekt and must never be offered against a
+   Perfekt answer — the item would have two correct answers.
 5. **Dedupe.** Reject items whose normalized prompt matches an existing item in the
    same unit.
 6. **Level gate.** Reject items whose vocabulary sits above the unit's CEFR level
    (checked against the level's own vocabulary units plus a frequency list).
+7. **Ambiguous-subject gate** (from H0, §10). Reject German items whose subject is a
+   bare `Sie`/`sie` where the required verb form depends on reading it as *she* vs.
+   *they* vs. formal *you*. Same for Spanish `usted`/`él` collisions in English mode.
 7. **Stage.** Survivors are written as `status: draft` to the level's JSONL.
 
 Every rejection is written to `curriculum/bank/<lang>/<level>.rejects.jsonl` with its
@@ -281,7 +286,7 @@ set → transform → produce. Within a set:
 | Type | Rule | Calls |
 |---|---|---|
 | `mcq` | Index comparison. | 0 |
-| `cloze` | Normalize (lowercase, collapse whitespace, strip terminal punctuation, fold umlauts/accents) and match against `accept`. | 0 |
+| `cloze` | Normalize (lowercase, collapse whitespace, strip terminal punctuation, fold umlauts/accents, **collapse `/` and `,` separators to a single space**) and match against `accept`. | 0 |
 | `transform` | Same normalization and match. **On a miss, one `Task.check` call** decides whether the answer is a legitimate alternative. | 0 or 1 |
 | `produce` | `Task.check` against the item's `rubric`; returns `{correct, feedback, corrected}`. | 1 |
 
@@ -388,11 +393,15 @@ Restructured around the three layers. Each stage ships independently and leaves 
 bot working. These replace §5 of the phase plan for the content-model work; the
 skill-track stages (reading / writing / listening / exams) follow unchanged after H6.
 
-### H0 — Schema and golden unit
+### H0 — Schema and golden unit ✅ content done, tooling pending
 Write the spine and bank JSON schemas and `make curriculum-lint`. **Hand-write one
 complete unit** (`de.a2.g07`, spine + 15 items) as the golden reference every generator
 prompt is measured against. No bot changes.
 **Exit:** lint passes on the golden unit; the golden unit reads like something you'd study.
+
+**Status:** the golden unit is written and verified against every rule in §1.5 and
+§2.2 — see §8 for the five spec defects it caught. What remains is turning that
+verification into the committed `make curriculum-lint` target.
 
 ### H1 — Spine generator
 `make curriculum-spine`, run for German A2. Human pass over all ~24 units: ordering,
@@ -431,7 +440,42 @@ layer boundary leaked and that's the bug to fix before adding tracks.
 
 ---
 
-## 8. Risks specific to this model
+## 8. What H0 already found
+
+The golden unit (`curriculum/de/a2.yaml` + `curriculum/bank/de/a2.jsonl`,
+`de.a2.g07` "Perfekt vs. Präteritum", 15 items) is written and passes every gate
+above. Writing it by hand surfaced five defects in this spec — the whole reason the
+stage exists, and all five are folded in above:
+
+1. **Plusquamperfekt distractors are valid German.** The first draft of an MCQ offered
+   `hatten` against `haben ... gelernt`, and another offered `war` against
+   `ist aufgestanden`. Both are correct German (`wir hatten gelernt`,
+   `er war aufgestanden`) — two right answers on a four-option item. This is the exact
+   failure gate 3's cold solver exists to catch, and it appeared on the *first* unit,
+   which suggests it will be common. Gate 4 now rules it out structurally.
+2. **`Sie` is three words at once.** A cloze reading `Sie ___ das Buch schon ___`
+   accepts both `hat gelesen` and `haben gelesen` depending on whether the subject is
+   *she*, *they*, or formal *you*. Now a gate; the item was rewritten to `Er`.
+3. **Two-gap cloze needs separator variants.** A learner types `habe gearbeitet`,
+   `habe / gearbeitet`, or `habe, gearbeitet` interchangeably. Normalization now
+   collapses separators, so accept-lists don't have to enumerate them.
+4. **Word-order alternatives belong in the accept-list from the start.**
+   `Den ganzen Tag habe ich gearbeitet.` is as correct as
+   `Ich habe den ganzen Tag gearbeitet.` Relying on the §4.3 escape hatch to discover
+   this would burn a call and a moment of doubt for the first user to hit it. Every
+   `transform` item now ships with its fronted-adverbial variant pre-listed.
+5. **`spine_hash` was underspecified.** "A hash over the fields the bank depends on"
+   doesn't pin down serialization. Now fixed: sha256, first 16 hex chars, over compact
+   JSON with sorted keys of `{title_target, level, skill, exercises}`. The golden unit
+   carries a real, verifiable hash rather than a placeholder.
+
+Findings 1 and 2 are both *ambiguity* bugs, and both would have shipped as
+"the app marked my right answer wrong." That's the failure mode to design against
+hardest, and it argues for keeping the cold-solver gate even when it feels redundant.
+
+---
+
+## 9. Risks specific to this model
 
 | Risk | Mitigation |
 |---|---|
@@ -445,7 +489,7 @@ layer boundary leaked and that's the bug to fix before adding tracks.
 
 ---
 
-## 9. Open decisions
+## 10. Open decisions
 
 Carried from the phase plan, plus the ones this spec introduces. Recommendations given —
 these need your call before H0:
