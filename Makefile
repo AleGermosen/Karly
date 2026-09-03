@@ -1,7 +1,7 @@
 # Karly — convenience targets.
 #
 # Remote targets need KARLY_HOST set, e.g.:
-#   export KARLY_HOST=aj@192.168.1.50
+#   export KARLY_HOST=marcus@192.168.8.228
 
 .PHONY: help run test deploy logs status restart stop
 

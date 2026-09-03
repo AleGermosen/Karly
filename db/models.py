@@ -5,6 +5,7 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     Enum,
     Float,
@@ -40,6 +41,9 @@ class User(Base):
     cefr_estimate: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Daily practice reminder time as "HH:MM" (local), or None if disabled.
     reminder_time: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Whether the tutor corrects mistakes inline. Off = natural conversation,
+    # with mistakes surfaced on demand via /summary instead.
+    corrections_on: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
     assessments: Mapped[list["Assessment"]] = relationship(back_populates="user")

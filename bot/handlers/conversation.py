@@ -9,6 +9,7 @@ Also handles /topic <x> (steer the conversation) and /english <q> (meta Q&A).
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -25,10 +26,13 @@ from db.repo import (
     get_user_by_telegram_id,
     recent_document,
     recent_history,
+    recent_user_messages,
+    set_corrections,
 )
 from llm import prompts
 from llm.gemini import LLMUnavailable, QuotaExceeded
 from llm.router import Task, route
+from llm.structured import generate_json
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +55,29 @@ def _user_level(cefr_estimate_json: str | None) -> str:
     except (ValueError, TypeError):
         pass
     return "A2-B1"
+
+
+async def _keep_typing(bot, chat_id: int) -> None:
+    """Re-send the 'typing' chat action every few seconds until cancelled.
+
+    Telegram clears the indicator after ~5 s, but LLM replies can take 20 s+;
+    without this the chat looks dead long before the answer lands.
+    """
+    try:
+        while True:
+            await bot.send_chat_action(chat_id=chat_id, action="typing")
+            await asyncio.sleep(4)
+    except asyncio.CancelledError:
+        pass
+
+
+async def _route_with_typing(context, chat_id: int, task: Task, prompt: str, **kw):
+    """Run route() while keeping the typing indicator alive for the duration."""
+    typing = asyncio.create_task(_keep_typing(context.bot, chat_id))
+    try:
+        return await route(task, prompt, **kw)
+    finally:
+        typing.cancel()
 
 
 def _parse_corrections(reply: str) -> list[dict]:
@@ -82,7 +109,9 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     history = recent_history(user.id, limit=config.CONTEXT_WINDOW_MESSAGES)
+    corrections_on = user.corrections_on
     system = prompts.TUTOR_PERSONA.format(level=_user_level(user.cefr_estimate))
+    system += prompts.CORRECTION_BLOCK if corrections_on else prompts.NO_CORRECTION_NOTE
 
     topic = context.user_data.get("topic")
     if topic:
@@ -96,10 +125,10 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 f"fits, steer toward its topic. Summary: {doc['summary']}"
             )
 
-    await context.bot.send_chat_action(chat_id=message.chat_id, action="typing")
-
     try:
-        reply = await route(Task.chat, text, system=system, history=history)
+        reply = await _route_with_typing(
+            context, message.chat_id, Task.chat, text, system=system, history=history
+        )
     except QuotaExceeded:
         await message.reply_text(QUOTA_MSG)
         return
@@ -108,7 +137,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await message.reply_text(ERROR_MSG)
         return
 
-    corrections = _parse_corrections(reply)
+    corrections = _parse_corrections(reply) if corrections_on else []
     add_message(user.id, "user", text)
     add_message(user.id, "assistant", reply, corrections=corrections or None)
     if corrections:
@@ -150,11 +179,14 @@ async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             "Ask a meta-question in English, e.g. /english when do I use dative?"
         )
         return
-    await context.bot.send_chat_action(
-        chat_id=update.effective_message.chat_id, action="typing"
-    )
     try:
-        reply = await route(Task.chat, question, system=prompts.ENGLISH_META)
+        reply = await _route_with_typing(
+            context,
+            update.effective_message.chat_id,
+            Task.chat,
+            question,
+            system=prompts.ENGLISH_META,
+        )
     except QuotaExceeded:
         await update.effective_message.reply_text(QUOTA_MSG)
         return
@@ -162,3 +194,93 @@ async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.effective_message.reply_text(ERROR_MSG)
         return
     await update.effective_message.reply_text(reply)
+
+
+@require_auth
+async def corrections(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/corrections on|off — toggle inline grammar corrections (persisted)."""
+    user = get_user_by_telegram_id(update.effective_user.id)
+    if user is None:
+        return
+    arg = (context.args[0].lower() if context.args else "").strip()
+
+    if arg in ("on", "an", "ein"):
+        set_corrections(user.id, True)
+        await update.effective_message.reply_text(
+            "Korrekturen AN — ich korrigiere jeden Fehler wieder. "
+            "(Inline corrections on.)"
+        )
+        return
+    if arg in ("off", "aus"):
+        set_corrections(user.id, False)
+        await update.effective_message.reply_text(
+            "Korrekturen AUS — wir plaudern jetzt frei. Nutze /summary für eine "
+            "Auswertung deiner Fehler. (Corrections off; use /summary later.)"
+        )
+        return
+
+    state = "AN" if user.corrections_on else "AUS"
+    await update.effective_message.reply_text(
+        f"Korrekturen sind {state}. Nutze /corrections on oder /corrections off."
+    )
+
+
+@require_auth
+async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/summary — analyse recent messages and list what to work on.
+
+    Sends the session's user messages in one batch to the LLM, so mistakes are
+    surfaced even when inline corrections were off. Corrections found feed the
+    same spaced-repetition vocab pipeline as inline ones.
+    """
+    user = get_user_by_telegram_id(update.effective_user.id)
+    if user is None:
+        return
+
+    messages = recent_user_messages(user.id, limit=config.CONTEXT_WINDOW_MESSAGES)
+    if not messages:
+        await update.effective_message.reply_text(
+            "Noch nichts zum Auswerten — schreib mir erst ein paar Sätze. 🙂"
+        )
+        return
+
+    batch = "\n".join(f"- {m}" for m in messages)
+    try:
+        result, _ = await _summary_analyze(context, update.effective_message.chat_id, batch)
+    except QuotaExceeded:
+        await update.effective_message.reply_text(QUOTA_MSG)
+        return
+    except LLMUnavailable:
+        await update.effective_message.reply_text(ERROR_MSG)
+        return
+
+    if not isinstance(result, dict):
+        await update.effective_message.reply_text(ERROR_MSG)
+        return
+
+    items = [
+        it for it in (result.get("items") or [])
+        if isinstance(it, dict) and (it.get("term") or "").strip()
+    ]
+    saved = 0
+    if items:
+        saved = add_vocab_items(user.id, items, source=VocabSource.conversation)
+
+    lines = ["📝 *Auswertung*\n", (result.get("summary") or "").strip()]
+    if items:
+        lines.append("\nZu üben:")
+        for it in items[:10]:
+            ctx = it.get("context_sentence") or it.get("term")
+            lines.append(f"  • {ctx}")
+        lines.append(f"\n{saved} zur Übung gespeichert. /practice zum Üben. 💪")
+    await update.effective_message.reply_text("\n".join(l for l in lines if l))
+
+
+async def _summary_analyze(context, chat_id: int, batch: str):
+    typing = asyncio.create_task(_keep_typing(context.bot, chat_id))
+    try:
+        return await generate_json(
+            Task.analyze, batch, system=prompts.SESSION_SUMMARY
+        )
+    finally:
+        typing.cancel()

@@ -26,6 +26,11 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     level=logging.INFO,
 )
+# python-telegram-bot talks to Telegram over httpx, which logs every request
+# line at INFO — and the bot token is part of the Telegram API URL path. Quiet
+# the HTTP client loggers so the token never lands in journald.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 logger = logging.getLogger("karly")
 
 
@@ -44,6 +49,8 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("remind", reminders.remind))
     app.add_handler(CommandHandler("topic", conversation.topic))
     app.add_handler(CommandHandler("english", conversation.english))
+    app.add_handler(CommandHandler("corrections", conversation.corrections))
+    app.add_handler(CommandHandler("summary", conversation.summary))
 
     # Documents (Phase 4).
     app.add_handler(CommandHandler("docs", documents.docs))

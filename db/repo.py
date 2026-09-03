@@ -79,6 +79,27 @@ def recent_history(user_id: int, limit: int = 20) -> list[dict]:
     return [{"role": r.role, "text": r.text} for r in rows]
 
 
+def recent_user_messages(user_id: int, limit: int = 30) -> list[str]:
+    """Return the last `limit` user-authored message texts, oldest-first."""
+    with get_session() as session:
+        rows = (
+            session.query(Message.text)
+            .filter(Message.user_id == user_id, Message.role == "user")
+            .order_by(Message.created_at.desc(), Message.id.desc())
+            .limit(limit)
+            .all()
+        )
+    rows.reverse()
+    return [r[0] for r in rows]
+
+
+def set_corrections(user_id: int, on: bool) -> None:
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if user is not None:
+            user.corrections_on = on
+
+
 # --- Vocab -----------------------------------------------------------------
 
 def add_vocab_items(
