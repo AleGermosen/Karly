@@ -1,21 +1,37 @@
-"""Task router.
+"""Fallback-ladder router.
 
-Routes by task type and handles quota fallback:
-  chat, assess, analyze, generate -> Gemini
-  lookup, check                    -> Ollama when available, else Gemini
-On Gemini quota exhaustion the caller receives QuotaExceeded (unless Ollama is
-available for lookup/check tasks, in which case we fall back to Ollama).
+Tries backends in priority order per task type; skips rungs that are on
+cooldown (daily-exhausted or transiently failed); raises the original
+QuotaExceeded / LLMUnavailable on total failure so handlers need no changes.
+
+When GROQ_API_KEY is unset the Groq rungs are absent and the ladder collapses
+to [Gemini, Ollama] — identical to the old behaviour.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
+from typing import Callable, Awaitable
 
+import config
 from llm import gemini, ollama_client
-from llm.gemini import LLMUnavailable, QuotaExceeded
+from llm.errors import (
+    AllBackendsExhausted,
+    BackendUnavailable,
+    Generation,
+    LLMUnavailable,
+    QuotaExceeded,
+    RateLimited,
+)
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Task taxonomy
+# ---------------------------------------------------------------------------
 
 class Task(str, Enum):
     chat = "chat"
@@ -26,7 +42,236 @@ class Task(str, Enum):
     check = "check"
 
 
-_OLLAMA_PREFERRED = {Task.lookup, Task.check}
+# ---------------------------------------------------------------------------
+# Rung / state
+# ---------------------------------------------------------------------------
+
+BackendFn = Callable[..., Awaitable[Generation]]
+
+
+@dataclass
+class Rung:
+    backend: BackendFn
+    model_id: str
+    label: str
+
+
+@dataclass
+class RungState:
+    cooldown_until: datetime | None = None
+    reason: str | None = None  # "daily" | "transient" | None
+
+    def is_on_cooldown(self) -> bool:
+        if self.cooldown_until is None:
+            return False
+        return datetime.now(timezone.utc) < self.cooldown_until
+
+
+@dataclass
+class RouteResult:
+    text: str
+    rung: Rung
+    model: str
+    tokens_in: int | None = None
+    tokens_out: int | None = None
+
+
+# ---------------------------------------------------------------------------
+# Ladder state (in-process; swap backing store for Redis in Phase B)
+# ---------------------------------------------------------------------------
+
+class LadderState:
+    def __init__(self) -> None:
+        self._states: dict[str, RungState] = {}
+        self._lock = asyncio.Lock()
+
+    def _key(self, rung: Rung) -> str:
+        return f"{rung.label}:{rung.model_id}"
+
+    async def get(self, rung: Rung) -> RungState:
+        async with self._lock:
+            return self._states.get(self._key(rung), RungState())
+
+    async def mark_daily(self, rung: Rung, reset_at: datetime | None) -> None:
+        async with self._lock:
+            self._states[self._key(rung)] = RungState(
+                cooldown_until=reset_at, reason="daily"
+            )
+
+    async def mark_transient(self, rung: Rung, seconds: float = 60.0) -> None:
+        from datetime import timedelta
+        async with self._lock:
+            until = datetime.now(timezone.utc) + timedelta(seconds=seconds)
+            self._states[self._key(rung)] = RungState(
+                cooldown_until=until, reason="transient"
+            )
+
+    def ladder_status(self, ladder: list[Rung]) -> list[dict]:
+        now = datetime.now(timezone.utc)
+        out = []
+        for rung in ladder:
+            state = self._states.get(self._key(rung), RungState())
+            if state.is_on_cooldown():
+                out.append({
+                    "label": rung.label,
+                    "state": "cooldown",
+                    "available_at": state.cooldown_until,
+                    "reason": state.reason,
+                })
+            else:
+                out.append({"label": rung.label, "state": "ready"})
+        return out
+
+
+_ladder_state = LadderState()
+
+
+# ---------------------------------------------------------------------------
+# Backend shims — adapt existing clients to the unified signature
+# ---------------------------------------------------------------------------
+
+async def _gemini_backend(
+    prompt: str,
+    *,
+    system: str | None = None,
+    history: list[dict] | None = None,
+    json_output: bool = False,
+    model: str | None = None,
+) -> Generation:
+    try:
+        text = await gemini.generate(
+            prompt, system=system, history=history, json_output=json_output
+        )
+        return Generation(text=text, model=config.GEMINI_MODEL)
+    except QuotaExceeded:
+        raise
+    except LLMUnavailable:
+        raise BackendUnavailable("Gemini unavailable")
+
+
+async def _ollama_backend(
+    prompt: str,
+    *,
+    system: str | None = None,
+    history: list[dict] | None = None,
+    json_output: bool = False,
+    model: str | None = None,
+) -> Generation:
+    try:
+        text = await ollama_client.generate(prompt, system=system)
+        return Generation(text=text, model=config.OLLAMA_MODEL)
+    except Exception as exc:
+        raise BackendUnavailable(str(exc)) from exc
+
+
+async def _groq_backend(
+    prompt: str,
+    *,
+    system: str | None = None,
+    history: list[dict] | None = None,
+    json_output: bool = False,
+    model: str | None = None,
+) -> Generation:
+    from llm import groq_client
+    return await groq_client.generate(
+        prompt, system=system, history=history, json_output=json_output, model=model
+    )
+
+
+# ---------------------------------------------------------------------------
+# Ladder definitions
+# ---------------------------------------------------------------------------
+
+def _build_ladders() -> dict[Task, list[Rung]]:
+    groq_available = bool(config.GROQ_API_KEY)
+
+    groq_70b = Rung(_groq_backend, config.GROQ_MODEL_PRIMARY, "⚡ Groq 70B")
+    groq_8b = Rung(_groq_backend, config.GROQ_MODEL_FALLBACK, "⚡ Groq 8B")
+    gemini_rung = Rung(_gemini_backend, config.GEMINI_MODEL, "🤖 Gemini")
+    ollama_rung = Rung(_ollama_backend, config.OLLAMA_MODEL, "🐌 Ollama")
+
+    heavy = []
+    cheap = []
+    analyze = []
+
+    if groq_available:
+        heavy = [groq_70b, groq_8b, gemini_rung, ollama_rung]
+        cheap = [groq_8b, gemini_rung, ollama_rung]
+        analyze = [groq_70b, groq_8b, gemini_rung]
+    else:
+        heavy = [gemini_rung, ollama_rung]
+        cheap = [gemini_rung, ollama_rung]
+        analyze = [gemini_rung]
+
+    return {
+        Task.chat: heavy,
+        Task.assess: heavy,
+        Task.generate: heavy,
+        Task.analyze: analyze,
+        Task.lookup: cheap,
+        Task.check: cheap,
+    }
+
+
+_LADDERS: dict[Task, list[Rung]] = _build_ladders()
+
+
+# ---------------------------------------------------------------------------
+# Core routing
+# ---------------------------------------------------------------------------
+
+async def route_result(
+    task: Task,
+    prompt: str,
+    *,
+    system: str | None = None,
+    history: list[dict] | None = None,
+    json_output: bool = False,
+) -> RouteResult:
+    """Walk the ladder for *task* and return the first successful RouteResult.
+
+    Raises AllBackendsExhausted if every rung is on cooldown or fails.
+    """
+    ladder = _LADDERS[task]
+    for rung in ladder:
+        state = await _ladder_state.get(rung)
+        if state.is_on_cooldown():
+            logger.debug("Skipping %s (cooldown until %s)", rung.label, state.cooldown_until)
+            continue
+
+        try:
+            gen = await rung.backend(
+                prompt,
+                system=system,
+                history=history,
+                json_output=json_output,
+                model=rung.model_id,
+            )
+            return RouteResult(
+                text=gen.text,
+                rung=rung,
+                model=gen.model,
+                tokens_in=gen.tokens_in,
+                tokens_out=gen.tokens_out,
+            )
+
+        except (RateLimited, QuotaExceeded) as exc:
+            reset_at = getattr(exc, "reset_at", None)
+            logger.warning(
+                "%s quota/rate exhausted (reset=%s); moving down ladder.",
+                rung.label, reset_at,
+            )
+            await _ladder_state.mark_daily(rung, reset_at)
+
+        except (BackendUnavailable, LLMUnavailable) as exc:
+            logger.warning("%s transient failure: %s", rung.label, exc)
+            await _ladder_state.mark_transient(rung, seconds=60.0)
+
+        except Exception as exc:
+            logger.warning("%s unexpected error: %s", rung.label, exc)
+            await _ladder_state.mark_transient(rung, seconds=60.0)
+
+    raise AllBackendsExhausted("All LLM backends exhausted or on cooldown")
 
 
 async def route(
@@ -37,38 +282,37 @@ async def route(
     history: list[dict] | None = None,
     json_output: bool = False,
 ) -> str:
-    """Dispatch a request to the right backend with fallback.
-
-    Raises QuotaExceeded if Gemini is out of quota and no fallback is available.
-    Raises LLMUnavailable if no backend can serve the request.
-    """
-    prefer_ollama = task in _OLLAMA_PREFERRED and ollama_client.is_available()
-
-    if prefer_ollama:
-        try:
-            return await ollama_client.generate(prompt, system=system)
-        except Exception as exc:
-            logger.warning(
-                "Ollama failed for %s (%s); falling back to Gemini.",
-                task.value,
-                exc,
-            )
-
-    # Gemini path (primary for chat/assess/analyze/generate, fallback for the
-    # lookup/check tasks when Ollama is down).
+    """Convenience wrapper: returns plain text; raises QuotaExceeded or
+    LLMUnavailable so existing handler except-clauses need no changes."""
     try:
-        return await gemini.generate(
-            prompt, system=system, history=history, json_output=json_output
+        result = await route_result(
+            task, prompt, system=system, history=history, json_output=json_output
         )
-    except QuotaExceeded:
-        # Last-ditch: if Ollama is available, use it even for Gemini tasks.
-        if ollama_client.is_available():
-            logger.warning(
-                "Gemini quota exhausted; falling back to Ollama for %s.",
-                task.value,
-            )
-            try:
-                return await ollama_client.generate(prompt, system=system)
-            except Exception as exc:
-                raise LLMUnavailable(str(exc)) from exc
-        raise
+        return result.text
+    except AllBackendsExhausted as exc:
+        raise QuotaExceeded(str(exc)) from exc
+
+
+# ---------------------------------------------------------------------------
+# Status (for /status command, Phase A step 4)
+# ---------------------------------------------------------------------------
+
+def ladder_status(task: Task = Task.chat) -> list[dict]:
+    """Return per-rung status for *task*. Reads cached state synchronously."""
+    ladder = _LADDERS[task]
+    now = datetime.now(timezone.utc)
+    out = []
+    for rung in ladder:
+        state = _ladder_state._states.get(
+            f"{rung.label}:{rung.model_id}", RungState()
+        )
+        if state.is_on_cooldown():
+            out.append({
+                "label": rung.label,
+                "state": "cooldown",
+                "available_at": state.cooldown_until,
+                "reason": state.reason,
+            })
+        else:
+            out.append({"label": rung.label, "state": "ready"})
+    return out

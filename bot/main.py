@@ -51,6 +51,8 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("english", conversation.english))
     app.add_handler(CommandHandler("corrections", conversation.corrections))
     app.add_handler(CommandHandler("summary", conversation.summary))
+    app.add_handler(CommandHandler("status", conversation.status))
+    app.add_handler(CommandHandler("backend", conversation.backend))
 
     # Documents (Phase 4).
     app.add_handler(CommandHandler("docs", documents.docs))

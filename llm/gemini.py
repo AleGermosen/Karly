@@ -12,16 +12,9 @@ from google import genai
 from google.genai import errors, types
 
 import config
+from llm.errors import LLMUnavailable, QuotaExceeded  # noqa: F401 (re-exported)
 
 logger = logging.getLogger(__name__)
-
-
-class QuotaExceeded(Exception):
-    """Gemini daily/rate quota hit (HTTP 429 / RESOURCE_EXHAUSTED)."""
-
-
-class LLMUnavailable(Exception):
-    """Gemini could not be reached or returned an unrecoverable error."""
 
 
 # A single shared async client.

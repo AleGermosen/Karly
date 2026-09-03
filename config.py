@@ -37,5 +37,22 @@ OLLAMA_MODEL: str = os.getenv(
 
 DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///karly.db").strip()
 
+# --- Groq (optional — absence means Groq rungs are skipped) ---
+GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "").strip()
+GROQ_BASE_URL: str = os.getenv(
+    "GROQ_BASE_URL", "https://api.groq.com/openai/v1"
+).strip()
+GROQ_MODEL_PRIMARY: str = os.getenv(
+    "GROQ_MODEL_PRIMARY", "llama-3.3-70b-versatile"
+).strip()
+GROQ_MODEL_FALLBACK: str = os.getenv(
+    "GROQ_MODEL_FALLBACK", "llama-3.1-8b-instant"
+).strip()
+GROQ_TEMPERATURE: float = float(os.getenv("GROQ_TEMPERATURE", "0.7"))
+GROQ_MAX_TOKENS: int = int(os.getenv("GROQ_MAX_TOKENS", "1024"))
+# seconds
+GROQ_CONNECT_TIMEOUT: float = float(os.getenv("GROQ_CONNECT_TIMEOUT", "5.0"))
+GROQ_READ_TIMEOUT: float = float(os.getenv("GROQ_READ_TIMEOUT", "30.0"))
+
 # Conversation context window (messages) to respect free-tier limits.
 CONTEXT_WINDOW_MESSAGES: int = 20

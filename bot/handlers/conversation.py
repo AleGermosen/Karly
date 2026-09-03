@@ -30,14 +30,36 @@ from db.repo import (
     set_corrections,
 )
 from llm import prompts
-from llm.gemini import LLMUnavailable, QuotaExceeded
-from llm.router import Task, route
+from llm.errors import AllBackendsExhausted, LLMUnavailable, QuotaExceeded
+from llm.router import Task, ladder_status, route, route_result
 from llm.structured import generate_json
 
 logger = logging.getLogger(__name__)
 
-QUOTA_MSG = "Tageslimit erreicht — versuch es später. 🙏 (Gemini quota reached.)"
+QUOTA_MSG = "Tageslimit erreicht — versuch es später. 🙏 (All LLM quotas reached.)"
 ERROR_MSG = "Entschuldigung, da ging etwas schief. Versuch es nochmal."
+
+# Backend-transition notices (bilingual, matching Karly's style).
+_BACKEND_NOTICES: dict[str, str] = {
+    "⚡ Groq 70B": (
+        "⚡ Läuft auf Groq (llama-3.3-70b) — schnell. (Talking to Groq's fast model.)"
+    ),
+    "⚡ Groq 8B": (
+        "⚡ Groqs schnelles Modell (70B) hat sein Tageslimit erreicht — ich wechsle zum "
+        "leichteren Groq-Modell (8B). Immer noch schnell, etwas einfacher. "
+        "Reset um Mitternacht (UTC). (Switched to Groq 8B.)"
+    ),
+    "🤖 Gemini": (
+        "🐢 Groqs Gratis-Limit ist heute aufgebraucht — ich wechsle zu Gemini. "
+        "Etwas langsamer (~20s). (Switched to Gemini; slower.)"
+    ),
+    "🐌 Ollama": (
+        "🐌 Alle Cloud-Gratis-Limits sind heute erschöpft — ich laufe jetzt lokal (Ollama). "
+        "Langsam (~1 Min/Antwort), aber es geht. (Running locally now; slow.)"
+    ),
+}
+
+_RECOVERED_NOTICE = "⚡ Zurück auf Groqs schnellem Modell! (Back on Groq's fast model.)"
 
 # Matches:  ❌ wrong → ✅ right — reason
 _CORRECTION_RE = re.compile(
@@ -72,12 +94,22 @@ async def _keep_typing(bot, chat_id: int) -> None:
 
 
 async def _route_with_typing(context, chat_id: int, task: Task, prompt: str, **kw):
-    """Run route() while keeping the typing indicator alive for the duration."""
+    """Run route_result() while keeping the typing indicator alive."""
     typing = asyncio.create_task(_keep_typing(context.bot, chat_id))
     try:
-        return await route(task, prompt, **kw)
+        return await route_result(task, prompt, **kw)
     finally:
         typing.cancel()
+
+
+def _backend_notice(prev_label: str | None, new_label: str) -> str | None:
+    """Return a transition notice to send the user, or None if nothing to say."""
+    if prev_label == new_label:
+        return None
+    # Recovering back to the primary Groq 70B rung.
+    if prev_label is not None and new_label == "⚡ Groq 70B":
+        return _RECOVERED_NOTICE
+    return _BACKEND_NOTICES.get(new_label)
 
 
 def _parse_corrections(reply: str) -> list[dict]:
@@ -126,10 +158,10 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
 
     try:
-        reply = await _route_with_typing(
+        result = await _route_with_typing(
             context, message.chat_id, Task.chat, text, system=system, history=history
         )
-    except QuotaExceeded:
+    except (QuotaExceeded, AllBackendsExhausted):
         await message.reply_text(QUOTA_MSG)
         return
     except LLMUnavailable as exc:
@@ -137,11 +169,24 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await message.reply_text(ERROR_MSG)
         return
 
+    reply = result.text
     corrections = _parse_corrections(reply) if corrections_on else []
     add_message(user.id, "user", text)
     add_message(user.id, "assistant", reply, corrections=corrections or None)
     if corrections:
         add_vocab_items(user.id, corrections, source=VocabSource.conversation)
+
+    # Backend-change notification (send before the reply so it reads naturally).
+    prev_label = context.user_data.get("last_backend_label")
+    new_label = result.rung.label
+    notice = _backend_notice(prev_label, new_label)
+    if notice:
+        await message.reply_text(notice)
+    context.user_data["last_backend_label"] = new_label
+
+    # Per-reply backend tag when /backend is on.
+    if context.user_data.get("backend_tag_on"):
+        reply = f"{reply}\n\n_{new_label}_"
 
     await message.reply_text(reply)
 
@@ -180,20 +225,28 @@ async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
         return
     try:
-        reply = await _route_with_typing(
+        result = await _route_with_typing(
             context,
             update.effective_message.chat_id,
             Task.chat,
             question,
             system=prompts.ENGLISH_META,
         )
-    except QuotaExceeded:
+    except (QuotaExceeded, AllBackendsExhausted):
         await update.effective_message.reply_text(QUOTA_MSG)
         return
     except LLMUnavailable:
         await update.effective_message.reply_text(ERROR_MSG)
         return
-    await update.effective_message.reply_text(reply)
+
+    prev_label = context.user_data.get("last_backend_label")
+    new_label = result.rung.label
+    notice = _backend_notice(prev_label, new_label)
+    if notice:
+        await update.effective_message.reply_text(notice)
+    context.user_data["last_backend_label"] = new_label
+
+    await update.effective_message.reply_text(result.text)
 
 
 @require_auth
@@ -247,7 +300,7 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     batch = "\n".join(f"- {m}" for m in messages)
     try:
         result, _ = await _summary_analyze(context, update.effective_message.chat_id, batch)
-    except QuotaExceeded:
+    except (QuotaExceeded, AllBackendsExhausted):
         await update.effective_message.reply_text(QUOTA_MSG)
         return
     except LLMUnavailable:
@@ -284,3 +337,44 @@ async def _summary_analyze(context, chat_id: int, batch: str):
         )
     finally:
         typing.cancel()
+
+
+@require_auth
+async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/status — show which backend is active and which rungs are exhausted."""
+    rungs = ladder_status(Task.chat)
+    parts = []
+    for r in rungs:
+        if r["state"] == "ready":
+            parts.append(f"{r['label']}: frei")
+        else:
+            avail = r.get("available_at")
+            reset_str = avail.strftime("%H:%M UTC") if avail else "?"
+            parts.append(f"{r['label']}: Limit (Reset {reset_str})")
+
+    current = context.user_data.get("last_backend_label", rungs[0]["label"] if rungs else "?")
+    line = " | ".join(parts)
+    await update.effective_message.reply_text(f"Aktuell: {current}.\n{line}")
+
+
+@require_auth
+async def backend(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/backend on|off — toggle per-reply backend tag footer."""
+    arg = (context.args[0].lower() if context.args else "").strip()
+    if arg in ("on", "an", "ein"):
+        context.user_data["backend_tag_on"] = True
+        await update.effective_message.reply_text(
+            "Backend-Tag AN — jede Antwort zeigt das aktive Modell. "
+            "(Backend tag on — every reply shows the active model.)"
+        )
+        return
+    if arg in ("off", "aus"):
+        context.user_data["backend_tag_on"] = False
+        await update.effective_message.reply_text(
+            "Backend-Tag AUS. (Backend tag off.)"
+        )
+        return
+    state = "AN" if context.user_data.get("backend_tag_on") else "AUS"
+    await update.effective_message.reply_text(
+        f"Backend-Tag ist {state}. Nutze /backend on oder /backend off."
+    )
