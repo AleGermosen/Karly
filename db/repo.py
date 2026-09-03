@@ -293,6 +293,26 @@ def random_translations(user_id: int, exclude_id: int, limit: int = 3) -> list[s
     return seen
 
 
+def mark_due_by_terms(
+    user_id: int, terms: list[str], now: datetime | None = None
+) -> int:
+    """Set next_review_at=now for the user's vocab items matching *terms*, so
+    they surface immediately in the next practice session. Returns the count."""
+    now = now or datetime.utcnow()
+    terms = [t for t in terms if t]
+    if not terms:
+        return 0
+    with get_session() as session:
+        rows = (
+            session.query(VocabItem)
+            .filter(VocabItem.user_id == user_id, VocabItem.term.in_(terms))
+            .all()
+        )
+        for v in rows:
+            v.next_review_at = now
+        return len(rows)
+
+
 def record_practice(user_id: int) -> None:
     with get_session() as session:
         session.add(PracticeLog(user_id=user_id))

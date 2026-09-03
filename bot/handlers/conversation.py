@@ -14,7 +14,7 @@ import json
 import logging
 import re
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 import config
@@ -24,6 +24,7 @@ from db.repo import (
     add_message,
     add_vocab_items,
     get_user_by_telegram_id,
+    mark_due_by_terms,
     recent_document,
     recent_history,
     recent_user_messages,
@@ -111,6 +112,28 @@ def _backend_notice(prev_label: str | None, new_label: str) -> str | None:
     return _BACKEND_NOTICES.get(new_label)
 
 
+_CORR_CACHE_MAX = 30  # keep the last N corrected replies actionable
+
+
+def _correction_keyboard(message_id: int) -> InlineKeyboardMarkup:
+    row = [
+        InlineKeyboardButton("📖 Warum?", callback_data=f"corr:why:{message_id}"),
+        InlineKeyboardButton("➕ Beispiel", callback_data=f"corr:example:{message_id}"),
+        InlineKeyboardButton("🎯 Üben", callback_data=f"corr:drill:{message_id}"),
+    ]
+    return InlineKeyboardMarkup([row])
+
+
+def _cache_corrections(
+    context: ContextTypes.DEFAULT_TYPE, message_id: int, corrections: list[dict]
+) -> None:
+    cache: dict[int, list[dict]] = context.user_data.setdefault("corr_cache", {})
+    cache[message_id] = corrections
+    if len(cache) > _CORR_CACHE_MAX:  # drop oldest by insertion order
+        for old in list(cache)[:-_CORR_CACHE_MAX]:
+            del cache[old]
+
+
 def _parse_corrections(reply: str) -> list[dict]:
     """Extract corrections as vocab dicts from the tutor's reply."""
     items = []
@@ -192,7 +215,58 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if context.user_data.get("backend_tag_on"):
         reply = f"{reply}\n\n_{new_label}_"
 
-    await message.reply_text(reply)
+    sent = await message.reply_text(reply)
+
+    # Attach follow-up action buttons when the reply contained corrections.
+    if corrections:
+        _cache_corrections(context, sent.message_id, corrections)
+        await sent.edit_reply_markup(
+            reply_markup=_correction_keyboard(sent.message_id)
+        )
+
+
+@require_auth
+async def on_correction_action(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Handle the 📖/➕/🎯 buttons attached to a corrected reply."""
+    query = update.callback_query
+    await query.answer()
+    _, action, raw_mid = query.data.split(":")
+    corrections = (context.user_data.get("corr_cache") or {}).get(int(raw_mid))
+    if not corrections:
+        await query.message.reply_text(
+            "Diese Korrektur ist zu alt. (That correction is no longer active.)"
+        )
+        return
+
+    chat_id = query.message.chat_id
+    block = "\n".join(c["context_sentence"] for c in corrections)
+
+    if action == "drill":
+        user = get_user_by_telegram_id(update.effective_user.id)
+        terms = [c["term"] for c in corrections]
+        n = mark_due_by_terms(user.id, terms) if user else 0
+        await query.message.reply_text(
+            f"🎯 {n} Wort/Wörter zur Übung markiert — /flashcards. "
+            "(Marked for practice.)"
+        )
+        return
+
+    system = (
+        prompts.CORRECTION_EXPLAIN if action == "why" else prompts.CORRECTION_EXAMPLE
+    )
+    try:
+        result = await _route_with_typing(
+            context, chat_id, Task.chat, block, system=system
+        )
+    except (QuotaExceeded, AllBackendsExhausted):
+        await query.message.reply_text(QUOTA_MSG)
+        return
+    except LLMUnavailable:
+        await query.message.reply_text(ERROR_MSG)
+        return
+    await query.message.reply_text(result.text)
 
 
 @require_auth

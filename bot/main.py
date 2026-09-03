@@ -6,6 +6,7 @@ import logging
 from telegram import BotCommand
 from telegram.ext import (
     Application,
+    CallbackQueryHandler,
     CommandHandler,
     MessageHandler,
     filters,
@@ -15,6 +16,7 @@ import config
 from bot.handlers import (
     assessment,
     conversation,
+    daily,
     documents,
     practice,
     reminders,
@@ -45,6 +47,7 @@ def build_application() -> Application:
     # Conversation flows (registered before the catch-all handler).
     app.add_handler(assessment.build_handler())
     app.add_handler(practice.build_handler())
+    app.add_handler(daily.build_handler())
 
     # Global /cancel — only fires when no conversation is active (the assessment
     # and practice handlers consume /cancel/​/stop themselves while running).
@@ -65,6 +68,11 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("docfocus", documents.docfocus))
     app.add_handler(MessageHandler(filters.Document.ALL, documents.handle_document))
 
+    # Inline action buttons attached to corrected replies (📖/➕/🎯).
+    app.add_handler(
+        CallbackQueryHandler(conversation.on_correction_action, pattern=r"^corr:")
+    )
+
     # Any non-command text goes to the tutor conversation handler.
     app.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, conversation.chat)
@@ -79,6 +87,7 @@ def build_application() -> Application:
 MENU_COMMANDS = [
     BotCommand("practice", "Vokabeln üben (Spaced Repetition)"),
     BotCommand("flashcards", "Karteikarten üben (wie /practice)"),
+    BotCommand("daily", "Tägliche Mini-Challenge (3 Aufgaben)"),
     BotCommand("test", "Einstufungstest starten"),
     BotCommand("profile", "Dein Lernprofil ansehen"),
     BotCommand("review", "Übungs-Statistik & Streak"),
