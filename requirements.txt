@@ -4,3 +4,8 @@ sqlalchemy
 httpx
 python-dotenv
 pypdf
+# ML — Stage 1 (HLR) and Stage 2 (BKT) are pure Python. numpy + tensorflow
+# enable Stage 3 (DKT LSTM). DKT is gated at runtime: if these aren't
+# installed the bot still works fine using HLR/BKT only.
+numpy
+tensorflow-cpu

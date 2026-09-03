@@ -8,14 +8,18 @@ from sqlalchemy import func
 
 from db.models import (
     Assessment,
+    ConceptMastery,
     Document,
     Message,
     PracticeLog,
+    ReviewLog,
     User,
     VocabItem,
     VocabSource,
 )
 from db.session import get_session
+from srs import bkt as bkt_mod
+from srs import hlr as hlr_mod
 from srs import sm2
 
 
@@ -208,33 +212,55 @@ def _vocab_to_dict(v: VocabItem) -> dict:
     }
 
 
-def due_vocab(user_id: int, limit: int = 10, now: datetime | None = None) -> list[dict]:
+def due_vocab(
+    user_id: int,
+    limit: int = 10,
+    now: datetime | None = None,
+    source: str | None = None,
+    document_id: int | None = None,
+) -> list[dict]:
+    """Return due vocab items, optionally filtered by source or document_id.
+
+    source: one of "conversation", "assessment", "document" (VocabSource value).
+    document_id: restrict to items from a specific uploaded document.
+    """
     now = now or datetime.utcnow()
     with get_session() as session:
-        rows = (
-            session.query(VocabItem)
-            .filter(
-                VocabItem.user_id == user_id,
-                VocabItem.next_review_at <= now,
-            )
-            .order_by(VocabItem.next_review_at.asc())
-            .limit(limit)
-            .all()
+        q = session.query(VocabItem).filter(
+            VocabItem.user_id == user_id,
+            VocabItem.next_review_at <= now,
         )
+        if source:
+            q = q.filter(VocabItem.source == source)
+        if document_id is not None:
+            q = q.filter(VocabItem.document_id == document_id)
+        rows = q.order_by(VocabItem.next_review_at.asc()).limit(limit).all()
         return [_vocab_to_dict(v) for v in rows]
 
 
-def count_due(user_id: int, now: datetime | None = None) -> int:
+def count_due(
+    user_id: int,
+    now: datetime | None = None,
+    source: str | None = None,
+) -> int:
     now = now or datetime.utcnow()
     with get_session() as session:
-        return (
-            session.query(VocabItem)
-            .filter(
-                VocabItem.user_id == user_id,
-                VocabItem.next_review_at <= now,
-            )
-            .count()
+        q = session.query(VocabItem).filter(
+            VocabItem.user_id == user_id,
+            VocabItem.next_review_at <= now,
         )
+        if source:
+            q = q.filter(VocabItem.source == source)
+        return q.count()
+
+
+def count_due_by_source(user_id: int, now: datetime | None = None) -> dict[str, int]:
+    """Return {source_name: due_count} for all three sources."""
+    return {
+        "conversation": count_due(user_id, now=now, source="conversation"),
+        "assessment": count_due(user_id, now=now, source="assessment"),
+        "document": count_due(user_id, now=now, source="document"),
+    }
 
 
 def apply_grade(vocab_id: int, quality: int, now: datetime | None = None) -> datetime | None:
@@ -251,6 +277,246 @@ def apply_grade(vocab_id: int, quality: int, now: datetime | None = None) -> dat
         v.sm2_repetitions = state.repetitions
         v.next_review_at = state.next_review_at
         return state.next_review_at
+
+
+def apply_hlr_grade(
+    vocab_id: int,
+    user_id: int,
+    quality: int,
+    now: datetime | None = None,
+) -> datetime | None:
+    """Apply a grade using HLR scheduling, with review logging.
+
+    quality is the SM-2 0-5 scale; quality < 3 = incorrect, >= 3 = correct.
+    Also runs SM-2 to keep the easiness/interval fields in sync (used by
+    /review stats). Returns the new next_review_at.
+    """
+    now = now or datetime.utcnow()
+    correct = quality >= 3
+    with get_session() as session:
+        v = session.get(VocabItem, vocab_id)
+        if v is None:
+            return None
+
+        # SM-2 update (keeps easiness/interval/repetitions consistent).
+        sm2_state = sm2.update(
+            v.sm2_easiness, v.sm2_interval, v.sm2_repetitions, quality, now=now
+        )
+        v.sm2_easiness = sm2_state.easiness
+        v.sm2_interval = sm2_state.interval
+        v.sm2_repetitions = sm2_state.repetitions
+
+        # HLR update.
+        prev_review = v.next_review_at - timedelta(days=max(v.sm2_interval, 1))
+        elapsed = max(0.0, (now - prev_review).total_seconds() / 86400)
+        old_h = v.hlr_half_life if v.hlr_half_life > 0 else hlr_mod.INIT_HALF_LIFE
+        new_h = hlr_mod.update(old_h, elapsed, correct)
+        v.hlr_half_life = new_h
+        v.next_review_at = hlr_mod.next_review_at(new_h, now=now)
+
+        # Log the review for DKT training.
+        session.add(ReviewLog(
+            user_id=user_id,
+            vocab_id=vocab_id,
+            correct=correct,
+            elapsed_days=elapsed,
+            half_life=old_h,
+        ))
+
+        return v.next_review_at
+
+
+# --- BKT (Bayesian Knowledge Tracing) -------------------------------------
+
+def get_bkt_state(user_id: int) -> dict[str, dict]:
+    """Return the current per-skill BKT state for a user.
+
+    Each value is a dict: {"p": float, "level": str | None}.
+    Old flat {skill: float} rows are migrated on read.
+    """
+    with get_session() as session:
+        row = (
+            session.query(ConceptMastery)
+            .filter(ConceptMastery.user_id == user_id)
+            .one_or_none()
+        )
+        if row is None:
+            return {s: {"p": bkt_mod.P_L0, "level": None} for s in bkt_mod.SKILLS}
+        try:
+            raw = json.loads(row.state_json)
+        except (ValueError, TypeError):
+            return {s: {"p": bkt_mod.P_L0, "level": None} for s in bkt_mod.SKILLS}
+        # Migrate old flat format {skill: float} → {skill: {p, level}}.
+        migrated = {}
+        for s in bkt_mod.SKILLS:
+            val = raw.get(s, bkt_mod.P_L0)
+            if isinstance(val, dict):
+                migrated[s] = val
+            else:
+                migrated[s] = {"p": float(val), "level": None}
+        return migrated
+
+
+def update_bkt_state(
+    user_id: int, skill: str, correct: bool, level: str | None = None
+) -> float:
+    """Update BKT mastery for a skill after one observation.
+
+    level is the CEFR level of the item that was answered (e.g. "A2").
+    Returns the new mastery probability for that skill.
+    """
+    if skill not in bkt_mod.SKILLS:
+        return 0.0
+    with get_session() as session:
+        row = (
+            session.query(ConceptMastery)
+            .filter(ConceptMastery.user_id == user_id)
+            .one_or_none()
+        )
+        if row is None:
+            state: dict = {
+                s: {"p": bkt_mod.P_L0, "level": None} for s in bkt_mod.SKILLS
+            }
+            row = ConceptMastery(user_id=user_id, state_json=json.dumps(state))
+            session.add(row)
+        else:
+            try:
+                raw = json.loads(row.state_json)
+            except (ValueError, TypeError):
+                raw = {}
+            # Migrate old flat format on write too.
+            state = {}
+            for s in bkt_mod.SKILLS:
+                val = raw.get(s, bkt_mod.P_L0)
+                state[s] = val if isinstance(val, dict) else {"p": float(val), "level": None}
+
+        entry = state.get(skill, {"p": bkt_mod.P_L0, "level": None})
+        new_p = bkt_mod.update(entry["p"], correct)
+        # Update level if a more recent one is provided.
+        new_level = level if level else entry.get("level")
+        state[skill] = {"p": new_p, "level": new_level}
+        row.state_json = json.dumps(state)
+        row.updated_at = datetime.utcnow()
+        return new_p
+
+
+# --- DKT review history ----------------------------------------------------
+
+def weekly_practice_count(user_id: int, now: datetime | None = None) -> int:
+    """Number of practice sessions in the last 7 days."""
+    now = now or datetime.utcnow()
+    since = now - timedelta(days=7)
+    with get_session() as session:
+        return (
+            session.query(PracticeLog)
+            .filter(PracticeLog.user_id == user_id, PracticeLog.created_at >= since)
+            .count()
+        )
+
+
+def weekly_review_stats(
+    user_id: int, now: datetime | None = None
+) -> dict[str, int]:
+    """Review counts for the current week and the prior week from ReviewLog.
+
+    Returns {"this_total", "this_correct", "prev_total", "prev_correct"}.
+    """
+    now = now or datetime.utcnow()
+    this_start = now - timedelta(days=7)
+    prev_start = now - timedelta(days=14)
+    with get_session() as session:
+        this_rows = (
+            session.query(ReviewLog)
+            .filter(
+                ReviewLog.user_id == user_id,
+                ReviewLog.created_at >= this_start,
+            )
+            .all()
+        )
+        prev_rows = (
+            session.query(ReviewLog)
+            .filter(
+                ReviewLog.user_id == user_id,
+                ReviewLog.created_at >= prev_start,
+                ReviewLog.created_at < this_start,
+            )
+            .all()
+        )
+    return {
+        "this_total": len(this_rows),
+        "this_correct": sum(1 for r in this_rows if r.correct),
+        "prev_total": len(prev_rows),
+        "prev_correct": sum(1 for r in prev_rows if r.correct),
+    }
+
+
+def weekly_corrections(
+    user_id: int, limit: int = 20, now: datetime | None = None
+) -> list[str]:
+    """Unique corrected forms (context_sentence strings) from the last 7 days.
+
+    Pulls from Message.corrections_json on assistant turns that had corrections.
+    """
+    now = now or datetime.utcnow()
+    since = now - timedelta(days=7)
+    with get_session() as session:
+        rows = (
+            session.query(Message.corrections_json)
+            .filter(
+                Message.user_id == user_id,
+                Message.role == "assistant",
+                Message.corrections_json.isnot(None),
+                Message.created_at >= since,
+            )
+            .order_by(Message.created_at.desc())
+            .limit(50)
+            .all()
+        )
+    seen: list[str] = []
+    for (cj,) in rows:
+        try:
+            items = json.loads(cj)
+        except (ValueError, TypeError):
+            continue
+        for it in items:
+            line = it.get("context_sentence", "")
+            if line and line not in seen:
+                seen.append(line)
+            if len(seen) >= limit:
+                return seen
+    return seen
+
+
+def review_history_for_dkt(
+    user_id: int,
+) -> tuple[list[dict], dict[int, int], int]:
+    """Load review history and build an item-index map for DKT.
+
+    Returns:
+        reviews      — list of {item_idx, correct} oldest-first
+        item_idx_map — {vocab_id: item_idx}
+        n_items      — number of distinct vocab items seen
+    """
+    with get_session() as session:
+        rows = (
+            session.query(ReviewLog)
+            .filter(ReviewLog.user_id == user_id)
+            .order_by(ReviewLog.created_at.asc(), ReviewLog.id.asc())
+            .all()
+        )
+
+    vocab_ids: list[int] = []
+    seen: dict[int, int] = {}
+    for r in rows:
+        if r.vocab_id not in seen:
+            seen[r.vocab_id] = len(seen)
+        vocab_ids.append(r.vocab_id)
+
+    reviews = [
+        {"item_idx": seen[r.vocab_id], "correct": r.correct}
+        for r in rows
+    ]
+    return reviews, seen, len(seen)
 
 
 def hardest_items(user_id: int, limit: int = 5) -> list[dict]:
@@ -287,6 +553,25 @@ def random_translations(user_id: int, exclude_id: int, limit: int = 3) -> list[s
     seen: list[str] = []
     for (t,) in rows:
         if t not in seen:
+            seen.append(t)
+        if len(seen) >= limit:
+            break
+    return seen
+
+
+def random_terms(user_id: int, exclude_id: int, limit: int = 3) -> list[str]:
+    """Random German terms from the user's vocab (for EN→DE MCQ distractors)."""
+    with get_session() as session:
+        rows = (
+            session.query(VocabItem.term)
+            .filter(VocabItem.user_id == user_id, VocabItem.id != exclude_id)
+            .order_by(func.random())
+            .limit(limit * 3)
+            .all()
+        )
+    seen: list[str] = []
+    for (t,) in rows:
+        if t and t not in seen:
             seen.append(t)
         if len(seen) >= limit:
             break

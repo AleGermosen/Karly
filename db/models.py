@@ -88,6 +88,8 @@ class VocabItem(Base):
     sm2_interval: Mapped[int] = mapped_column(Integer, default=0)
     sm2_repetitions: Mapped[int] = mapped_column(Integer, default=0)
     next_review_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    # HLR (Half-Life Regression) state — half-life in days. 0.0 = not yet used.
+    hlr_half_life: Mapped[float] = mapped_column(Float, default=0.0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
     user: Mapped["User"] = relationship(back_populates="vocab_items")
@@ -129,3 +131,38 @@ class PracticeLog(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class ReviewLog(Base):
+    """One row per individual vocab review (card shown + outcome).
+
+    Used by HLR and DKT. elapsed_days is the time since the item was last
+    reviewed (0 on the first review), half_life is the HLR estimate at the
+    time of review.
+    """
+
+    __tablename__ = "review_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    vocab_id: Mapped[int] = mapped_column(ForeignKey("vocab_items.id"), index=True)
+    correct: Mapped[bool] = mapped_column(Boolean)
+    elapsed_days: Mapped[float] = mapped_column(Float)
+    half_life: Mapped[float] = mapped_column(Float)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class ConceptMastery(Base):
+    """BKT mastery state per user, per skill (grammar, reading, …).
+
+    state_json: JSON object {skill: p_mastered (float 0-1)}.
+    """
+
+    __tablename__ = "concept_mastery"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), unique=True, index=True
+    )
+    state_json: Mapped[str] = mapped_column(Text, default="{}")
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)

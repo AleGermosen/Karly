@@ -20,6 +20,9 @@ _MIGRATIONS: dict[str, dict[str, str]] = {
         "corrections_on": "BOOLEAN NOT NULL DEFAULT 1",
         "correction_level": "TEXT NOT NULL DEFAULT 'relaxed'",
     },
+    "vocab_items": {
+        "hlr_half_life": "REAL NOT NULL DEFAULT 0.0",
+    },
 }
 
 

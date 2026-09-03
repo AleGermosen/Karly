@@ -19,7 +19,10 @@ from bot.handlers import (
     daily,
     documents,
     practice,
+    quiz,
     reminders,
+    report,
+    roleplay,
     start,
 )
 from db.session import init_db
@@ -48,12 +51,15 @@ def build_application() -> Application:
     app.add_handler(assessment.build_handler())
     app.add_handler(practice.build_handler())
     app.add_handler(daily.build_handler())
+    app.add_handler(quiz.build_handler())
+    app.add_handler(roleplay.build_handler())
 
     # Global /cancel — only fires when no conversation is active (the assessment
     # and practice handlers consume /cancel/​/stop themselves while running).
     app.add_handler(CommandHandler("cancel", start.cancel_cmd))
 
     app.add_handler(CommandHandler("review", practice.review))
+    app.add_handler(CommandHandler("weekly", report.weekly_report))
     app.add_handler(CommandHandler("remind", reminders.remind))
     app.add_handler(CommandHandler("topic", conversation.topic))
     app.add_handler(CommandHandler("english", conversation.english))
@@ -88,6 +94,9 @@ MENU_COMMANDS = [
     BotCommand("practice", "Vokabeln üben (Spaced Repetition)"),
     BotCommand("flashcards", "Karteikarten üben (wie /practice)"),
     BotCommand("daily", "Tägliche Mini-Challenge (3 Aufgaben)"),
+    BotCommand("quiz", "Schnell-Quiz auf schwache Skills"),
+    BotCommand("roleplay", "Roleplay-Szene auf Deutsch"),
+    BotCommand("weekly", "Wöchentlicher Lernbericht"),
     BotCommand("test", "Einstufungstest starten"),
     BotCommand("profile", "Dein Lernprofil ansehen"),
     BotCommand("review", "Übungs-Statistik & Streak"),

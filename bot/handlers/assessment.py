@@ -19,7 +19,7 @@ from telegram.ext import (
 )
 
 from bot.middleware import require_auth
-from db.repo import get_user_by_telegram_id, save_assessment
+from db.repo import get_user_by_telegram_id, save_assessment, update_bkt_state
 from llm import prompts
 from llm.gemini import LLMUnavailable, QuotaExceeded
 from llm.router import Task
@@ -135,6 +135,7 @@ def _mcq_keyboard(item_no: int, options: list) -> InlineKeyboardMarkup:
 
 @require_auth
 async def assess_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user = get_user_by_telegram_id(update.effective_user.id)
     context.user_data["assess_transcript"] = []
     context.user_data["assess_results"] = []
     context.user_data["assess_count"] = 0
@@ -142,6 +143,7 @@ async def assess_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     context.user_data["assess_level"] = START_LEVEL
     context.user_data["assess_open_no"] = 0
     context.user_data["assess_pending_open"] = []
+    context.user_data["assess_user_id"] = user.id if user else None
     await update.effective_message.reply_text(
         "Los geht's — kurze Einstufung (~8-12 Fragen), gemischt: Grammatik, "
         "Lesen, freies Schreiben. Bei Auswahlfragen tippe auf einen Button. "
@@ -229,6 +231,12 @@ async def assess_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     )
     context.user_data["assess_count"] += 1
 
+    # BKT: update skill mastery with this observation, recording the CEFR level.
+    skill = item.get("skill")
+    user_id = context.user_data.get("assess_user_id")
+    if skill and user_id:
+        update_bkt_state(user_id, skill, correct, level=item.get("level"))
+
     # Adapt difficulty: harder on a correct answer, easier on a wrong one.
     context.user_data["assess_level"] = _step_level(
         context.user_data.get("assess_level", START_LEVEL), 1 if correct else -1
@@ -286,6 +294,7 @@ async def _flush_open(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
     net = 0
     lines = []
+    user_id = context.user_data.get("assess_user_id")
     for p in pending:
         g = graded.get(p["q_no"])
         if g is None:
@@ -298,6 +307,12 @@ async def _flush_open(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         net += 1 if correct else -1
         mark = "✅" if correct else "❌"
         lines.append(f"Frage {p['q_no']}: {mark}" + (f" {feedback}" if feedback else ""))
+
+        # BKT: update skill mastery for this open item, recording the CEFR level.
+        result_entry = results[p["result_idx"]]
+        skill = result_entry.get("skill")
+        if skill and user_id:
+            update_bkt_state(user_id, skill, correct, level=result_entry.get("level"))
 
     # Adapt difficulty once, in the batch's net direction.
     if net:
@@ -470,6 +485,7 @@ def _clear(context: ContextTypes.DEFAULT_TYPE) -> None:
         "assess_level",
         "assess_open_no",
         "assess_pending_open",
+        "assess_user_id",
     ):
         context.user_data.pop(key, None)
 
