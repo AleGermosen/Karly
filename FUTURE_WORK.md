@@ -9,10 +9,13 @@ Living plan for Karly's evolution. Updated 2026-09-03.
 **What's working today:** Dual-language tutor bot — German mode (native English speaker learning German, fully featured) and English mode (native Spanish speaker learning English, **now fully featured with all German-mode features**). Adaptive placement test, spaced-repetition flashcards (HLR scheduler, MCQ mode, deck picker, EN→ES/ES→EN flip), daily challenge, rapid quiz targeting weak skills, English roleplay scenes (6 scenarios), weekly progress report, PDF vocabulary extraction, social deduction game (The Impostor), open auth, BKT skill mastery, DKT LSTM (gated), systemd deploy on OptiPlex.
 
 **What to build next (solo phase):**
-1. **English-mode polish** — small remaining items listed below (help text updates, `/english` block, backend notice language)
-2. Voice notes — speak German/English, get a text correction back
-3. Assessment JSON hardening — retry/skip on bad output instead of raw dump
-4. Manual grade override buttons on typed answers
+1. **English mode should be in English** — the interface is currently Spanish; it should mirror German mode, with Spanish kept for explanations only
+2. **Relaxed corrections should feel relaxed** — already the default, but it still corrects too much and tags slang. Nobody should feel judged for talking
+3. **Games in `/help`** — The Impostor exists but is invisible
+4. **English-mode polish** — small remaining items listed below (`/english` block, backend notice language)
+5. Voice notes — speak German/English, get a text correction back
+6. Assessment JSON hardening — retry/skip on bad output instead of raw dump
+7. Manual grade override buttons on typed answers
 
 **Next phase, planned:** give Karly a course — a topic list per CEFR level with a short
 lesson and a set of exercises each, the way test-english.com is organised, written once
@@ -93,6 +96,12 @@ Feature parity is **complete** as of 2026-09-03 — all five blocked handlers ar
 English mode currently supports free conversation with corrections and `/spanish` meta-questions. Everything else — placement test, flashcards, daily challenge, quiz, roleplay, weekly report, PDF lessons — is either blocked or silently uses German prompts and German UI text. This section is the complete plan to reach parity.
 
 **Context:** English mode = native Spanish speaker learning English. All UI text shown to the user should be in Spanish. Corrections are always explained in Spanish. The conversation itself is in English.
+
+> **Superseded.** The Spanish-UI rule above was the wrong call — English mode should
+> mirror German mode, with the interface in the language being learned and Spanish kept
+> for explanations. The Spanish UI strings this phase produced get rewritten in English.
+> See ["English mode should be in English"](#english-mode-should-be-in-english). The
+> Spanish *teaching* content (correction reasons, debriefs, reports) built here stays.
 
 ---
 
@@ -403,6 +412,109 @@ This flag is not part of the MVP. It is noted here so the state model and comman
 7. Vote collection — direct votes from online players, proxy votes from host for offline players (`/impostor vote`, `/impostor skip`, `/impostor status`)
 8. Result broadcast to online players only; win check + game end (`/impostor end`)
 9. Subcommand routing in `bot/main.py`
+
+---
+
+### English mode should be in English
+
+**This reverses the principle the English-mode parity work was built on.** That work
+stated: *"All UI text shown to the user should be in Spanish."* That's wrong for a
+learner — it makes English mode feel like a Spanish app that occasionally speaks English,
+when German mode feels like a German app. English mode should mirror German mode:
+**the target language everywhere, the native language only where the user genuinely
+needs it.**
+
+The rule, stated once: **conversation and interface in the language being learned;
+explanations and reports in the language they already speak.**
+
+| Surface | German mode (the model to copy) | English mode today | Should be |
+|---|---|---|---|
+| The conversation itself | German | English ✅ | English ✅ |
+| Menus, buttons, `/help`, `/profile`, `/review` | German | Spanish ❌ | **English** |
+| Prompts inside `/practice`, `/daily`, `/quiz`, `/course` | German | Spanish ❌ | **English** |
+| Error and quota messages | German | Spanish ❌ | **English** |
+| The `— why` on a correction | English | Spanish ✅ | Spanish ✅ keep |
+| Meta-questions (`/english` ↔ `/spanish`) | English | Spanish ✅ | Spanish ✅ keep |
+| Roleplay debrief after `/done` | English | Spanish ✅ | Spanish ✅ keep |
+| `/weekly`, `/summary`, document summaries | English | Spanish ✅ | Spanish ✅ keep |
+| Vocabulary translations | English | Spanish ✅ | Spanish ✅ keep |
+
+So the work is: **the Spanish UI strings written during the parity phase get rewritten in
+English.** The Spanish *teaching* content — explanations, debriefs, reports — stays exactly
+as it is. Roughly: `start.py`, `report.py`, `practice.py`, `quiz.py`, `daily.py`,
+`roleplay.py`, `documents.py` UI strings switch; `llm/prompts.py` mostly doesn't.
+
+**The A1 problem, and the fix.** An all-English interface is hostile to a true beginner —
+and the plan is now to teach from A1 ([`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md)). So make
+the amount of Spanish a setting rather than a constant:
+
+| `l1_support` | Interface | Who |
+|---|---|---|
+| `full` | Spanish interface, Spanish explanations | A1–A2 |
+| `minimal` | **English interface, Spanish explanations** ← the default | A2–B1 |
+| `off` | Everything in English, including the `— why` lines | B2+ |
+
+Default it from the placement test, let the user change it with `/language` or a similar
+command, and nudge upward when they clear a level: *"Your English is good enough — want
+me to switch the menus to English?"* That single question turns a settings toggle into a
+small reward.
+
+---
+
+### Games should appear in `/help`
+
+The Impostor exists (`bot/handlers/game.py`) but is invisible — it's in neither `/help`
+nor the welcome message, so nobody who wasn't told about it will ever find it.
+
+| Item | What to do |
+|---|---|
+| New `Games` section in `/help` | List `/impostor new`, `join`, `add`, `players`, `start`, `vote`, `skip`, `status`, `end` — grouped, not as nine flat lines |
+| Same section in `/start` welcome | One line, not the full command list: *"🎭 /impostor — social deduction game for the class"* |
+| Both language modes | German and English versions of the section |
+| Make the structure extensible | Future activities land in the same section rather than each needing its own help edit |
+| Consider `/games` | A short menu listing what's available, so `/help` doesn't grow forever. Worth it once there's a second game |
+
+Small task, real payoff: a feature nobody can find has no users. Worth doing at the same
+time as the `/help` and welcome-message updates already listed under English-mode polish
+above — same files, same edit.
+
+---
+
+### Relaxed corrections — the default, and genuinely relaxed
+
+**Goal: nobody should feel judged for talking.** Students especially will go quiet if
+every message comes back marked up. The bot should feel like a patient conversation
+partner by default, and become a strict examiner only when asked.
+
+**Already done:** `correction_level` defaults to `"relaxed"` (`db/models.py`). No change
+needed there — the default is right.
+
+**What needs changing is what "relaxed" means.** Today's relaxed prompt still corrects
+"wrong verb conjugation, badly wrong article gender", and slang always gets a 💬 tag even
+though the prompt says slang isn't a mistake. Being tagged for saying something casually
+is exactly the feeling to design out.
+
+| Item | What to do |
+|---|---|
+| Loosen `CORRECTION_RELAXED` / `ENGLISH_CORRECTION_RELAXED` | Correct **only** what actually blocks understanding — a sentence a native speaker would misread. Not conjugation slips, not article gender, not prepositions, as long as the meaning lands |
+| Hard cap | **At most one** correction per message, and none at all if the message is understandable. Today's "one or two" still reads as a licence to find something |
+| Never flag | Typos, missing capitals or punctuation, contractions, casual register, incomplete sentences in a fast exchange |
+| Slang | Silent in relaxed mode — drop the 💬 tag entirely. Keep it in strict, where the user has opted into being told. Slang is a sign of fluency, not an error |
+| First messages | No corrections at all for a user's first few messages, or when returning after a break. Let them warm up |
+| Tone rule in the persona | Explicitly: never comment on the *quality* of their language, never praise-then-correct ("Good try, but…"), never count mistakes |
+| `/corrections` discoverability | Mention once, early, that corrections can be turned up: *"I'll mostly just chat. Want me to correct more? /corrections strict"* — then never mention it again |
+
+**Nothing is lost by staying quiet.** Mistakes are still captured even when they aren't
+shown: they feed `/summary`, the weekly report, the BKT skill model, flashcards, and — once
+the classroom phase lands — your view of what the class is getting wrong. The learner
+gets an uninterrupted conversation; you still get the data. That's the whole argument for
+making relaxed the default, and it already works this way.
+
+**Possible rename, worth considering:** `strict / relaxed / off` describes the machine's
+behaviour, not the user's intent. Something like `exam / chat / off` — or letting the
+student pick "correct me a lot / a little / not while we're talking" — reads better to a
+nervous beginner. Cosmetic, but this is the setting most likely to be changed by someone
+who is already feeling self-conscious.
 
 ---
 
