@@ -16,10 +16,13 @@ already does.
 generate the exercises once in a batch and save them too, then the bot just reads them.
 No inventing questions live, so units are fast, repeatable, and can be marked passed.
 
-**Where to start:** German A2 only. One level, one language, all the way through. English
-comes after, as a content-only addition.
+**Scope:** **English is the priority** — it's for your students, and it runs the whole
+ladder, A1 to C1 (§3). German stays your personal track and gets levels when you want them.
 
-**Pending work:** see [§3](#3-pending-tasks) — 6 stages, first two are content, not code.
+**Where to start:** build the machinery once against **English A1**, then add one level at
+a time. Each new level after the first is content only — no code.
+
+**Pending work:** see [§4](#4-pending-tasks).
 
 ---
 
@@ -77,23 +80,65 @@ shippable before H2 covers every unit.
 
 ---
 
-## 3. Pending tasks
+## 3. The English ladder — A1 to C1
+
+Five levels. Roughly 130 topics end to end, but **you never build more than one level at
+a time**, and every level after the first is a content-only commit.
+
+| Level | Topics | What it covers | Notes |
+|---|---|---|---|
+| **A1** | ~20 | to be, present simple, articles, plurals, can, past simple of common verbs | Where a true beginner starts |
+| **A2** | ~24 | present perfect, past continuous, comparatives, going to, must/should | |
+| **B1** | ~28 | all narrative tenses, conditionals 1–2, passive, reported speech, relative clauses | The biggest single jump — see below |
+| **B2** | ~30 | perfect modals, mixed conditionals, advanced passive, participle clauses, inversion basics | |
+| **C1** | ~30 | register, hedging, emphasis and cleft sentences, nominalisation, collocation, discourse markers | **Not a grammar list** — see below |
+
+**Two things worth knowing before you start:**
+
+- **Test-English stops at B2.** There is no model to copy for C1, so that level's topic
+  list has to come from CEFR C1 descriptors and Cambridge C1 Advanced scope instead.
+- **C1 isn't more grammar.** By C1 the grammar is essentially done; what's left is
+  *usage* — choosing the right register, hedging an opinion, fronting for emphasis,
+  turning verbs into nouns, and collocation. If C1 is generated as "another grammar list"
+  it will come out thin and repetitive. Its units need a different shape, and that's a
+  real piece of design work when you get there, not a content run.
+- **B1+ is optional.** Test-English splits B1 and B2 with a B1+ level because the gap is
+  wide. Skip it initially; add it later if students stall between B1 and B2.
+
+**Which level first?** A1, if your students are genuine beginners. If they're not, build
+the level they're actually at — the placement test (`/test`) already sorts students by
+level, so the bot routes them correctly as soon as their level exists.
+
+**Effort per level:** roughly an afternoon of generation (unattended) plus an evening of
+reading it over. $0 on the Groq free tier.
+
+---
+
+## 4. Pending tasks
 
 Six stages. Each one leaves the bot working, so they can be spread out.
 
+**Build the machinery once (H0–H5), then add levels (H6+).**
+
 | # | Task | Type | Status | What it gives you |
 |---|---|---|---|---|
-| **H0** | One unit written by hand as the reference — `de.a2.g07` "Perfekt vs. Präteritum", spine + 15 questions | content | ✅ **done** | Proves the format works. Already caught 5 problems (§4) |
-| **H0b** | `make curriculum-lint` — checks syllabus and question files for errors | code | ⏳ **next** | Stops broken content reaching the bot |
-| **H1** | Write the rest of German A2 — ~23 more topics. Script drafts them, you review | content | ⏳ | The actual syllabus |
-| **H2** | Generate ~360 questions for those topics, auto-check them, skim and approve | content | ⏳ | The exercise bank |
-| **H3** | `/course` — progress bar, lesson card, exercise runner, pass/fail, unlock next unit | code | ⏳ | **The feature.** A usable course |
-| **H4** | Track mastery per topic; missed questions become flashcards; chat corrections get a "practise this unit" button | code | ⏳ | The thing Test-English can't do |
-| **H5** | `/leveltest` (15 questions to clear a level) and `/browse` (jump to any unit) | code | ⏳ | Finishing a level means something |
-| **H6** | Repeat H1+H2 for English B1 | content | ⏳ | Second language, **no code changes** — if any are needed, something's wrong |
+| **H0** | One unit written by hand as the reference — German `de.a2.g07`, lesson + 15 questions | content | ✅ **done** | Proves the format works. Already caught 5 problems (§5) |
+| **H0b** | `make curriculum-lint` — checks the content files for errors | code | ⏳ **next** | Stops broken content reaching the bot |
+| **H1** | One **English** reference unit, with Spanish explanations | content | ⏳ | The German unit proved the format; this proves the English/Spanish wording before generating hundreds |
+| **H2** | English A1 — ~20 topics + ~300 questions, generated and reviewed | content | ⏳ | The first real level |
+| **H3** | `/course` — progress bar, lesson card, exercise runner, pass/fail, unlock next | code | ⏳ | **The feature.** A usable course |
+| **H4** | Mastery per topic; missed questions become flashcards; chat corrections get a "practise this unit" button | code | ⏳ | The thing Test-English can't do |
+| **H5** | `/leveltest` (clear a level) and `/browse` (jump to any unit) | code | ⏳ | Finishing a level means something |
+| **H6** | English A2 | content | ⏳ | ↓ each of these is a content-only commit — |
+| **H7** | English B1 | content | ⏳ | no code changes at all. If any are needed, |
+| **H8** | English B2 | content | ⏳ | the design leaked and that's the bug to fix |
+| **H9** | English C1 — needs its own unit shape first (§3) | content + design | ⏳ | Tops out the ladder |
+| **H10** | German levels, on demand | content | ⏳ | Your own track, whenever you want it |
 
-Rough effort: H1 and H2 are an afternoon of generation plus an evening of reading, per
-level, and cost $0 on the Groq free tier. H3 is the biggest code stage.
+H3 is the biggest code stage. H6–H8 are repeatable content runs. **You can put the bot in
+front of students after H5 with only A1 built** — students above A1 keep using
+conversation, flashcards and quiz exactly as they do today, and their level lights up when
+you build it.
 
 **After H6 — the other Test-English sections**, in value order:
 
@@ -106,7 +151,7 @@ level, and cost $0 on the Groq free tier. H3 is the biggest code stage.
 
 ---
 
-## 4. What the reference unit already taught us
+## 5. What the reference unit already taught us
 
 H0 was one hand-written unit, and it caught five problems that would otherwise have
 shipped. Two mattered:
@@ -129,22 +174,23 @@ it starts to feel redundant.
 
 ---
 
-## 5. Decisions needed before H1
+## 6. Decisions needed before H1
 
 Recommendations given; these just need a yes.
 
 | Question | Recommendation |
 |---|---|
-| Which level first? | German A2 alone, through H5 |
+| Which level first? | English A1, unless your students are past it — then build the level they're at |
 | Content in git or database? | Git — fits the existing deploy, reviewable in diffs |
 | Pass mark for a unit? | 80%, retake any time |
 | Locked units, or browse freely? | Soft: "Continue" follows the order, `/browse` opens anything at or below your level |
 | Can a unit be passed before its questions are written? | Yes — don't punish the user for a content gap |
-| Exam practice? | Defer. Revisit only if you're sitting a real exam |
+| Exam practice? | Defer. Revisit if students are sitting Cambridge or similar |
+| B1+ bridge level? | Skip it; add only if students stall between B1 and B2 |
 
 ---
 
-## 6. Non-goals
+## 7. Non-goals
 
 - No website. Everything stays in Telegram.
 - Not replacing conversation — the course is a second mode, and chat stays the main way

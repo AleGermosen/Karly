@@ -16,10 +16,14 @@ Living plan for Karly's evolution. Updated 2026-09-03.
 
 **Next phase, planned:** give Karly a course — a topic list per CEFR level with a short
 lesson and a set of exercises each, the way test-english.com is organised, written once
-into the repo instead of invented live. Plan and pending tasks in
-[`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md).
+into the repo instead of invented live. **English runs the full ladder, A1 to C1**, built
+one level at a time. Plan and pending tasks in [`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md).
 
-**When you're ready to open to other users:**
+**Also planned — classroom controls:** English mode is for your students, so the bot
+needs a roster, an approve-before-joining gate, and a teacher view of who's using it and
+how they're doing. See [Classroom phase](#classroom-phase--teacher-controls) below.
+
+**When you're ready to open to the public:**
 → Multi-tenant foundation → Usage metering → Entitlements → Telegram Stars payments
 
 ---
@@ -345,6 +349,11 @@ Changes needed in `bot/middleware.py`:
 
 **Rate limiting / abuse:** the user has decided to defer caps and metering to later. This is acceptable for now — the bot runs on Groq's free tier, which self-limits via quota. Document this decision: metering is planned in the scale phase (see "Step 2 — Usage metering") and should be revisited before promoting the bot publicly.
 
+> **Superseded for classroom use.** Open auth stays right for the game, but students need
+> an approve-before-joining gate and per-student usage tracking. See
+> [Classroom phase](#classroom-phase--teacher-controls) — it adds an access *mode* rather
+> than reverting to single-user, so the game keeps working.
+
 ---
 
 #### Broadcast implementation
@@ -419,6 +428,121 @@ Cloze and sentence answers are auto-mapped to grade 2 (wrong) or 4 (correct). Po
 
 - After feedback is shown, append the grade buttons (`_grade_keyboard()`) so the user can override before advancing
 - Small change to `on_typed()` in `practice.py`
+
+---
+
+## Classroom phase — teacher controls
+
+> **Why now:** English mode is for your students, not just you. The moment other people
+> use the bot you need to know who they are, whether they're actually using it, and how
+> they're doing. This phase is small and private — a handful of students you know, not a
+> public launch. Everything in the Scale phase below stays deferred.
+
+**This reverses one earlier decision.** The Impostor work opened the bot to everyone
+(`_is_authorized()` returns `True` when `ALLOWED_USER_ID` is unset). For a class you want
+the opposite: nobody gets in until you say so. The fix is a third mode rather than going
+back to single-user — see "Access modes" below.
+
+---
+
+### Step 1 — Roster and roles
+
+Every user gets a `role` and, if they're a student, a `class`.
+
+| Item | What to do |
+|---|---|
+| `role` column on `users` | `teacher` / `student` / `guest`. You are the only teacher initially |
+| `class` column (or a `classes` table if you teach more than one group) | Lets `/students` and the weekly digest be scoped to one group |
+| `status` column | `pending` / `active` / `paused` / `removed`. Nothing is ever hard-deleted — a removed student's history stays for your records |
+| `joined_at`, `approved_by` | Basic audit trail |
+
+### Step 2 — Approval flow
+
+What you asked for: a confirmation when someone wants to start using the bot.
+
+1. A new person sends `/start`. They get a friendly "waiting for your teacher to let you
+   in" message and can't use anything else.
+2. **You get a DM:** `👤 Ana García (@ana_g) wants to join. [✅ Approve] [❌ Decline]`,
+   with a **[Approve + assign to class]** option if you run more than one group.
+3. You tap. The student is told immediately and lands in the normal `/start` flow.
+4. Declines are remembered, so a declined user re-sending `/start` doesn't spam you.
+
+**Access modes** — one setting, three behaviours:
+
+| Mode | Behaviour |
+|---|---|
+| `open` | Anyone can use it (today's behaviour) |
+| `approval` | New users wait for your tap ← **the classroom default** |
+| `code` | Students join with a class code you hand out in the lesson, and you confirm afterwards. Reuses the code mechanic already designed for The Impostor |
+
+### Step 3 — What you can see
+
+Three commands, teacher-only.
+
+| Command | Shows |
+|---|---|
+| `/students` | The roster: name, level, last active, current streak, cards due, units passed. Sorted by "who needs attention" — least recently active first |
+| `/student <name>` | One student in depth: CEFR per skill, units passed and failed, accuracy trend over recent weeks, weakest topics, error patterns, total messages and time on task |
+| `/class` | Weekly digest for the whole group: who was active and who wasn't, average accuracy, units completed, and **the mistakes most students are making** — the most useful thing on this list for planning a lesson |
+
+**Alerts, pushed to you rather than polled:**
+
+| Trigger | Message |
+|---|---|
+| A student hasn't used the bot in N days (default 7) | `😴 Ana hasn't practised since Tuesday.` |
+| A student fails the same unit 3 times | `⚠️ Marco has failed "Present perfect" 3 times — worth covering in class.` |
+| A student finishes a level | `🎉 Sofía cleared A2.` |
+
+Weekly digest arrives on a schedule you set, reusing the existing reminder job queue.
+
+### Step 4 — What you deliberately don't see
+
+Worth deciding now rather than after a student asks.
+
+| Data | Default |
+|---|---|
+| Scores, streaks, units, error *patterns*, activity counts | **Visible to you.** This is ordinary gradebook information |
+| Verbatim chat transcripts and their free writing | **Not visible by default.** Aggregates and error categories, yes; reading their conversations, no |
+| Optional per-student opt-in to share writing samples | Worth adding if you want to mark their writing — but make it their choice, and tell them |
+
+Students should be told, at `/start`, what their teacher can see. One short line in the
+welcome message. This costs nothing and avoids the awkward conversation later.
+
+### Step 5 — Usage tracking
+
+**This is the "Usage metering" step from the Scale phase, pulled forward** — the same
+table serves both purposes, so build it once here.
+
+One row per LLM call: `user_id, model, tokens_in, tokens_out, task, ts`. The router
+already returns `RouteResult` with token counts; the handlers just need to persist them.
+
+| Gives you | How |
+|---|---|
+| Who's actually using the bot, and how much | Per-student call and message counts, by day and week |
+| Which features get used | Grouped by task — conversation vs `/practice` vs `/course` |
+| Cost per student | Tokens × rate, so a class stays inside the free tier knowingly rather than by luck |
+| A per-student daily cap | One runaway user (or a stuck loop) can't burn the whole quota |
+
+### Step 6 — Optional, once the course exists
+
+Only worth building after the curriculum phase ([`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md)) lands.
+
+| Item | What it does |
+|---|---|
+| Assignments | You assign a unit or level to the class; it becomes their next `/course` task, and `/class` shows who's done it |
+| CSV export | Roster and scores out to a spreadsheet for your own gradebook |
+| Multiple classes | Only if you teach more than one group — otherwise the `class` column is enough |
+
+### Suggested order
+
+1. Roster and roles (Step 1) — nothing works without it
+2. Approval flow (Step 2) — the gate you asked for; makes it safe to hand out
+3. Usage tracking (Step 5) — start collecting early, it's worthless retroactively
+4. `/students` and `/student` (Step 3) — the day-to-day view
+5. `/class` digest and alerts (Step 3) — the weekly rhythm
+6. Assignments and export (Step 6) — after the course exists
+
+Steps 1–3 are the minimum to put the bot in front of a class.
 
 ---
 
