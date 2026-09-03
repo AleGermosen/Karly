@@ -44,6 +44,10 @@ class User(Base):
     # Correction strictness: "strict" | "relaxed" | "off".
     # "relaxed" = only real errors; "strict" = everything; "off" = none.
     correction_level: Mapped[str] = mapped_column(String, default="relaxed")
+    # Which language the user is learning: "german" (default) or "english".
+    # German mode: native English speaker learning German.
+    # English mode: native Spanish speaker learning English.
+    learning_mode: Mapped[str] = mapped_column(String, default="german")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
     @property

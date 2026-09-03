@@ -98,6 +98,12 @@ async def quiz_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user = get_user_by_telegram_id(update.effective_user.id)
     if user is None:
         return ConversationHandler.END
+    if getattr(user, "learning_mode", "german") == "english":
+        await update.effective_message.reply_text(
+            "Este comando es solo para el modo alemán. "
+            "Usa /language para cambiar de idioma."
+        )
+        return ConversationHandler.END
 
     bkt_state = get_bkt_state(user.id)
     weak = _weakest_skills(bkt_state)

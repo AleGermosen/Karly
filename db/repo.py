@@ -111,6 +111,14 @@ def set_corrections(user_id: int, on: bool) -> None:
     set_correction_level(user_id, "strict" if on else "off")
 
 
+def set_learning_mode(user_id: int, mode: str) -> None:
+    """Set learning_mode to 'german' or 'english'."""
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if user is not None:
+            user.learning_mode = mode
+
+
 # --- Vocab -----------------------------------------------------------------
 
 def add_vocab_items(

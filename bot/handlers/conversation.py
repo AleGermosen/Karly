@@ -164,13 +164,24 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     history = recent_history(user.id, limit=config.CONTEXT_WINDOW_MESSAGES)
     level = user.correction_level
-    system = prompts.TUTOR_PERSONA.format(level=_user_level(user.cefr_estimate))
-    if level == "strict":
-        system += prompts.CORRECTION_STRICT + prompts.SLANG_NOTE
-    elif level == "relaxed":
-        system += prompts.CORRECTION_RELAXED + prompts.SLANG_NOTE
+    learning_mode = getattr(user, "learning_mode", "german") or "german"
+
+    if learning_mode == "english":
+        system = prompts.ENGLISH_TUTOR_PERSONA.format(level=_user_level(user.cefr_estimate))
+        if level == "strict":
+            system += prompts.ENGLISH_CORRECTION_STRICT + prompts.ENGLISH_SLANG_NOTE
+        elif level == "relaxed":
+            system += prompts.ENGLISH_CORRECTION_RELAXED + prompts.ENGLISH_SLANG_NOTE
+        else:
+            system += prompts.ENGLISH_NO_CORRECTION_NOTE + prompts.ENGLISH_SLANG_NOTE
     else:
-        system += prompts.NO_CORRECTION_NOTE + prompts.SLANG_NOTE
+        system = prompts.TUTOR_PERSONA.format(level=_user_level(user.cefr_estimate))
+        if level == "strict":
+            system += prompts.CORRECTION_STRICT + prompts.SLANG_NOTE
+        elif level == "relaxed":
+            system += prompts.CORRECTION_RELAXED + prompts.SLANG_NOTE
+        else:
+            system += prompts.NO_CORRECTION_NOTE + prompts.SLANG_NOTE
 
     topic = context.user_data.get("topic")
     if topic:
@@ -324,6 +335,39 @@ async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.effective_message.reply_text(notice)
     context.user_data["last_backend_label"] = new_label
 
+    await update.effective_message.reply_text(result.text)
+
+
+@require_auth
+async def spanish(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/spanish <pregunta> — meta-question in Spanish (for English-mode users)."""
+    question = " ".join(context.args).strip() if context.args else ""
+    if not question:
+        await update.effective_message.reply_text(
+            "Haz una pregunta en español, por ejemplo: /spanish ¿cuándo uso 'the'?"
+        )
+        return
+    try:
+        result = await _route_with_typing(
+            context,
+            update.effective_message.chat_id,
+            Task.chat,
+            question,
+            system=prompts.SPANISH_META,
+        )
+    except (QuotaExceeded, AllBackendsExhausted):
+        await update.effective_message.reply_text(QUOTA_MSG)
+        return
+    except LLMUnavailable:
+        await update.effective_message.reply_text(ERROR_MSG)
+        return
+
+    prev_label = context.user_data.get("last_backend_label")
+    new_label = result.rung.label
+    notice = _backend_notice(prev_label, new_label)
+    if notice:
+        await update.effective_message.reply_text(notice)
+    context.user_data["last_backend_label"] = new_label
     await update.effective_message.reply_text(result.text)
 
 

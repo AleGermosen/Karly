@@ -1,7 +1,7 @@
-"""/start, /help, /profile command handlers."""
+"""/start, /help, /profile, /language command handlers."""
 from __future__ import annotations
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 from bot.middleware import require_auth
@@ -10,11 +10,12 @@ from db.repo import (
     get_bkt_state,
     get_user_by_telegram_id,
     latest_assessment,
+    set_learning_mode,
     vocab_count,
 )
 from srs import bkt as bkt_mod
 
-WELCOME = (
+WELCOME_GERMAN = (
     "Hallo! Ich bin Karly, dein Deutsch-Tutor. 🇩🇪\n\n"
     "Schreib mir einfach auf Deutsch — ich antworte und korrigiere dich.\n\n"
     "Wichtigste Commands:\n"
@@ -28,7 +29,30 @@ WELCOME = (
     "/help — alle Commands"
 )
 
-HELP = (
+WELCOME_ENGLISH = (
+    "¡Hola! Soy Karly, tu tutora de inglés. 🇺🇸\n\n"
+    "Escríbeme en inglés — te respondo y te corrijo.\n\n"
+    "Comandos principales:\n"
+    "/profile — tu perfil de aprendizaje\n"
+    "/corrections — activar/desactivar correcciones\n"
+    "/spanish — hacer una pregunta en español\n"
+    "/language — cambiar el idioma que aprendes\n\n"
+    "/help — todos los comandos"
+)
+
+LANGUAGE_PICKER = (
+    "¡Hola! / Hello! 👋\n\n"
+    "¿Qué idioma quieres aprender? / What do you want to learn?"
+)
+
+_PICKER_KB = InlineKeyboardMarkup([
+    [
+        InlineKeyboardButton("🇩🇪 Deutsch lernen", callback_data="lang:german"),
+        InlineKeyboardButton("🇺🇸 Learn English", callback_data="lang:english"),
+    ]
+])
+
+HELP_GERMAN = (
     "Karly — dein Deutsch-Tutor.\n"
     "Schreib einfach auf Deutsch; ich korrigiere dich. Alle Commands:\n\n"
 
@@ -58,7 +82,8 @@ HELP = (
     "/docfocus on|off — Gespräch aufs neueste Dokument lenken\n"
     "📄 Schick eine deutsche PDF → Fachbegriffe werden automatisch extrahiert\n\n"
 
-    "── System ──\n"
+    "── Sistema ──\n"
+    "/language — cambiar a modo inglés\n"
     "/status — Backend-Ladder & Groq-Quota (verbleibende Anfragen)\n"
     "/backend on|off — Backend-Label in jeder Antwort anzeigen\n"
     "/cancel — aktive Session abbrechen\n"
@@ -67,15 +92,72 @@ HELP = (
     "/help — diese Übersicht"
 )
 
+HELP_ENGLISH = (
+    "Karly — tu tutora de inglés.\n"
+    "Escríbeme en inglés; te corrijo. Todos los comandos:\n\n"
+
+    "── Conversación ──\n"
+    "Escribe cualquier cosa en inglés y te respondo.\n"
+    "/corrections strict|relaxed|off — nivel de correcciones\n"
+    "/topic <tema> — enfocar la conversación en un tema\n"
+    "/spanish <pregunta> — hacer una pregunta meta en español\n"
+    "/summary — analizar tus errores recientes\n\n"
+
+    "── Perfil ──\n"
+    "/profile — tu perfil de aprendizaje\n"
+    "/remind HH:MM — recordatorio diario (/remind off para desactivar)\n\n"
+
+    "── Sistema ──\n"
+    "/language — cambiar de inglés a alemán\n"
+    "/status — estado del backend\n"
+    "/start — mensaje de bienvenida\n"
+    "/help — este resumen"
+)
+
 
 @require_auth
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.effective_message.reply_text(WELCOME)
+    user = get_user_by_telegram_id(update.effective_user.id)
+    if user is None or user.learning_mode == "german":
+        await update.effective_message.reply_text(
+            LANGUAGE_PICKER, reply_markup=_PICKER_KB
+        )
+    else:
+        await update.effective_message.reply_text(
+            LANGUAGE_PICKER, reply_markup=_PICKER_KB
+        )
+
+
+async def language_pick(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle the language-picker inline buttons."""
+    query = update.callback_query
+    await query.answer()
+    mode = query.data.split(":")[1]  # "german" or "english"
+
+    user = get_user_by_telegram_id(update.effective_user.id)
+    if user is None:
+        return
+    set_learning_mode(user.id, mode)
+
+    if mode == "german":
+        await query.edit_message_text(WELCOME_GERMAN)
+    else:
+        await query.edit_message_text(WELCOME_ENGLISH)
+
+
+@require_auth
+async def language_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/language — show the language picker to switch modes."""
+    await update.effective_message.reply_text(LANGUAGE_PICKER, reply_markup=_PICKER_KB)
 
 
 @require_auth
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.effective_message.reply_text(HELP)
+    user = get_user_by_telegram_id(update.effective_user.id)
+    if user and user.learning_mode == "english":
+        await update.effective_message.reply_text(HELP_ENGLISH)
+    else:
+        await update.effective_message.reply_text(HELP_GERMAN)
 
 
 @require_auth

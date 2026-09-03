@@ -45,7 +45,12 @@ def build_application() -> Application:
 
     app.add_handler(CommandHandler("start", start.start))
     app.add_handler(CommandHandler("help", start.help_cmd))
+    app.add_handler(CommandHandler("language", start.language_cmd))
     app.add_handler(CommandHandler("profile", start.profile))
+    # Language picker callback (from /start and /language inline buttons).
+    app.add_handler(
+        CallbackQueryHandler(start.language_pick, pattern=r"^lang:")
+    )
 
     # Conversation flows (registered before the catch-all handler).
     app.add_handler(assessment.build_handler())
@@ -63,6 +68,7 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("remind", reminders.remind))
     app.add_handler(CommandHandler("topic", conversation.topic))
     app.add_handler(CommandHandler("english", conversation.english))
+    app.add_handler(CommandHandler("spanish", conversation.spanish))
     app.add_handler(CommandHandler("corrections", conversation.corrections))
     app.add_handler(CommandHandler("summary", conversation.summary))
     app.add_handler(CommandHandler("status", conversation.status))

@@ -110,6 +110,14 @@ def _correction_block(level: str) -> str:
 
 @require_auth
 async def roleplay_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user = get_user_by_telegram_id(update.effective_user.id)
+    if user and getattr(user, "learning_mode", "german") == "english":
+        await update.effective_message.reply_text(
+            "Este comando es solo para el modo alemán. "
+            "Usa /language para cambiar de idioma."
+        )
+        return ConversationHandler.END
+
     args = context.args or []
     # If a scenario key was passed as an argument, skip the picker.
     if args and args[0] in _KEY_TO_SCENARIO:

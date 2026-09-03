@@ -136,6 +136,12 @@ def _mcq_keyboard(item_no: int, options: list) -> InlineKeyboardMarkup:
 @require_auth
 async def assess_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user = get_user_by_telegram_id(update.effective_user.id)
+    if user and getattr(user, "learning_mode", "german") == "english":
+        await update.effective_message.reply_text(
+            "Este comando es solo para el modo alemán. "
+            "Usa /language para cambiar de idioma."
+        )
+        return ConversationHandler.END
     context.user_data["assess_transcript"] = []
     context.user_data["assess_results"] = []
     context.user_data["assess_count"] = 0
