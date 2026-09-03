@@ -7,13 +7,13 @@
 #   3. prints the service status
 #
 # Configure the target once (add to your ~/.bashrc):
-#   export KARLY_HOST=aj@192.168.1.50        # user@host or an SSH alias
+#   export KARLY_HOST=karly-optiplex         # user@host or an SSH alias
 #   export KARLY_REMOTE_DIR=Karly            # optional, defaults to "Karly"
 #
 # Usage:  ./deploy/deploy.sh
 set -euo pipefail
 
-HOST="${KARLY_HOST:?Set KARLY_HOST, e.g. export KARLY_HOST=aj@192.168.1.50}"
+HOST="${KARLY_HOST:?Set KARLY_HOST, e.g. export KARLY_HOST=karly-optiplex}"
 REMOTE_DIR="${KARLY_REMOTE_DIR:-Karly}"
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
