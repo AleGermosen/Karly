@@ -28,22 +28,26 @@ Build only as far as demand justifies.
 | First scale target | **Paid beta — ≤ hundreds of users** |
 | Payments | **Telegram Stars** (native, recurring, no external provider) |
 | Free vs paid split | **Same model for all; gate on volume + features**, not model quality |
-| Primary model | **Groq `groq/compound`** (best available on free tier; fallback `groq/compound-mini`) |
+| Primary model | **Groq `openai/gpt-oss-120b`** (fallback `openai/gpt-oss-20b`). NB: `groq/compound*` are agentic systems, **not** chat-completion models — they 404 on `/chat/completions`; do not use them here. |
 
 ---
 
 ## Current backend ladder (live as of 2026-09-03)
 
 ```
-⚡ Groq (groq/compound)       — primary; fast
-⚡ Groq Mini (groq/compound-mini) — when compound daily limit hit
-🤖 Gemini (gemini-3.6-flash)  — when both Groq limits hit (~20 req/day free)
-🐌 Ollama (local)             — last resort; slow (~1 min), unlimited
+⚡ Groq (openai/gpt-oss-120b)     — primary; fast
+⚡ Groq Mini (openai/gpt-oss-20b) — when the 120b daily limit is hit
+🤖 Gemini (gemini-3.6-flash)      — when both Groq limits hit (~20 req/day free)
+🐌 Ollama (local)                 — last resort; slow, unlimited — CHAT ONLY
 ```
 
 Per-rung cooldowns track daily vs transient failures. State resets on restart
 (in-process only — Phase B moves this to Redis). `/status` shows current rung;
 `/backend on` appends a footer tag to every reply.
+
+**Ollama is excluded from structured tasks** (`Task.assess`, doc analysis): the
+3B local model cannot produce reliable JSON, which corrupted the assessment
+(returned an answer instead of a question). Those ladders stop at Gemini.
 
 **Cost today:** $0 — all free tiers. Groq free limits handle solo use.
 
@@ -129,6 +133,102 @@ deliberately.
 - **Hosting** — move to a small always-on cloud VM/container; a paid product
   shouldn't depend on the OptiPlex. The OptiPlex becomes dev/staging (and the
   Ollama last-resort rung).
+
+---
+
+## Interactivity roadmap (started 2026-09-03)
+
+A push to make Karly more interactive. Original plan had five threads; the
+**assessment revamp shipped first**, the rest are still open.
+
+### Shipped
+- **Assessment revamp** (`/test`): structured JSON items, MCQ answer buttons
+  with local scoring, adaptive CEFR difficulty, per-skill quotas (grammar /
+  reading / comprehension / production / functional / vocab — no longer
+  vocab-heavy), auto-graded open answers **batched 5 at a time** to save LLM
+  calls, per-skill breakdown in the verdict. Ollama excluded from the assess
+  ladder so bad JSON can't leak an answer. Global `/cancel` added.
+
+### Still missing from the plan
+1. **Command menu button** (was "step 1", never built). Use Telegram
+   `setMyCommands` in a `post_init` hook in `bot/main.py` to populate the
+   native `≡` menu. **Static, hand-picked order** (decided): practice, test,
+   profile, review, topic, summary, docs, remind, help — hide `/status`,
+   `/backend`. Optionally a `/menu` reply-keyboard for big tappable buttons.
+   Dynamic usage-sorted ordering deferred.
+2. **Flashcard upgrades** — `/practice` already has SM-2 flashcard/cloze/
+   sentence. Add: `/flashcards` alias + menu entry, due-count badge in
+   `/profile` & reminders, MCQ flashcard mode (LLM distractors), auto-graded
+   typed answers, DE↔EN direction toggle, themed decks (filter by `source` /
+   `document_id`), "➕ Add to flashcards" button on corrections/doc vocab.
+3. **Correction-attached buttons** — inline buttons under each correction:
+   "Explain why", "Save word", "Another example", "Drill this". Uses stored
+   `corrections_json`.
+4. **`/daily` mixed challenge** — one bite-sized daily task (cloze + translate
+   + "reply to this"), tied to the existing `PracticeLog` streak.
+5. **Stretch** — voice notes (STT/TTS), roleplay scenarios, weekly progress
+   report, `/quiz` rapid MCQ from weak areas.
+
+**Assessment follow-ups not yet done:** explicit running-estimate refinements,
+harden the JSON fallback further (retry/skip rather than any raw dump).
+
+---
+
+## ML roadmap — personalized learning models (AFTER the interactivity pipeline)
+
+**Sequencing:** build this only once the interactivity items above (command
+menu → flashcards → correction buttons → `/daily`) have shipped. These three
+stages are ordered cheapest-first and each earns the next; do not jump to the
+LSTM before the data exists to train it. All three approved by the user
+(2026-09-03).
+
+**Why not just TensorFlow from the start:** a deep net is data-hungry; a single
+learner won't generate enough signal for it to beat a simple model, and the LLM
+already handles generation. The real ML win is **smarter review scheduling and
+knowledge tracing**, so we escalate model complexity as data grows.
+
+### Stage 1 — Half-Life Regression (HLR) recall scheduler
+**What:** learn a per-item *memory half-life* from review history and schedule
+`next_review_at` when predicted recall drops to a target (e.g. 0.5), replacing
+the fixed SM-2 formula.
+- **Model:** logistic/linear regression on features (past correct/incorrect
+  count, elapsed time, item difficulty, source). **scikit-learn — no TF.**
+- **Data needed:** log every review outcome + timestamp. `PracticeLog` already
+  logs sessions; add per-item review events (correct?, latency, prior interval).
+- **Integration:** new `srs/hlr.py` alongside `srs/sm2.py`; a config flag picks
+  the scheduler so we can A/B against SM-2. Retrain offline (cron) on the
+  accumulated log; store learned weights, not a live-trained model.
+- **Why first:** biggest UX payoff (better retention), smallest dependency,
+  works on modest single-user data.
+
+### Stage 2 — Bayesian Knowledge Tracing (BKT) concept mastery
+**What:** track mastery probability per *concept* (grammar rules, e.g. "dative
+after two-way prepositions") so Karly can target weak concepts in `/daily`,
+`/quiz`, and assessment gap selection.
+- **Model:** classic BKT (4 params per skill: prior, learn, slip, guess) —
+  interpretable, low-data, no neural net. Tag items/corrections with concept
+  ids to feed it.
+- **Data needed:** concept tagging on assessment items and corrections
+  (`corrections_json` already stores the mistakes; add a concept label).
+- **Integration:** `ml/bkt.py`; surface mastery in `/profile` and use it to
+  pick drill targets.
+
+### Stage 3 — Deep Knowledge Tracing (DKT, LSTM) — **TensorFlow**
+**What:** sequence model (LSTM) over the full interaction history to predict
+next-item correctness / mastery across many concepts at once. This is where
+TensorFlow earns its place.
+- **Gate:** only after the paid beta (Phase B+) produces enough multi-user
+  interaction sequences to train a net that beats BKT. Until then it will
+  overfit — keep it on the shelf.
+- **Model:** LSTM/GRU over (concept, correct) sequences (the standard DKT
+  formulation). **TensorFlow** (user preference); PyTorch acceptable alt.
+- **Integration:** offline training pipeline producing a served model;
+  `ml/dkt/` module; inference feeds the same scheduler/target-selection
+  interfaces as HLR/BKT so it's a drop-in upgrade.
+
+**Dependency note:** Stages 1–2 add only scikit-learn (light). Stage 3 adds
+TensorFlow — a heavy dependency; defer it until data justifies, and decide
+container/resource impact on the OptiPlex before committing.
 
 ---
 

@@ -32,6 +32,7 @@ from db.repo import (
     get_user_by_telegram_id,
     hardest_items,
     practice_streak,
+    random_translations,
     record_practice,
 )
 from llm import prompts
@@ -67,11 +68,27 @@ def _pick_mode(item: dict) -> str:
     modes = ["flashcard"]
     if item.get("translation"):
         modes.append("flashcard")
+        modes.append("mcq")  # tap-only recall; needs distractors at render time
     ctx = item.get("context_sentence") or ""
     if item["term"] and item["term"] in ctx:
         modes.append("cloze")
     modes.append("sentence")
     return random.choice(modes)
+
+
+def _mcq_options(user_id: int, item: dict) -> tuple[list[str], int] | None:
+    """Build shuffled MCQ options (correct translation + distractors) and the
+    index of the correct one. Returns None if not enough distractors exist."""
+    correct = item.get("translation")
+    if not correct:
+        return None
+    distractors = random_translations(user_id, item["id"], limit=3)
+    distractors = [d for d in distractors if d != correct]
+    if len(distractors) < 2:  # need at least a 3-way choice to be worthwhile
+        return None
+    options = distractors[:3] + [correct]
+    random.shuffle(options)
+    return options, options.index(correct)
 
 
 @require_auth
@@ -112,6 +129,30 @@ async def _next_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     mode = _pick_mode(item)
     context.user_data["current_item"] = item
     context.user_data["current_mode"] = mode
+
+    if mode == "mcq":
+        user_id = context.user_data.get("practice_user_id")
+        built = _mcq_options(user_id, item)
+        if built is None:
+            mode = "flashcard"  # fall back if not enough distractors
+            context.user_data["current_mode"] = mode
+        else:
+            options, correct_idx = built
+            context.user_data["await"] = "mcq"
+            context.user_data["mcq_correct"] = correct_idx
+            lines = [f"🃏 Was bedeutet: *{item['term']}*?\n"]
+            for i, opt in enumerate(options):
+                lines.append(f"{i + 1}. {opt}")
+            kb = InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(str(i + 1), callback_data=f"mcqcard:{i}")
+                        for i in range(len(options))
+                    ]
+                ]
+            )
+            await _reply(update, "\n".join(lines), keyboard=kb)
+            return IN_SESSION
 
     if mode == "flashcard":
         context.user_data["await"] = "reveal"
@@ -158,6 +199,24 @@ async def on_reveal(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["await"] = "grade"
     await query.edit_message_text(text, reply_markup=_grade_keyboard())
     return IN_SESSION
+
+
+@require_auth
+async def on_mcq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    if context.user_data.get("await") != "mcq":
+        return IN_SESSION
+    choice = int(query.data.split(":", 1)[1])
+    item = context.user_data.get("current_item")
+    correct_idx = context.user_data.get("mcq_correct")
+    correct = choice == correct_idx
+    if item:
+        apply_grade(item["id"], 4 if correct else 2)
+    answer = item.get("translation") if item else None
+    mark = "✅ Richtig!" if correct else f"❌ Es war: {answer}"
+    await query.edit_message_text(query.message.text + f"\n\n{mark}")
+    return await _advance(update, context)
 
 
 @require_auth
@@ -251,6 +310,7 @@ def _clear(context: ContextTypes.DEFAULT_TYPE) -> None:
         "current_item",
         "current_mode",
         "await",
+        "mcq_correct",
     ):
         context.user_data.pop(k, None)
 
@@ -265,12 +325,13 @@ async def _reply(update: Update, text: str, keyboard=None) -> None:
 
 def build_handler() -> ConversationHandler:
     return ConversationHandler(
-        entry_points=[CommandHandler("practice", practice_start)],
+        entry_points=[CommandHandler(["practice", "flashcards"], practice_start)],
         states={
             IN_SESSION: [
                 CommandHandler("stop", practice_stop),
                 CallbackQueryHandler(on_reveal, pattern=r"^reveal$"),
                 CallbackQueryHandler(on_grade, pattern=r"^grade:\d$"),
+                CallbackQueryHandler(on_mcq, pattern=r"^mcqcard:\d$"),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, on_typed),
             ]
         },

@@ -193,19 +193,24 @@ def _build_ladders() -> dict[Task, list[Rung]]:
     heavy = []
     cheap = []
     analyze = []
+    # Structured tasks (assessment, doc analysis) need reliable JSON — the tiny
+    # local Ollama model can't produce it, so it is left off these ladders.
+    structured = []
 
     if groq_available:
         heavy = [groq_70b, groq_8b, gemini_rung, ollama_rung]
         cheap = [groq_8b, gemini_rung, ollama_rung]
         analyze = [groq_70b, groq_8b, gemini_rung]
+        structured = [groq_70b, groq_8b, gemini_rung]
     else:
         heavy = [gemini_rung, ollama_rung]
         cheap = [gemini_rung, ollama_rung]
         analyze = [gemini_rung]
+        structured = [gemini_rung]
 
     return {
         Task.chat: heavy,
-        Task.assess: heavy,
+        Task.assess: structured,
         Task.generate: heavy,
         Task.analyze: analyze,
         Task.lookup: cheap,

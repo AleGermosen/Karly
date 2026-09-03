@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from telegram import BotCommand
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -45,6 +46,10 @@ def build_application() -> Application:
     app.add_handler(assessment.build_handler())
     app.add_handler(practice.build_handler())
 
+    # Global /cancel — only fires when no conversation is active (the assessment
+    # and practice handlers consume /cancel/​/stop themselves while running).
+    app.add_handler(CommandHandler("cancel", start.cancel_cmd))
+
     app.add_handler(CommandHandler("review", practice.review))
     app.add_handler(CommandHandler("remind", reminders.remind))
     app.add_handler(CommandHandler("topic", conversation.topic))
@@ -68,8 +73,28 @@ def build_application() -> Application:
     return app
 
 
+# The native Telegram command menu (the ≡ button), curated and ordered by
+# expected frequency. Debug commands (/status, /backend) are intentionally
+# omitted. Order is static for now; usage-sorted ordering is future work.
+MENU_COMMANDS = [
+    BotCommand("practice", "Vokabeln üben (Spaced Repetition)"),
+    BotCommand("flashcards", "Karteikarten üben (wie /practice)"),
+    BotCommand("test", "Einstufungstest starten"),
+    BotCommand("profile", "Dein Lernprofil ansehen"),
+    BotCommand("review", "Übungs-Statistik & Streak"),
+    BotCommand("topic", "Gespräch auf ein Thema lenken"),
+    BotCommand("summary", "Deine Fehler auswerten"),
+    BotCommand("corrections", "Korrekturen ein/aus"),
+    BotCommand("docs", "Deine Dokumente"),
+    BotCommand("remind", "Tägliche Erinnerung setzen"),
+    BotCommand("start", "Willkommen / neu starten"),
+    BotCommand("help", "Alle Befehle anzeigen"),
+]
+
+
 async def _post_init(app: Application) -> None:
-    """Startup hooks: probe Ollama (dormant until Phase 5); restore reminders."""
+    """Startup hooks: publish the command menu; probe Ollama; restore reminders."""
+    await app.bot.set_my_commands(MENU_COMMANDS)
     await ollama_client.health_check()
     await reminders.reschedule_all(app)
 

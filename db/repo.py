@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta
 
+from sqlalchemy import func
+
 from db.models import (
     Assessment,
     Document,
@@ -264,6 +266,31 @@ def hardest_items(user_id: int, limit: int = 5) -> list[dict]:
             .all()
         )
         return [_vocab_to_dict(v) for v in rows]
+
+
+def random_translations(user_id: int, exclude_id: int, limit: int = 3) -> list[str]:
+    """Random distinct translations from the user's other vocab, for MCQ
+    distractors. Excludes the item being tested and empty translations."""
+    with get_session() as session:
+        rows = (
+            session.query(VocabItem.translation)
+            .filter(
+                VocabItem.user_id == user_id,
+                VocabItem.id != exclude_id,
+                VocabItem.translation.isnot(None),
+                VocabItem.translation != "",
+            )
+            .order_by(func.random())
+            .limit(limit * 3)  # over-fetch, then dedupe below
+            .all()
+        )
+    seen: list[str] = []
+    for (t,) in rows:
+        if t not in seen:
+            seen.append(t)
+        if len(seen) >= limit:
+            break
+    return seen
 
 
 def record_practice(user_id: int) -> None:

@@ -5,7 +5,12 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from bot.middleware import require_auth
-from db.repo import get_user_by_telegram_id, latest_assessment, vocab_count
+from db.repo import (
+    count_due,
+    get_user_by_telegram_id,
+    latest_assessment,
+    vocab_count,
+)
 
 WELCOME = (
     "Hallo! Ich bin Karly, dein Deutsch-Tutor. 🇩🇪\n\n"
@@ -14,7 +19,7 @@ WELCOME = (
     "Commands:\n"
     "/test — Einstufungstest (find your level)\n"
     "/profile — dein Lernprofil\n"
-    "/practice — Vokabeln üben\n"
+    "/practice — Vokabeln üben (auch /flashcards)\n"
     "/review — Übungs-Statistik\n"
     "/remind HH:MM — tägliche Erinnerung\n"
     "/topic <x> — Thema steuern\n"
@@ -31,7 +36,8 @@ HELP = (
     "/test — adaptiver Einstufungstest (~10-15 Fragen); /done früher fertig, "
     "/cancel abbrechen\n"
     "/profile — Level, Schwächen, Vokabelzahl\n"
-    "/practice — Vokabeln üben (Spaced Repetition); /stop beendet\n"
+    "/practice (oder /flashcards) — Vokabeln üben (Spaced Repetition); "
+    "/stop beendet\n"
     "/review — Statistik: fällig, Streak, schwerste Vokabeln\n"
     "/remind HH:MM — tägliche Erinnerung (/remind off zum Ausschalten)\n"
     "/topic <x> — Gespräch auf ein Thema lenken (/topic clear zum Zurücksetzen)\n"
@@ -55,6 +61,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @require_auth
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text(HELP)
+
+
+@require_auth
+async def cancel_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Global /cancel. The assessment/practice conversations consume /cancel
+    while active; this only fires when nothing is running, so the user always
+    gets a reply instead of silence."""
+    await update.effective_message.reply_text(
+        "Es läuft gerade nichts zum Abbrechen. (Nothing active to cancel.)"
+    )
 
 
 @require_auth
@@ -85,5 +101,8 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             "Noch kein Einstufungstest gemacht. Starte mit /test."
         )
     lines.append(f"\nGespeicherte Vokabeln/Korrekturen: *{count}*")
+    due = count_due(user.id)
+    if due:
+        lines.append(f"🃏 Fällig zum Üben: *{due}* — /flashcards")
 
     await update.effective_message.reply_text("\n".join(lines))
