@@ -41,13 +41,12 @@ ERROR_MSG = "Entschuldigung, da ging etwas schief. Versuch es nochmal."
 
 # Backend-transition notices (bilingual, matching Karly's style).
 _BACKEND_NOTICES: dict[str, str] = {
-    "⚡ Groq 70B": (
-        "⚡ Läuft auf Groq (llama-3.3-70b) — schnell. (Talking to Groq's fast model.)"
+    "⚡ Groq": (
+        "⚡ Läuft auf Groq — schnell. (Talking to Groq's fast model.)"
     ),
-    "⚡ Groq 8B": (
-        "⚡ Groqs schnelles Modell (70B) hat sein Tageslimit erreicht — ich wechsle zum "
-        "leichteren Groq-Modell (8B). Immer noch schnell, etwas einfacher. "
-        "Reset um Mitternacht (UTC). (Switched to Groq 8B.)"
+    "⚡ Groq Mini": (
+        "⚡ Groqs Hauptmodell hat sein Limit erreicht — ich wechsle zum kleineren Modell. "
+        "Immer noch schnell. Reset um Mitternacht (UTC). (Switched to Groq Mini.)"
     ),
     "🤖 Gemini": (
         "🐢 Groqs Gratis-Limit ist heute aufgebraucht — ich wechsle zu Gemini. "
@@ -107,7 +106,7 @@ def _backend_notice(prev_label: str | None, new_label: str) -> str | None:
     if prev_label == new_label:
         return None
     # Recovering back to the primary Groq 70B rung.
-    if prev_label is not None and new_label == "⚡ Groq 70B":
+    if prev_label is not None and new_label == "⚡ Groq":
         return _RECOVERED_NOTICE
     return _BACKEND_NOTICES.get(new_label)
 

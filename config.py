@@ -43,10 +43,10 @@ GROQ_BASE_URL: str = os.getenv(
     "GROQ_BASE_URL", "https://api.groq.com/openai/v1"
 ).strip()
 GROQ_MODEL_PRIMARY: str = os.getenv(
-    "GROQ_MODEL_PRIMARY", "llama-3.3-70b-versatile"
+    "GROQ_MODEL_PRIMARY", "groq/compound"
 ).strip()
 GROQ_MODEL_FALLBACK: str = os.getenv(
-    "GROQ_MODEL_FALLBACK", "llama-3.1-8b-instant"
+    "GROQ_MODEL_FALLBACK", "groq/compound-mini"
 ).strip()
 GROQ_TEMPERATURE: float = float(os.getenv("GROQ_TEMPERATURE", "0.7"))
 GROQ_MAX_TOKENS: int = int(os.getenv("GROQ_MAX_TOKENS", "1024"))

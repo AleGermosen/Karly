@@ -185,8 +185,8 @@ async def _groq_backend(
 def _build_ladders() -> dict[Task, list[Rung]]:
     groq_available = bool(config.GROQ_API_KEY)
 
-    groq_70b = Rung(_groq_backend, config.GROQ_MODEL_PRIMARY, "⚡ Groq 70B")
-    groq_8b = Rung(_groq_backend, config.GROQ_MODEL_FALLBACK, "⚡ Groq 8B")
+    groq_70b = Rung(_groq_backend, config.GROQ_MODEL_PRIMARY, "⚡ Groq")
+    groq_8b = Rung(_groq_backend, config.GROQ_MODEL_FALLBACK, "⚡ Groq Mini")
     gemini_rung = Rung(_gemini_backend, config.GEMINI_MODEL, "🤖 Gemini")
     ollama_rung = Rung(_ollama_backend, config.OLLAMA_MODEL, "🐌 Ollama")
 
