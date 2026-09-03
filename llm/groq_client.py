@@ -19,6 +19,16 @@ logger = logging.getLogger(__name__)
 _BASE = config.GROQ_BASE_URL.rstrip("/")
 _COMPLETIONS = f"{_BASE}/chat/completions"
 
+# Latest quota snapshot per model, updated on every successful response.
+# {model_id: {remaining_req, limit_req, remaining_tok, limit_tok, reset_at}}
+# In-process only — resets on restart, repopulates on the next call.
+_quota: dict[str, dict] = {}
+
+
+def quota_snapshot() -> dict[str, dict]:
+    """Return the most recent rate-limit snapshot for each Groq model seen."""
+    return dict(_quota)
+
 
 def _parse_reset(header_val: str | None) -> datetime | None:
     """Parse a Groq reset header (float seconds from now) into an absolute UTC datetime."""
@@ -118,18 +128,28 @@ async def generate(
             tokens_in = usage.get("prompt_tokens")
             tokens_out = usage.get("completion_tokens")
 
-            # Proactive exhaustion: check remaining-request header so the
-            # router can mark this rung before the next call hits a 429.
-            remaining = resp.headers.get("x-ratelimit-remaining-requests")
-            if remaining is not None:
+            # Capture rate-limit headers for /status display and proactive
+            # exhaustion detection.
+            h = resp.headers
+            rem_req = h.get("x-ratelimit-remaining-requests")
+            lim_req = h.get("x-ratelimit-limit-requests")
+            rem_tok = h.get("x-ratelimit-remaining-tokens")
+            lim_tok = h.get("x-ratelimit-limit-tokens")
+            reset_hdr = h.get("x-ratelimit-reset-requests")
+            _quota[resolved_model] = {
+                "remaining_req": int(rem_req) if rem_req is not None else None,
+                "limit_req": int(lim_req) if lim_req is not None else None,
+                "remaining_tok": int(rem_tok) if rem_tok is not None else None,
+                "limit_tok": int(lim_tok) if lim_tok is not None else None,
+                "reset_at": _parse_reset(reset_hdr),
+            }
+
+            if rem_req is not None:
                 try:
-                    if int(remaining) == 0:
-                        reset_at = _parse_reset(
-                            resp.headers.get("x-ratelimit-reset-requests")
-                        )
+                    if int(rem_req) == 0:
                         raise RateLimited(
                             f"Groq {resolved_model} requests exhausted",
-                            reset_at=reset_at,
+                            reset_at=_parse_reset(reset_hdr),
                             scope="requests",
                         )
                 except ValueError:

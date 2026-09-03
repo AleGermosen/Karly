@@ -1,285 +1,167 @@
 # Karly — Roadmap & Future Work
 
-The single living plan for Karly's evolution from a single-user bot into a
-Groq-powered, subscription-sold German tutor. Records *what*, *why*, and
-*concrete starting points* so any future session can pick up without
-re-deriving the diagnosis. **Planning doc — no code here.**
+Living plan for Karly's evolution. Updated 2026-09-03.
 
-> **Shipped (through 2026-09-03), no longer tracked here:**
-> Phases 0–5 (assessment, conversation, SM-2 practice, PDF learning, systemd
-> deploy to the OptiPlex); the token-in-logs fix; `/corrections on|off` +
-> `/summary`; typing-indicator keep-alive; **Phase A step 1 — Groq-first
-> fallback ladder** (`llm/errors.py`, `llm/groq_client.py`, router rewrite);
-> **backend-change notifications**; **`/status`** and **`/backend on|off`**.
-> See git history for detail.
+---
+
+## TL;DR
+
+**What's working today:** Full German tutor bot — conversation with inline corrections, adaptive placement test, spaced-repetition flashcards (HLR scheduler, MCQ mode, deck picker, DE↔EN flip), daily challenge, rapid quiz targeting weak skills, roleplay scenes, weekly progress report, BKT skill mastery, DKT LSTM (gated), PDF vocabulary extraction, systemd deploy on OptiPlex.
+
+**What to build next (solo phase):**
+1. Voice notes — speak German, get a text correction back
+2. Assessment JSON hardening — retry/skip on bad output instead of raw dump
+3. Manual grade override buttons on typed answers
+
+**When you're ready to open to other users:**
+→ Multi-tenant foundation → Usage metering → Entitlements → Telegram Stars payments
 
 ---
 
 ## Vision
 
-Turn Karly into a subscription SaaS: many Telegram users, **Groq as the primary
-LLM** (sub-2s replies are the product's edge), sold via **Telegram Stars**.
-Build only as far as demand justifies.
+Turn Karly into a subscription SaaS: many Telegram users, **Groq as the primary LLM** (sub-2s replies are the product's edge), sold via **Telegram Stars**. Build only as far as demand justifies.
 
-### Decisions locked (2026-09-03)
+**Locked decisions:**
 
 | Decision | Choice |
 |---|---|
-| First scale target | **Paid beta — ≤ hundreds of users** |
-| Payments | **Telegram Stars** (native, recurring, no external provider) |
-| Free vs paid split | **Same model for all; gate on volume + features**, not model quality |
-| Primary model | **Groq `openai/gpt-oss-120b`** (fallback `openai/gpt-oss-20b`). NB: `groq/compound*` are agentic systems, **not** chat-completion models — they 404 on `/chat/completions`; do not use them here. |
+| First scale target | Paid beta — ≤ hundreds of users |
+| Payments | Telegram Stars (native, recurring) |
+| Free vs paid split | Same model quality for all; gate on volume + features |
+| Primary LLM | Groq `openai/gpt-oss-120b` (fallback `openai/gpt-oss-20b`). Note: `groq/compound*` are agentic systems, not chat-completion — they 404 on `/chat/completions`. |
 
 ---
 
-## Current backend ladder (live as of 2026-09-03)
+## Current system snapshot
+
+### Backend ladder (live)
 
 ```
 ⚡ Groq (openai/gpt-oss-120b)     — primary; fast
-⚡ Groq Mini (openai/gpt-oss-20b) — when the 120b daily limit is hit
-🤖 Gemini (gemini-3.6-flash)      — when both Groq limits hit (~20 req/day free)
-🐌 Ollama (local)                 — last resort; slow, unlimited — CHAT ONLY
+⚡ Groq Mini (openai/gpt-oss-20b) — Groq 120b daily limit hit
+🤖 Gemini (gemini-3.6-flash)      — both Groq limits hit
+🐌 Ollama (local 3B)              — last resort; chat only
 ```
 
-Per-rung cooldowns track daily vs transient failures. State resets on restart
-(in-process only — Phase B moves this to Redis). `/status` shows current rung;
-`/backend on` appends a footer tag to every reply.
+Ollama is excluded from structured tasks (`/test`, doc analysis) — the 3B model can't reliably produce JSON. Per-rung cooldowns are in-process only; they reset on restart (Redis moves this in Phase B).
 
-**Ollama is excluded from structured tasks** (`Task.assess`, doc analysis): the
-3B local model cannot produce reliable JSON, which corrupted the assessment
-(returned an answer instead of a question). Those ladders stop at Gemini.
+### Cost today
 
-**Cost today:** $0 — all free tiers. Groq free limits handle solo use.
+| Scenario | Volume | LLM cost | Infra |
+|---|---|---|---|
+| Just me (now) | ~1,500 turns/mo | $0 (free tier) | $0 |
+| Beta (hundreds) | 60k turns/mo | ~$20–100/mo | ~$10–20/mo |
+| Scale (thousands) | 600k turns/mo | ~$200–950/mo | ~$100–300/mo |
 
----
-
-## Phase A — remaining items (paid-beta path)
-
-> ⛔ **IGNORE UNTIL READY TO OPEN KARLY TO OTHER USERS.**
-> Everything below in this section is only needed when you decide to let other
-> people in. While it's just you, none of this is worth touching — the bot
-> works fine as-is. Come back here when you're ready to invite the first beta
-> users.
-
-### A2. Multi-tenant foundation
-
-Remove the single-user gate (every Telegram user auto-provisions a `User`).
-**SQLite → managed Postgres** (Neon free tier to start).
-**Fix the sync-SQLAlchemy-in-async-handlers issue** — fine at one user, blocks
-the event loop under concurrency. This is the main existing-code lift.
-
-### A3. Usage metering
-
-One row per LLM call (`user_id, model, tokens_in, tokens_out, task, ts`).
-The router already returns `RouteResult` with token counts — the handler just
-needs to persist them. Powers quota enforcement, real cost/margin numbers,
-and abuse detection. Prerequisite for A4.
-
-### A4. Entitlements + gating
-
-`subscriptions` table (`user_id, tier, status, current_period_end,
-provider_charge_id`); extend `require_auth` → `require_tier` / `check_quota`.
-Gate on **volume + features**: free = N msgs/day, no PDF, no `/summary`;
-paid = high/unlimited msgs, PDFs, `/summary`, priority in the rate-limiter.
-
-### A5. Telegram Stars subscriptions
-
-`/subscribe` sends a recurring Stars invoice; handle `pre_checkout_query` →
-`successful_payment` → renewal/cancel updates; grace period + auto-downgrade
-on lapse.
-
-**Critical path:** A2 (multi-tenant + async fix) → A3 (metering) → A4
-(entitlements) → A5 (Stars).
+One tutor turn ≈ 2,000 input + 500 output tokens. Verify Groq rates at console.groq.com — they change.
 
 ---
 
-## Expenses — what this actually costs
+## Solo phase — what to build next
 
-**Assumptions** (adjust as real usage data arrives via metering):
-- One tutor turn ≈ **~2,000 input tokens** and **~500 output tokens**.
-- Groq pricing: verify current rates at console.groq.com — they change.
+These are quality improvements that make sense before opening to other users.
 
-| Scenario | Volume | LLM cost | + Infra | Notes |
-|---|---|---|---|---|
-| **Just me (now)** | ~1,500 turns/mo | **$0** on free tier | $0 | Free tiers cover it. |
-| **Hundreds (beta)** | 200 users × ~300 turns = 60k/mo | ~$20–100/mo | ~$10–20/mo | Past free tier → Groq paid. Postgres (Neon free) + small VM. |
-| **Scale (thousands)** | 2,000 users × ~300 turns = 600k/mo | ~$200–950/mo | ~$100–300/mo | Route free users to Mini here — much cheaper. |
+### Voice notes (STT/TTS)
 
-**Revenue context:** a Telegram Stars sub at ~$5–9/mo covers costs at modest
-paid conversion. Volume caps on the free tier protect the margin — set them
-deliberately.
+Let AJ speak a German sentence and receive a text correction back. Optionally have Karly read her reply aloud.
 
----
+- **Input:** Telegram voice message → Groq Whisper (or Google STT) → text → normal correction pipeline
+- **Output (optional):** Gemini TTS or gTTS → send voice reply
+- **Gate:** voice message handler in `bot/main.py` (`filters.VOICE`); transcription replaces the text message in the conversation flow
+- **Why:** speaking practice is the hardest skill to drill over text; this is the highest-impact stretch feature
 
-## Deferred until the beta earns it (Phase B/C)
+### Assessment JSON hardening
 
-- Long-polling → **webhooks** + multiple stateless instances behind a load
-  balancer (horizontal scale).
-- **Redis** for cross-instance rate-limiting/token-buckets and a job queue
-  (also moves `LadderState` out of process so restarts don't reset cooldowns).
-- **Durable scheduler** for reminders (current in-process job-queue only
-  survives one instance).
-- Read replicas, response streaming to Telegram, caching common lookups,
-  routing free users to Mini for cost, multi-region.
+When the LLM returns malformed JSON during `/test`, the current fallback dumps the raw string as an open item. Better: retry once with a simpler prompt, then skip the item entirely if it still fails.
+
+- File: `bot/handlers/assessment.py` → `_next_item()`
+- One retry with a stripped-down prompt; skip + log on second failure
+
+### Manual grade override on typed answers
+
+Cloze and sentence answers are auto-mapped to grade 2 (wrong) or 4 (correct). Power users want to say "I knew it but typed it wrong" → grade 5.
+
+- After feedback is shown, append the grade buttons (`_grade_keyboard()`) so the user can override before advancing
+- Small change to `on_typed()` in `practice.py`
 
 ---
 
-## Cross-cutting (required even at beta scale)
+## Scale phase — open to other users
 
-- **Privacy policy + ToS** — storing other users' writing and taking payment.
-  GDPR export/delete is easy given the per-`user_id` schema.
-- **Hard per-user daily cost cap even on paid** — one runaway user directly
-  burns Groq budget.
-- **Hosting** — move to a small always-on cloud VM/container; a paid product
-  shouldn't depend on the OptiPlex. The OptiPlex becomes dev/staging (and the
-  Ollama last-resort rung).
+> **Don't touch until you're ready to invite the first beta users.** While it's just you, none of this is worth building — the bot works fine as-is.
 
----
+### Step 1 — Multi-tenant foundation
 
-## Interactivity roadmap (started 2026-09-03)
+- Remove the single-user gate; every Telegram user auto-provisions a `User` row
+- **SQLite → Postgres** (Neon free tier to start)
+- **Fix sync SQLAlchemy in async handlers** — fine at one user, blocks the event loop under concurrency; this is the main lift
 
-A push to make Karly more interactive. Original plan had five threads; the
-**assessment revamp shipped first**, the rest are still open.
+### Step 2 — Usage metering
 
-### Shipped
-- **Assessment revamp** (`/test`): structured JSON items, MCQ answer buttons
-  with local scoring, adaptive CEFR difficulty, per-skill quotas (grammar /
-  reading / comprehension / production / functional / vocab — no longer
-  vocab-heavy), auto-graded open answers **batched 5 at a time** to save LLM
-  calls, per-skill breakdown in the verdict. Ollama excluded from the assess
-  ladder so bad JSON can't leak an answer. Global `/cancel` added.
+One row per LLM call (`user_id, model, tokens_in, tokens_out, task, ts`). The router already returns `RouteResult` with token counts — the handler just needs to persist them. Prerequisite for entitlements.
 
-### Still missing from the plan
-1. **Command menu button** (was "step 1", never built). Use Telegram
-   `setMyCommands` in a `post_init` hook in `bot/main.py` to populate the
-   native `≡` menu. **Static, hand-picked order** (decided): practice, test,
-   profile, review, topic, summary, docs, remind, help — hide `/status`,
-   `/backend`. Optionally a `/menu` reply-keyboard for big tappable buttons.
-   Dynamic usage-sorted ordering deferred.
-2. **Flashcard upgrades** — `/practice` already has SM-2 flashcard/cloze/
-   sentence. Add: `/flashcards` alias + menu entry, due-count badge in
-   `/profile` & reminders, MCQ flashcard mode (LLM distractors), auto-graded
-   typed answers, DE↔EN direction toggle, themed decks (filter by `source` /
-   `document_id`), "➕ Add to flashcards" button on corrections/doc vocab.
-3. **Correction-attached buttons** — inline buttons under each correction:
-   "Explain why", "Save word", "Another example", "Drill this". Uses stored
-   `corrections_json`.
-4. **`/daily` mixed challenge** — one bite-sized daily task (cloze + translate
-   + "reply to this"), tied to the existing `PracticeLog` streak.
-5. **Stretch** — voice notes (STT/TTS), roleplay scenarios, weekly progress
-   report, `/quiz` rapid MCQ from weak areas.
+### Step 3 — Entitlements + gating
 
-**Assessment follow-ups not yet done:** explicit running-estimate refinements,
-harden the JSON fallback further (retry/skip rather than any raw dump).
+`subscriptions` table; extend `require_auth` → `require_tier` / `check_quota`. Free = N msgs/day, no PDF, no `/summary`; paid = unlimited, PDFs, priority.
+
+### Step 4 — Telegram Stars payments
+
+`/subscribe` sends a recurring Stars invoice; handle `pre_checkout_query` → `successful_payment` → renewal/cancel; grace period + auto-downgrade on lapse.
+
+### Step 5 — Cross-cutting (required at beta)
+
+- Privacy policy + ToS (storing user writing + taking payment; GDPR export/delete is easy given the per-`user_id` schema)
+- Hard per-user daily cost cap — one runaway user burns Groq budget
+- Move to a cloud VM/container; OptiPlex becomes dev/staging
+
+### Step 6 — Infrastructure (Phase B/C, when needed)
+
+- Long-polling → webhooks + stateless instances behind a load balancer
+- Redis for cross-instance rate-limiting and durable `LadderState` (cooldowns survive restarts)
+- Durable reminder scheduler (current in-process job-queue doesn't survive multi-instance)
+- Read replicas, response streaming, multi-region
 
 ---
 
-## ML roadmap — personalized learning models (AFTER the interactivity pipeline)
+## ML roadmap
 
-**Sequencing:** build this only once the interactivity items above (command
-menu → flashcards → correction buttons → `/daily`) have shipped. These three
-stages are ordered cheapest-first and each earns the next; do not jump to the
-LSTM before the data exists to train it. All three approved by the user
-(2026-09-03).
+All three stages are approved and architecturally designed. Stages 1 and 2 are **live**. Stage 3 is built but gated.
 
-**Why not just TensorFlow from the start:** a deep net is data-hungry; a single
-learner won't generate enough signal for it to beat a simple model, and the LLM
-already handles generation. The real ML win is **smarter review scheduling and
-knowledge tracing**, so we escalate model complexity as data grows.
+### Stage 1 — HLR recall scheduler ✅ Live
 
-### Stage 1 — Half-Life Regression (HLR) recall scheduler
-**What:** learn a per-item *memory half-life* from review history and schedule
-`next_review_at` when predicted recall drops to a target (e.g. 0.5), replacing
-the fixed SM-2 formula.
-- **Model:** logistic/linear regression on features (past correct/incorrect
-  count, elapsed time, item difficulty, source). **scikit-learn — no TF.**
-- **Data needed:** log every review outcome + timestamp. `PracticeLog` already
-  logs sessions; add per-item review events (correct?, latency, prior interval).
-- **Integration:** new `srs/hlr.py` alongside `srs/sm2.py`; a config flag picks
-  the scheduler so we can A/B against SM-2. Retrain offline (cron) on the
-  accumulated log; store learned weights, not a live-trained model.
-- **Why first:** biggest UX payoff (better retention), smallest dependency,
-  works on modest single-user data.
+`srs/hlr.py` replaces SM-2's fixed-multiplier with a per-item memory half-life. Every review logs to `ReviewLog`; `apply_hlr_grade` updates both HLR and SM-2 (for stats compatibility).
 
-### Stage 2 — Bayesian Knowledge Tracing (BKT) concept mastery
-**What:** track mastery probability per *concept* (grammar rules, e.g. "dative
-after two-way prepositions") so Karly can target weak concepts in `/daily`,
-`/quiz`, and assessment gap selection.
-- **Model:** classic BKT (4 params per skill: prior, learn, slip, guess) —
-  interpretable, low-data, no neural net. Tag items/corrections with concept
-  ids to feed it.
-- **Data needed:** concept tagging on assessment items and corrections
-  (`corrections_json` already stores the mistakes; add a concept label).
-- **Integration:** `ml/bkt.py`; surface mastery in `/profile` and use it to
-  pick drill targets.
+### Stage 2 — BKT skill mastery ✅ Live
 
-### Stage 3 — Deep Knowledge Tracing (DKT, LSTM) — **TensorFlow**
-**What:** sequence model (LSTM) over the full interaction history to predict
-next-item correctness / mastery across many concepts at once. This is where
-TensorFlow earns its place.
-- **Gate:** only after the paid beta (Phase B+) produces enough multi-user
-  interaction sequences to train a net that beats BKT. Until then it will
-  overfit — keep it on the shelf.
-- **Model:** LSTM/GRU over (concept, correct) sequences (the standard DKT
-  formulation). **TensorFlow** (user preference); PyTorch acceptable alt.
-- **Integration:** offline training pipeline producing a served model;
-  `ml/dkt/` module; inference feeds the same scheduler/target-selection
-  interfaces as HLR/BKT so it's a drop-in upgrade.
+`srs/bkt.py` tracks mastery probability per skill (grammar / reading / comprehension / production / functional / vocab) using classic Bayesian Knowledge Tracing. Updates fire after every assessment item and quiz answer. State is stored in `ConceptMastery` as `{skill: {p, level}}` — the CEFR level of the item is recorded alongside the probability so `/profile` shows e.g. `Grammar (A2): ███████░░░ 70%`. Powers `/quiz` target selection.
 
-**Dependency note:** Stages 1–2 add only scikit-learn (light). Stage 3 adds
-TensorFlow — a heavy dependency; defer it until data justifies, and decide
-container/resource impact on the OptiPlex before committing.
+### Stage 3 — DKT LSTM (TensorFlow) ⏳ Built, gated
+
+`srs/dkt.py` implements an LSTM over the user's full review sequence. Gated behind: (a) TensorFlow importable and (b) ≥ 50 reviews logged. With a single user the model will overfit; it becomes meaningful at multi-user beta scale. `review_history_for_dkt()` in `repo.py` builds the training data. No action needed — it activates automatically when the gate opens.
 
 ---
 
-## Planned features (solo phase — build whenever ready)
+## Technical notes
 
-### Correction strictness level
+These are implementation details worth preserving so future sessions don't re-derive them.
 
-**What:** Replace the binary `/corrections on|off` toggle with a three-level
-strictness dial. The user sets a level once and the tutor calibrates how
-aggressively it corrects.
+### Why Ollama is excluded from structured tasks
 
-**Levels:**
+The local 3B model cannot reliably produce valid JSON. During assessment it returned an answer instead of a question (the JSON blob was the answer string). The structured ladder (`Task.assess`, `Task.analyze`) stops at Gemini; Ollama only appears in `Task.chat`, `Task.generate`, `Task.lookup`, `Task.check`.
 
-| Level | Command | Behaviour |
-|---|---|---|
-| `off` | `/corrections off` | No corrections at all. Converse freely; use `/summary` to review later. *(Existing)* |
-| `relaxed` | `/corrections relaxed` | Catch only real errors that would confuse a native speaker: wrong case, wrong verb conjugation, missing agreement. Ignore word order choices, stylistic variation, and minor article slips. |
-| `strict` | `/corrections strict` | Catch everything: grammar, word order, article gender, register mismatches, awkward phrasing. Maximum learning pressure. |
+### Groq compound models
 
-`relaxed` is the new recommended default for daily conversation practice.
-`strict` is for deliberate drilling sessions.
+`groq/compound` and `groq/compound-mini` are agentic systems, not chat-completion endpoints — they return 404 on `/v1/chat/completions`. Use `openai/gpt-oss-120b` and `openai/gpt-oss-20b` instead. Check `config.py` defaults and the OptiPlex `.env` for any overrides.
 
-**Slang handling (applies at all levels):**
-Slang is never treated as an error. If the user writes something colloquial or
-slangy, Karly notes it with a neutral tag — `💬 "[word]" — Slang/umgangssprachlich`
-— so the user knows it's informal but doesn't feel corrected. This note appears
-regardless of strictness level and is not stored as a vocab item.
+### BKT CEFR level tracking
 
-**Storage:** a `correction_level` string column (`"off"` / `"relaxed"` /
-`"strict"`) on the `User` model, replacing the existing `corrections_on` bool.
-During migration, map `corrections_on=True → "relaxed"`, `False → "off"` to
-preserve existing behaviour.
+Each BKT observation records the CEFR level of the item that was answered. This means "Grammar: 70%" is always "70% mastery of grammar at A2" (or whatever level was being tested), not an undifferentiated global score. A proper graduated BKT (separate instance per skill+level, graduating up when mastery > 0.95) is future work post-beta.
 
-**Prompt impact:** the `CORRECTION_BLOCK` prompt snippet becomes
-level-specific. Each level gets its own instruction paragraph telling the tutor
-exactly what to flag and what to silently ignore. The slang note instruction is
-added once, shared across all levels.
+### SM-2 kept alongside HLR
 
-**Command UX:** `/corrections` with no argument shows the current level.
-`/corrections relaxed|strict|off` sets it. Keep `on` as an alias for `strict`
-so any muscle memory from the old toggle still works.
+`apply_hlr_grade` runs both HLR and SM-2 on every review. SM-2 easiness/interval fields stay current so `/review` stats (hardest items by easiness factor) keep working without changes.
 
----
+### Reminder timezone
 
-## Smaller open items
-
-- Auto-trigger `/summary` when corrections toggle back on, or after N idle
-  mins (on-demand only today).
-- Manual SM-2 override buttons for typed answers (auto-mapped today).
-- Reminder times use server local timezone (fine single-user; revisit for
-  multi-tenant across timezones).
-- OCR for scanned PDFs — intentionally out of scope.
-- `last_backend_label` stored in `context.user_data` (lost on restart) — move
-  to a `User` column for persistence when multi-tenant lands (A2).
+Reminder times are stored as "HH:MM" and interpreted in server local time. Fine for a single user; needs per-user timezone when multi-tenant.

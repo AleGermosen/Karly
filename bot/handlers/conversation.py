@@ -431,20 +431,49 @@ async def _summary_analyze(context, chat_id: int, batch: str):
 
 @require_auth
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/status — show which backend is active and which rungs are exhausted."""
+    """/status — backend ladder state + Groq request quota snapshot."""
+    from llm.groq_client import quota_snapshot
+
     rungs = ladder_status(Task.chat)
-    parts = []
+    current = context.user_data.get(
+        "last_backend_label", rungs[0]["label"] if rungs else "?"
+    )
+
+    lines = [f"⚙️ *Backend-Status* — aktiv: {current}\n"]
+
     for r in rungs:
         if r["state"] == "ready":
-            parts.append(f"{r['label']}: frei")
+            lines.append(f"  {r['label']}: ✅ frei")
         else:
             avail = r.get("available_at")
             reset_str = avail.strftime("%H:%M UTC") if avail else "?"
-            parts.append(f"{r['label']}: Limit (Reset {reset_str})")
+            lines.append(f"  {r['label']}: ⛔ Limit (Reset {reset_str})")
 
-    current = context.user_data.get("last_backend_label", rungs[0]["label"] if rungs else "?")
-    line = " | ".join(parts)
-    await update.effective_message.reply_text(f"Aktuell: {current}.\n{line}")
+    quota = quota_snapshot()
+    if quota:
+        lines.append("\n📊 *Groq Quota* (letzte Antwort):")
+        import config as _config
+        model_labels = {
+            _config.GROQ_MODEL_PRIMARY: "120b (primary)",
+            _config.GROQ_MODEL_FALLBACK: "20b (fallback)",
+        }
+        for model_id, q in quota.items():
+            label = model_labels.get(model_id, model_id)
+            rem = q.get("remaining_req")
+            lim = q.get("limit_req")
+            rem_tok = q.get("remaining_tok")
+            lim_tok = q.get("limit_tok")
+            reset_at = q.get("reset_at")
+            req_str = f"{rem}/{lim} req" if rem is not None and lim else "? req"
+            tok_str = f"{rem_tok}/{lim_tok} tok" if rem_tok is not None and lim_tok else ""
+            reset_str = f" — reset {reset_at.strftime('%H:%M UTC')}" if reset_at else ""
+            detail = f"{req_str}" + (f", {tok_str}" if tok_str else "") + reset_str
+            lines.append(f"  {label}: {detail}")
+        lines.append("  _(Quota is per-minute on free tier. Check console.groq.com for monthly totals.)_")
+    else:
+        lines.append("\n_(Groq quota: no calls made yet this session.)_")
+
+    await update.effective_message.reply_text("\n".join(lines))
 
 
 @require_auth
