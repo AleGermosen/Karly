@@ -16,7 +16,10 @@ SessionLocal = sessionmaker(bind=engine, expire_on_commit=False, future=True)
 # Additive columns to backfill on existing databases (create_all never ALTERs).
 # {table: {column: "SQL column definition"}}.
 _MIGRATIONS: dict[str, dict[str, str]] = {
-    "users": {"corrections_on": "BOOLEAN NOT NULL DEFAULT 1"},
+    "users": {
+        "corrections_on": "BOOLEAN NOT NULL DEFAULT 1",
+        "correction_level": "TEXT NOT NULL DEFAULT 'relaxed'",
+    },
 }
 
 
@@ -36,10 +39,20 @@ def _apply_migrations() -> None:
                     )
 
 
+def _migrate_correction_level() -> None:
+    """One-time data migration: map corrections_on=0 → correction_level='off'."""
+    with engine.begin() as conn:
+        conn.execute(text(
+            "UPDATE users SET correction_level = 'off' "
+            "WHERE corrections_on = 0 AND correction_level = 'relaxed'"
+        ))
+
+
 def init_db() -> None:
     """Create all tables if they don't exist, then backfill new columns."""
     Base.metadata.create_all(engine)
     _apply_migrations()
+    _migrate_correction_level()
 
 
 @contextmanager

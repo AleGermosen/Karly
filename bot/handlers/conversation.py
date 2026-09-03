@@ -27,7 +27,7 @@ from db.repo import (
     recent_document,
     recent_history,
     recent_user_messages,
-    set_corrections,
+    set_correction_level,
 )
 from llm import prompts
 from llm.errors import AllBackendsExhausted, LLMUnavailable, QuotaExceeded
@@ -140,9 +140,14 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     history = recent_history(user.id, limit=config.CONTEXT_WINDOW_MESSAGES)
-    corrections_on = user.corrections_on
+    level = user.correction_level
     system = prompts.TUTOR_PERSONA.format(level=_user_level(user.cefr_estimate))
-    system += prompts.CORRECTION_BLOCK if corrections_on else prompts.NO_CORRECTION_NOTE
+    if level == "strict":
+        system += prompts.CORRECTION_STRICT + prompts.SLANG_NOTE
+    elif level == "relaxed":
+        system += prompts.CORRECTION_RELAXED + prompts.SLANG_NOTE
+    else:
+        system += prompts.NO_CORRECTION_NOTE + prompts.SLANG_NOTE
 
     topic = context.user_data.get("topic")
     if topic:
@@ -169,7 +174,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     reply = result.text
-    corrections = _parse_corrections(reply) if corrections_on else []
+    corrections = _parse_corrections(reply) if level != "off" else []
     add_message(user.id, "user", text)
     add_message(user.id, "assistant", reply, corrections=corrections or None)
     if corrections:
@@ -250,30 +255,42 @@ async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 @require_auth
 async def corrections(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/corrections on|off — toggle inline grammar corrections (persisted)."""
+    """/corrections strict|relaxed|off — set correction strictness."""
     user = get_user_by_telegram_id(update.effective_user.id)
     if user is None:
         return
     arg = (context.args[0].lower() if context.args else "").strip()
 
-    if arg in ("on", "an", "ein"):
-        set_corrections(user.id, True)
+    if arg in ("strict", "on", "an", "ein"):
+        set_correction_level(user.id, "strict")
         await update.effective_message.reply_text(
-            "Korrekturen AN — ich korrigiere jeden Fehler wieder. "
-            "(Inline corrections on.)"
+            "Korrekturen: STRICT — ich korrigiere jeden Fehler, auch Wortstellung "
+            "und Stil. (Strict corrections on — every mistake flagged.)"
+        )
+        return
+    if arg in ("relaxed", "locker"):
+        set_correction_level(user.id, "relaxed")
+        await update.effective_message.reply_text(
+            "Korrekturen: RELAXED — ich korrigiere nur echte Fehler, die einen "
+            "Muttersprachler verwirren würden. Stilfragen ignoriere ich. "
+            "(Relaxed — only real errors flagged.)"
         )
         return
     if arg in ("off", "aus"):
-        set_corrections(user.id, False)
+        set_correction_level(user.id, "off")
         await update.effective_message.reply_text(
-            "Korrekturen AUS — wir plaudern jetzt frei. Nutze /summary für eine "
-            "Auswertung deiner Fehler. (Corrections off; use /summary later.)"
+            "Korrekturen AUS — wir plaudern frei. Nutze /summary für eine "
+            "Auswertung. (Corrections off; use /summary later.)"
         )
         return
 
-    state = "AN" if user.corrections_on else "AUS"
+    level = user.correction_level
+    level_label = {"strict": "STRICT", "relaxed": "RELAXED", "off": "AUS"}.get(level, level)
     await update.effective_message.reply_text(
-        f"Korrekturen sind {state}. Nutze /corrections on oder /corrections off."
+        f"Korrekturen: {level_label}.\n"
+        "/corrections strict — alles korrigieren\n"
+        "/corrections relaxed — nur echte Fehler\n"
+        "/corrections off — keine Korrekturen"
     )
 
 

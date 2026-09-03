@@ -6,11 +6,11 @@ a strict-JSON verdict, which is stored and used to update the user's level.
 """
 from __future__ import annotations
 
-import json
 import logging
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
+    CallbackQueryHandler,
     CommandHandler,
     ContextTypes,
     ConversationHandler,
@@ -22,14 +22,54 @@ from bot.middleware import require_auth
 from db.repo import get_user_by_telegram_id, save_assessment
 from llm import prompts
 from llm.gemini import LLMUnavailable, QuotaExceeded
-from llm.router import Task, route
+from llm.router import Task
 from llm.structured import generate_json
 
 logger = logging.getLogger(__name__)
 
 ASSESSING = 1
-MIN_EXCHANGES = 10
-MAX_EXCHANGES = 15
+MIN_EXCHANGES = 8
+MAX_EXCHANGES = 12
+
+CEFR_LADDER = ["A1", "A2", "B1", "B2", "C1", "C2"]
+START_LEVEL = "A2"
+
+# Grade open (typed) answers in batches of this many, to save LLM round-trips.
+OPEN_BATCH_SIZE = 5
+
+# Target number of items per skill across a full session (sums to MAX_EXCHANGES).
+SKILL_QUOTA = {
+    "grammar": 2,
+    "reading": 2,
+    "comprehension": 2,
+    "production": 2,
+    "functional": 2,
+    "vocab": 2,
+}
+
+
+def _step_level(level: str, delta: int) -> str:
+    """Move a CEFR level up/down the ladder, clamped to the ends."""
+    try:
+        i = CEFR_LADDER.index(level)
+    except ValueError:
+        i = CEFR_LADDER.index(START_LEVEL)
+    return CEFR_LADDER[max(0, min(len(CEFR_LADDER) - 1, i + delta))]
+
+
+def _skills_needed(results: list[dict]) -> list[str]:
+    """Skills still under their quota, most-needed first."""
+    served: dict[str, int] = {}
+    for r in results:
+        skill = r.get("skill")
+        if skill:
+            served[skill] = served.get(skill, 0) + 1
+    remaining = {
+        skill: quota - served.get(skill, 0) for skill, quota in SKILL_QUOTA.items()
+    }
+    needed = [s for s, left in remaining.items() if left > 0]
+    needed.sort(key=lambda s: remaining[s], reverse=True)
+    return needed
 
 QUOTA_MSG = "Tageslimit erreicht — versuch es später. 🙏 (Gemini quota reached.)"
 ERROR_MSG = "Da ging etwas schief bei der Einstufung. Versuch es später mit /test."
@@ -43,71 +83,258 @@ def _transcript_text(transcript: list[dict]) -> str:
     return "\n".join(lines)
 
 
-async def _next_item(transcript: list[dict]) -> str:
+async def _next_item(
+    transcript: list[dict], needed_skills: list[str], target_level: str
+) -> dict:
+    """Ask the model for the next structured interview item.
+
+    Returns a dict following the ASSESS_INTERVIEW contract. On malformed
+    output we degrade gracefully to an open free-text item so the session
+    never stalls.
+    """
     prompt = (
         "Interview transcript so far:\n"
         + (_transcript_text(transcript) or "(none yet — this is the first item)")
-        + "\n\nGive the next interview item."
+        + f"\n\nTarget difficulty for this item: CEFR {target_level}."
+        + "\n\nChoose the item's skill from these still-needed skills (pick the "
+        "first that fits naturally): "
+        + (", ".join(needed_skills) if needed_skills else "(any skill)")
+        + "\n\nGive the next interview item as JSON."
     )
-    return await route(Task.assess, prompt, system=prompts.ASSESS_INTERVIEW)
+    parsed, raw = await generate_json(
+        Task.assess, prompt, system=prompts.ASSESS_INTERVIEW
+    )
+    if not isinstance(parsed, dict) or not parsed.get("prompt"):
+        logger.warning("Assessment item was not valid JSON; using open fallback.")
+        skill = needed_skills[0] if needed_skills else "production"
+        return {"type": "open", "skill": skill, "level": target_level, "prompt": raw.strip()}
+    return parsed
+
+
+def _item_text(item: dict) -> str:
+    """Human-facing text for an item (question + numbered MCQ options)."""
+    parts = []
+    passage = (item.get("passage") or "").strip()
+    if passage:
+        parts.append(passage + "\n")
+    parts.append(item.get("prompt", ""))
+    if item.get("type") == "mcq" and item.get("options"):
+        parts.append("")
+        for i, opt in enumerate(item["options"]):
+            parts.append(f"{i + 1}. {opt}")
+    return "\n".join(parts)
+
+
+def _mcq_keyboard(item_no: int, options: list) -> InlineKeyboardMarkup:
+    row = [
+        InlineKeyboardButton(str(i + 1), callback_data=f"assess:{item_no}:{i}")
+        for i in range(len(options))
+    ]
+    return InlineKeyboardMarkup([row])
 
 
 @require_auth
 async def assess_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["assess_transcript"] = []
+    context.user_data["assess_results"] = []
     context.user_data["assess_count"] = 0
+    context.user_data["assess_item_no"] = 0
+    context.user_data["assess_level"] = START_LEVEL
+    context.user_data["assess_open_no"] = 0
+    context.user_data["assess_pending_open"] = []
     await update.effective_message.reply_text(
-        "Los geht's — kurze Einstufung (~10-15 Fragen). Antworte auf Deutsch, "
-        "so gut du kannst. /cancel bricht ab.\n(Starting your placement — "
-        "answer in German; /cancel to stop.)"
+        "Los geht's — kurze Einstufung (~8-12 Fragen), gemischt: Grammatik, "
+        "Lesen, freies Schreiben. Bei Auswahlfragen tippe auf einen Button. "
+        "/cancel bricht ab.\n(Starting your placement — tap a button for "
+        "multiple-choice, or type your answer for open questions.)"
     )
-    try:
-        item = await _next_item([])
-    except QuotaExceeded:
-        await update.effective_message.reply_text(QUOTA_MSG)
-        return ConversationHandler.END
-    except LLMUnavailable:
-        await update.effective_message.reply_text(ERROR_MSG)
-        return ConversationHandler.END
-
-    context.user_data["assess_transcript"].append({"role": "assistant", "text": item})
-    await update.effective_message.reply_text(item)
-    return ASSESSING
+    return await _serve_next(update, context)
 
 
-@require_auth
-async def assess_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    transcript: list[dict] = context.user_data.get("assess_transcript", [])
-    answer = (update.effective_message.text or "").strip()
-    transcript.append({"role": "user", "text": answer})
-    context.user_data["assess_count"] = context.user_data.get("assess_count", 0) + 1
+async def _serve_next(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Fetch and render the next item, or finish if we've hit the max."""
+    transcript: list[dict] = context.user_data["assess_transcript"]
+    results: list[dict] = context.user_data["assess_results"]
     count = context.user_data["assess_count"]
-
-    await context.bot.send_chat_action(
-        chat_id=update.effective_message.chat_id, action="typing"
-    )
 
     if count >= MAX_EXCHANGES:
         return await _finish(update, context, transcript)
 
+    await context.bot.send_chat_action(
+        chat_id=update.effective_chat.id, action="typing"
+    )
+    needed = _skills_needed(results)
+    target_level = context.user_data.get("assess_level", START_LEVEL)
     try:
-        item = await _next_item(transcript)
+        item = await _next_item(transcript, needed, target_level)
     except QuotaExceeded:
-        await update.effective_message.reply_text(QUOTA_MSG)
+        await context.bot.send_message(update.effective_chat.id, QUOTA_MSG)
         return ConversationHandler.END
     except LLMUnavailable:
-        await update.effective_message.reply_text(ERROR_MSG)
+        await context.bot.send_message(update.effective_chat.id, ERROR_MSG)
         return ConversationHandler.END
 
-    transcript.append({"role": "assistant", "text": item})
+    item_no = context.user_data["assess_item_no"] + 1
+    context.user_data["assess_item_no"] = item_no
+    context.user_data["assess_item"] = item
+    transcript.append({"role": "assistant", "text": _item_text(item)})
 
-    # Offer an early exit once past the minimum.
-    if count == MIN_EXCHANGES:
-        await update.effective_message.reply_text(
-            "(Fast fertig — noch ein paar Fragen, oder /done für die Auswertung.)"
+    text = _item_text(item)
+    keyboard = None
+    if item.get("type") == "mcq" and item.get("options"):
+        keyboard = _mcq_keyboard(item_no, item["options"])
+    else:
+        # Number open questions so batched feedback can refer back to them.
+        q_no = context.user_data.get("assess_open_no", 0) + 1
+        context.user_data["assess_open_no"] = q_no
+        item["_q_no"] = q_no
+        text = f"✍️ Offene Frage {q_no}:\n{text}"
+
+    if count >= MIN_EXCHANGES:
+        await context.bot.send_message(
+            update.effective_chat.id,
+            "(Fast fertig — antworte weiter, oder /done für die Auswertung.)",
         )
-    await update.effective_message.reply_text(item)
+    await context.bot.send_message(
+        update.effective_chat.id, text, reply_markup=keyboard
+    )
     return ASSESSING
+
+
+@require_auth
+async def assess_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle a tap on an MCQ option button."""
+    query = update.callback_query
+    await query.answer()
+    _, raw_no, raw_idx = query.data.split(":")
+    item_no, choice = int(raw_no), int(raw_idx)
+
+    # Ignore taps on a stale (already-answered) question.
+    if item_no != context.user_data.get("assess_item_no"):
+        return ASSESSING
+    item = context.user_data.get("assess_item")
+    if not item or item.get("type") != "mcq":
+        return ASSESSING
+
+    options = item.get("options") or []
+    answer_index = item.get("answer_index")
+    chosen = options[choice] if 0 <= choice < len(options) else "?"
+    correct = choice == answer_index
+
+    context.user_data["assess_results"].append(
+        {"skill": item.get("skill"), "level": item.get("level"), "correct": correct}
+    )
+    context.user_data["assess_transcript"].append(
+        {"role": "user", "text": f"Chose: {chosen} ({'correct' if correct else 'wrong'})"}
+    )
+    context.user_data["assess_count"] += 1
+
+    # Adapt difficulty: harder on a correct answer, easier on a wrong one.
+    context.user_data["assess_level"] = _step_level(
+        context.user_data.get("assess_level", START_LEVEL), 1 if correct else -1
+    )
+
+    mark = "✅ Richtig!" if correct else "❌ Leider falsch."
+    if not correct and isinstance(answer_index, int) and 0 <= answer_index < len(options):
+        mark += f" Richtige Antwort: {options[answer_index]}"
+    await query.edit_message_text(_item_text(item) + f"\n\n{mark}")
+    return await _serve_next(update, context)
+
+
+async def _grade_open_batch(
+    pending: list[dict],
+) -> dict[int, tuple[bool, str | None]]:
+    """Grade a batch of open answers in one LLM call. Returns {q_no: (correct,
+    feedback)}. Items that fail to grade are omitted (left unscored)."""
+    if not pending:
+        return {}
+    blocks = [
+        f"[{p['q_no']}] Frage: {p['question']}\nAntwort: {p['answer']}"
+        for p in pending
+    ]
+    prompt = "Grade each numbered answer.\n\n" + "\n\n".join(blocks)
+    try:
+        parsed, _ = await generate_json(
+            Task.assess, prompt, system=prompts.ASSESS_GRADE_OPEN_BATCH
+        )
+    except (QuotaExceeded, LLMUnavailable):
+        return {}
+    if not isinstance(parsed, list):
+        return {}
+    graded: dict[int, tuple[bool, str | None]] = {}
+    for obj in parsed:
+        if isinstance(obj, dict) and "n" in obj and "correct" in obj:
+            try:
+                graded[int(obj["n"])] = (bool(obj["correct"]), obj.get("feedback"))
+            except (ValueError, TypeError):
+                continue
+    return graded
+
+
+async def _flush_open(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Grade all buffered open answers at once, apply scores, adapt difficulty,
+    and report the results to AJ."""
+    pending = context.user_data.get("assess_pending_open") or []
+    if not pending:
+        return
+    await context.bot.send_chat_action(
+        chat_id=update.effective_chat.id, action="typing"
+    )
+    graded = await _grade_open_batch(pending)
+    results = context.user_data["assess_results"]
+    transcript = context.user_data["assess_transcript"]
+
+    net = 0
+    lines = []
+    for p in pending:
+        g = graded.get(p["q_no"])
+        if g is None:
+            continue
+        correct, feedback = g
+        results[p["result_idx"]]["correct"] = correct
+        transcript[p["transcript_idx"]]["text"] += (
+            f" ({'correct' if correct else 'wrong'})"
+        )
+        net += 1 if correct else -1
+        mark = "✅" if correct else "❌"
+        lines.append(f"Frage {p['q_no']}: {mark}" + (f" {feedback}" if feedback else ""))
+
+    # Adapt difficulty once, in the batch's net direction.
+    if net:
+        context.user_data["assess_level"] = _step_level(
+            context.user_data.get("assess_level", START_LEVEL), 1 if net > 0 else -1
+        )
+    context.user_data["assess_pending_open"] = []
+    if lines:
+        await context.bot.send_message(update.effective_chat.id, "\n".join(lines))
+
+
+@require_auth
+async def assess_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Buffer a typed free-text answer; grade in batches to save LLM calls."""
+    item = context.user_data.get("assess_item") or {}
+    answer = (update.effective_message.text or "").strip()
+
+    transcript = context.user_data["assess_transcript"]
+    transcript.append({"role": "user", "text": answer})
+    results = context.user_data["assess_results"]
+    results.append(
+        {"skill": item.get("skill"), "level": item.get("level"), "correct": None}
+    )
+    context.user_data.setdefault("assess_pending_open", []).append(
+        {
+            "q_no": item.get("_q_no", context.user_data["assess_count"] + 1),
+            "question": _item_text(item),
+            "answer": answer,
+            "result_idx": len(results) - 1,
+            "transcript_idx": len(transcript) - 1,
+        }
+    )
+    context.user_data["assess_count"] += 1
+
+    if len(context.user_data["assess_pending_open"]) >= OPEN_BATCH_SIZE:
+        await _flush_open(update, context)
+    return await _serve_next(update, context)
 
 
 @require_auth
@@ -127,9 +354,13 @@ async def _finish(
     await update.effective_message.reply_text(
         "Danke! Ich werte deine Antworten aus… (Scoring your answers…)"
     )
+    # Grade any open answers still buffered below the batch size.
+    await _flush_open(update, context)
     prompt = (
         "Full interview transcript:\n"
         + _transcript_text(transcript)
+        + "\n\nPer-item results summary:\n"
+        + _results_summary(context.user_data.get("assess_results", []))
         + "\n\nProduce the verdict JSON."
     )
     try:
@@ -158,10 +389,18 @@ async def _finish(
         _clear(context)
         return ConversationHandler.END
 
+    results = context.user_data.get("assess_results", [])
+    scores = _scored_counts(results)
+    if scores:
+        verdict["auto_scores"] = scores
     if user:
         save_assessment(user.id, verdict, transcript)
 
-    await update.effective_message.reply_text(_format_verdict(verdict))
+    message = _format_verdict(verdict)
+    breakdown = _scored_breakdown(scores)
+    if breakdown:
+        message += "\n\nDeine Auswahlfragen (auto-scored):\n" + breakdown
+    await update.effective_message.reply_text(message)
     _clear(context)
     return ConversationHandler.END
 
@@ -184,9 +423,55 @@ def _format_verdict(v: dict) -> str:
     return "\n".join(parts)
 
 
+def _scored_counts(results: list[dict]) -> dict[str, dict[str, int]]:
+    """Per-skill {correct, total} over items that were auto-scored (MCQ and
+    graded open answers). Items with correct=None are excluded."""
+    counts: dict[str, dict[str, int]] = {}
+    for r in results:
+        if r.get("correct") is None:
+            continue
+        skill = r.get("skill") or "unknown"
+        c = counts.setdefault(skill, {"correct": 0, "total": 0})
+        c["total"] += 1
+        c["correct"] += 1 if r["correct"] else 0
+    return counts
+
+
+def _scored_breakdown(scores: dict[str, dict[str, int]]) -> str:
+    """User-facing per-skill correct/total lines."""
+    return "\n".join(
+        f"  • {skill.capitalize()}: {c['correct']}/{c['total']}"
+        for skill, c in scores.items()
+    )
+
+
+def _results_summary(results: list[dict]) -> str:
+    """Per-skill correct/total for the verdict prompt."""
+    if not results:
+        return "(no auto-scored items)"
+    scores = _scored_counts(results)
+    lines = [
+        f"- {skill}: {c['correct']}/{c['total']} correct"
+        for skill, c in scores.items()
+    ]
+    ungraded = sum(1 for r in results if r.get("correct") is None)
+    if ungraded:
+        lines.append(f"- ungraded written responses: {ungraded} (judge from transcript)")
+    return "\n".join(lines) or "(no auto-scored items)"
+
+
 def _clear(context: ContextTypes.DEFAULT_TYPE) -> None:
-    context.user_data.pop("assess_transcript", None)
-    context.user_data.pop("assess_count", None)
+    for key in (
+        "assess_transcript",
+        "assess_results",
+        "assess_count",
+        "assess_item_no",
+        "assess_item",
+        "assess_level",
+        "assess_open_no",
+        "assess_pending_open",
+    ):
+        context.user_data.pop(key, None)
 
 
 @require_auth
@@ -205,6 +490,7 @@ def build_handler() -> ConversationHandler:
             ASSESSING: [
                 CommandHandler("done", assess_done),
                 CommandHandler("cancel", assess_cancel),
+                CallbackQueryHandler(assess_choice, pattern=r"^assess:"),
                 MessageHandler(filters.TEXT & ~filters.COMMAND, assess_answer),
             ]
         },

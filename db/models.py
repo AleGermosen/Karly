@@ -41,10 +41,15 @@ class User(Base):
     cefr_estimate: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Daily practice reminder time as "HH:MM" (local), or None if disabled.
     reminder_time: Mapped[str | None] = mapped_column(String, nullable=True)
-    # Whether the tutor corrects mistakes inline. Off = natural conversation,
-    # with mistakes surfaced on demand via /summary instead.
-    corrections_on: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Correction strictness: "strict" | "relaxed" | "off".
+    # "relaxed" = only real errors; "strict" = everything; "off" = none.
+    correction_level: Mapped[str] = mapped_column(String, default="relaxed")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+    @property
+    def corrections_on(self) -> bool:
+        """Backward-compat shim — true when any corrections are active."""
+        return self.correction_level != "off"
 
     assessments: Mapped[list["Assessment"]] = relationship(back_populates="user")
     vocab_items: Mapped[list["VocabItem"]] = relationship(back_populates="user")

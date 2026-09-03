@@ -93,11 +93,16 @@ def recent_user_messages(user_id: int, limit: int = 30) -> list[str]:
     return [r[0] for r in rows]
 
 
-def set_corrections(user_id: int, on: bool) -> None:
+def set_correction_level(user_id: int, level: str) -> None:
+    """Set correction_level to 'strict', 'relaxed', or 'off'."""
     with get_session() as session:
         user = session.get(User, user_id)
         if user is not None:
-            user.corrections_on = on
+            user.correction_level = level
+
+
+def set_corrections(user_id: int, on: bool) -> None:
+    set_correction_level(user_id, "strict" if on else "off")
 
 
 # --- Vocab -----------------------------------------------------------------
