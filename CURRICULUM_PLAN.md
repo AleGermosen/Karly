@@ -32,7 +32,7 @@ This is the whole reason for the phase.
 
 | | Test-English | Karly today | Karly after this phase |
 |---|---|---|---|
-| A numbered list of topics per level | ✅ ~24 grammar points per level, in study order | ❌ nothing | ✅ same idea, in `curriculum/de/a2.yaml` |
+| A numbered list of topics per level | ✅ ~24 grammar points per level, in study order | ❌ nothing | ✅ same idea, in `curriculum/en/a1.yaml` |
 | Explanation before the exercises | ✅ short lesson + examples | ❌ drills only, never teaches a topic | ✅ lesson card, then exercises |
 | Several exercises per topic | ✅ 3+ sets per point | ❌ random questions | ✅ 15 items per unit |
 | Feedback on every question | ✅ | ✅ already does this well | ✅ unchanged |
@@ -56,8 +56,8 @@ Three pieces. The split between them is the only real design decision.
 
 | Piece | What it is | Made when | Lives in |
 |---|---|---|---|
-| **Syllabus** | The topic list: name, level, order, explanation, examples, common mistakes | Once per level. LLM drafts it, you read it over | `curriculum/de/a2.yaml` — a normal file in the repo |
-| **Exercise bank** | The actual questions and answers, ~15 per topic | Once per level, in a batch. Auto-checked, then you skim it | `curriculum/bank/de/a2.jsonl` — also a file in the repo |
+| **Syllabus** | The topic list: name, level, order, explanation, examples, common mistakes | Once per level. LLM drafts it, you read it over | `curriculum/en/a1.yaml` — a normal file in the repo |
+| **Exercise bank** | The actual questions and answers, ~15 per topic | Once per level, in a batch. Auto-checked, then you skim it | `curriculum/bank/en/a1.jsonl` — also a file in the repo |
 | **The bot** | Reads those files, tracks who passed what | Every session | SQLite, 3 new tables |
 
 **Why generate the exercises up front instead of live?**
@@ -116,9 +116,8 @@ reading it over. $0 on the Groq free tier.
 
 ## 4. Pending tasks
 
-Six stages. Each one leaves the bot working, so they can be spread out.
-
-**Build the machinery once (H0–H5), then add levels (H6+).**
+**Build the machinery once (H0–H5), then add levels (H6+).** Each stage leaves the bot
+working, so they can be spread out.
 
 | # | Task | Type | Status | What it gives you |
 |---|---|---|---|---|
@@ -190,14 +189,42 @@ Recommendations given; these just need a yes.
 
 ---
 
-## 7. Non-goals
+## 7. How this fits with the classroom plan
+
+The two plans are separate documents but they are **not independent**, and the order
+matters:
+
+- **Classroom controls come first.** [`FUTURE_WORK.md`](FUTURE_WORK.md) →
+  Classroom phase, Steps 0–3. Students can use conversation, flashcards, `/quiz` and
+  `/daily` **today** — none of that waits on the course. What it does wait on is knowing
+  who they are and letting them in. Build the gate before the classroom, not after.
+- **The course makes the teacher view worth reading.** `/student` showing "units passed"
+  and `/class` showing what the group is stuck on only mean something once units exist.
+- **Assignments** (Classroom Step 6) are the join between the two: you assign a unit, it
+  becomes the student's next `/course` task, and `/class` shows who's done it. That's
+  the one item that genuinely needs both plans finished.
+
+**Two smaller couplings worth remembering when you build:**
+
+- **`l1_support` applies to lesson cards too.** The planned Spanish-support setting
+  (FUTURE_WORK → "English mode should be in English") governs how much Spanish a student
+  sees. Unit explanations and glosses have to respect it, or an A1 student gets an
+  English-only grammar explanation they can't read.
+- **Relaxed corrections stop at the exercise boundary.** The "don't make them feel
+  judged" work applies to *conversation*. Inside a unit an answer is right or wrong and
+  is marked as such — that's what the student asked for by starting an exercise. Keep the
+  gentleness in the wording, not in the grading.
+
+---
+
+## 8. Non-goals
 
 - No website. Everything stays in Telegram.
 - Not replacing conversation — the course is a second mode, and chat stays the main way
   material gets chosen.
 - Not a content library. One current unit, one next unit.
-- Nothing here depends on the multi-user work in [`FUTURE_WORK.md`](FUTURE_WORK.md), and
-  nothing here blocks it.
+- Nothing here depends on the public multi-user work (payments, entitlements) in
+  [`FUTURE_WORK.md`](FUTURE_WORK.md), and nothing here blocks it.
 
 ---
 

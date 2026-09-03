@@ -555,6 +555,31 @@ Cloze and sentence answers are auto-mapped to grade 2 (wrong) or 4 (correct). Po
 the opposite: nobody gets in until you say so. The fix is a third mode rather than going
 back to single-user — see "Access modes" below.
 
+**Build this before the curriculum phase.** Students can already use conversation,
+flashcards, `/quiz` and `/daily` — none of that waits on the course. What it does wait on
+is knowing who they are and letting them in. See
+[`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md) §7 for how the two plans meet.
+
+---
+
+### Step 0 — Blockers to clear before any student joins
+
+Found by reading both plans against the current code. These aren't features; they're
+things that will go wrong on day one if nobody looks at them first.
+
+| Gap | Why it bites | Fix |
+|---|---|---|
+| **New users land in German mode** | `learning_mode` defaults to `"german"` (`db/models.py`). A Spanish-speaking student who joins gets a German tutor speaking German at them, and won't know `/language` exists | Approval sets the student's language — or a class carries a default. **This is the day-one bug**; everything else is a degradation, this is a wall |
+| **The first five minutes are undefined** | After you approve someone, what happens? Straight to chat? Placement test? Nothing in either plan says | Define it: welcome → `/test` → level → "here's what to do next". A class of beginners will not explore on their own |
+| **Free-tier quota with a class is untested** | The cost table jumps from "just me, 1,500 turns/mo" to "beta, hundreds". Twenty students is neither. When Groq's daily limit is hit the ladder falls to Ollama 3B, which **can't do structured tasks** — so `/test` and `/course` don't slow down, they break | Estimate before inviting. Build usage tracking (Step 5) *first*, and add the per-student daily cap with it |
+| **No backup** | `karly.db` sits on the OptiPlex and will hold other people's work and progress | A nightly copy off the box. Trivial to add, genuinely painful to skip |
+| **Reminder timezone** | Reminders are stored `HH:MM` in *server* local time (see Technical notes) | Fine if the class is in your timezone. If not, per-user timezone becomes real work |
+| **Sync SQLAlchemy in async handlers** | Flagged in Scale Step 1 as "fine at one user, blocks the event loop under concurrency" | Probably fine for ~20 occasional users. Just know it is the first thing that will break, and what the symptom looks like (everything slow at once, not one user failing) |
+| **Consent, if any student is a minor** | You'll be storing their writing and reading a dashboard about them | Decide whether this applies to your class before inviting, not after |
+
+**Order:** clear the day-one bug and decide the quota question before the first invite.
+Backup before the second week. The rest can follow.
+
 ---
 
 ### Step 1 — Roster and roles
@@ -647,6 +672,7 @@ Only worth building after the curriculum phase ([`CURRICULUM_PLAN.md`](CURRICULU
 
 ### Suggested order
 
+0. Clear the day-one blockers (Step 0) — especially the German-mode default
 1. Roster and roles (Step 1) — nothing works without it
 2. Approval flow (Step 2) — the gate you asked for; makes it safe to hand out
 3. Usage tracking (Step 5) — start collecting early, it's worthless retroactively
@@ -654,7 +680,7 @@ Only worth building after the curriculum phase ([`CURRICULUM_PLAN.md`](CURRICULU
 5. `/class` digest and alerts (Step 3) — the weekly rhythm
 6. Assignments and export (Step 6) — after the course exists
 
-Steps 1–3 are the minimum to put the bot in front of a class.
+Steps 0–3 are the minimum to put the bot in front of a class.
 
 ---
 
