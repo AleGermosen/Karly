@@ -18,6 +18,7 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from bot import credits as credit_mod
 from bot.middleware import require_auth
 from db.models import VocabSource
 from db.repo import (
@@ -88,6 +89,12 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     en = getattr(user, "learning_mode", "german") == "english"
 
+    _credit_status = credit_mod.credits_check(user.id, credit_mod.COSTS["pdf"])
+    if _credit_status != "ok":
+        _text, _kb = credit_mod.credit_error_response(en, _credit_status)
+        await message.reply_text(_text, reply_markup=_kb)
+        return
+
     if en:
         await message.reply_text(f"📄 Analizando *{filename}*… un momento.")
     else:
@@ -138,7 +145,8 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         summary = await route(Task.analyze, text[:SUMMARY_CHARS], system=summary_prompt)
     except QuotaExceeded:
         await message.reply_text(
-            "Límite alcanzado — inténtalo más tarde. 🙏" if en else QUOTA_MSG
+            credit_mod.capacity_exhausted_text(en),
+            reply_markup=credit_mod.capacity_exhausted_keyboard(en),
         )
         return
     except LLMUnavailable:
@@ -175,6 +183,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         document_id=document_id,
     )
     set_document_term_count(document_id, inserted)
+    credit_mod.spend(user.id, task="pdf")
 
     top = ordered[:10]
     if en:
@@ -289,7 +298,8 @@ async def learn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         lesson = await route(Task.generate, "Generate the lesson now.", system=system)
     except QuotaExceeded:
         await update.effective_message.reply_text(
-            "Límite alcanzado — inténtalo más tarde. 🙏" if en else QUOTA_MSG
+            credit_mod.capacity_exhausted_text(en),
+            reply_markup=credit_mod.capacity_exhausted_keyboard(en),
         )
         return
     except LLMUnavailable:

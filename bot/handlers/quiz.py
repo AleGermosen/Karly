@@ -18,6 +18,7 @@ from telegram.ext import (
     filters,
 )
 
+from bot import credits as credit_mod
 from bot.middleware import require_auth
 from db.repo import (
     get_bkt_state,
@@ -97,6 +98,12 @@ async def quiz_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     en = mode == "english"
     context.user_data["quiz_mode"] = mode
 
+    _credit_status = credit_mod.credits_check(user.id, credit_mod.COSTS["quiz"])
+    if _credit_status != "ok":
+        _text, _kb = credit_mod.credit_error_response(en, _credit_status)
+        await update.effective_message.reply_text(_text, reply_markup=_kb)
+        return ConversationHandler.END
+
     bkt_state = get_bkt_state(user.id)
     weak = _weakest_skills(bkt_state)
     fallback_level = _cefr_from_user(user)
@@ -129,11 +136,13 @@ async def quiz_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             system=system_prompt,
         )
     except QuotaExceeded:
-        msg = "Límite alcanzado — inténtalo más tarde. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏 (All LLM quotas reached.)"
-        await update.effective_message.reply_text(msg)
+        await update.effective_message.reply_text(
+            credit_mod.capacity_exhausted_text(en),
+            reply_markup=credit_mod.capacity_exhausted_keyboard(en),
+        )
         return ConversationHandler.END
     except LLMUnavailable:
-        msg = "No se pudo crear el quiz. Inténtalo más tarde." if en else "Quiz konnte nicht erstellt werden. Versuch es später. (Could not build quiz.)"
+        msg = "No se pudo crear el quiz. Inténtalo más tarde." if en else "Quiz konnte nicht erstellt werden. Versuch es später."
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
@@ -156,6 +165,7 @@ async def quiz_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     context.user_data["quiz_total"] = 0
     context.user_data["quiz_q_no"] = 0
     record_practice(user.id)
+    credit_mod.spend(user.id, task="quiz")
     return await _ask(update, context)
 
 

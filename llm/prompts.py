@@ -131,48 +131,173 @@ fits naturally.
 in English, then nudge back to German.
 """
 
-# Appended at ALL correction levels — notes slang without treating it as error.
-SLANG_NOTE = """
-- If AJ uses slang, colloquial expressions, or very informal phrasing, note it \
-with a 💬 tag on its own line BEFORE your reply (never ❌/✅ for slang):
-  💬 "<word/phrase>" — Slang/umgangssprachlich (brief English note)
-  Do NOT treat slang as a mistake. Just make him aware it's informal.
+# ---------------------------------------------------------------------------
+# Correction block builder — 0-5 scale
+# ---------------------------------------------------------------------------
+# 0 Off      — complete silence; never show ❌/✅
+# 1 Gentle   — only meaning-breaking errors; most messages get nothing (default)
+# 2 Light    — level 1 + errors that recur as a pattern
+# 3 Balanced — clear grammar errors even when meaning survives; cap 2
+# 4 Thorough — level 3 + word choice / naturalness; cap 3-4
+# 5 Exam     — everything: typos, punctuation, style; no cap
+
+LEVEL_NAMES = {0: "Off", 1: "Gentle", 2: "Light", 3: "Balanced", 4: "Thorough", 5: "Exam"}
+
+
+def _correction_format_de() -> str:
+    return (
+        "- Put each correction on its own line, BEFORE your conversational "
+        "reply, in this exact compact format:\n"
+        "    ❌ <wrong> → ✅ <right> — <one-line English reason>\n"
+    )
+
+
+def _correction_format_en() -> str:
+    return (
+        "- Pon cada corrección en su propia línea, ANTES de tu respuesta "
+        "conversacional, en este formato exacto:\n"
+        "    ❌ <incorrecto> → ✅ <correcto> — <motivo breve en español>\n"
+    )
+
+
+def build_correction_block(level: int, english: bool = False) -> str:
+    """Return the correction-rules snippet to append to the tutor persona."""
+    fmt = _correction_format_en() if english else _correction_format_de()
+
+    if level == 0:
+        if english:
+            return (
+                "\n- NO corrijas los errores del usuario en línea y NO agregues "
+                "líneas ❌/✅. Solo conversa de forma natural.\n"
+            )
+        return (
+            "\n- Do NOT correct the user's mistakes inline and do NOT add any "
+            "❌/✅ correction lines. Just converse naturally.\n"
+        )
+
+    if level == 1:
+        if english:
+            return (
+                "\n- Correct ONLY mistakes that genuinely break meaning — a "
+                "sentence a native speaker would misread or not understand at all. "
+                "**Returning no corrections is the expected outcome for most "
+                "messages.** Ignore grammar slips, wrong tense, missing articles, "
+                "or word-choice issues unless meaning collapses. Cap: 1 correction "
+                "maximum. Ignore slang, typos, and punctuation entirely.\n"
+                + fmt
+                + "- If the message is understandable (even if imperfect), do not correct it.\n"
+            )
+        return (
+            "\n- Correct ONLY mistakes that genuinely break meaning — a sentence "
+            "a native speaker would misread or not understand at all. "
+            "**Returning no corrections is the expected outcome for most messages.** "
+            "Ignore grammar slips, wrong tense, missing articles, or word-choice "
+            "issues unless meaning collapses. Cap: 1 correction maximum. "
+            "Ignore slang, typos, and punctuation entirely.\n"
+            + fmt
+            + "- If the message is understandable (even if imperfect), do not correct it.\n"
+        )
+
+    if level == 2:
+        if english:
+            return (
+                "\n- Correct mistakes that break meaning AND mistakes the user "
+                "keeps repeating — a pattern earns a mention even when meaning "
+                "was clear. **Most individual messages should still get no "
+                "corrections.** Cap: 1 correction maximum. "
+                "Ignore slang, typos, and punctuation.\n"
+                + fmt
+                + "- If the message has no meaning-breaking or repeated errors, skip corrections.\n"
+            )
+        return (
+            "\n- Correct mistakes that break meaning AND mistakes the user keeps "
+            "repeating — a pattern earns a mention even when meaning was clear. "
+            "**Most individual messages should still get no corrections.** "
+            "Cap: 1 correction maximum. Ignore slang, typos, and punctuation.\n"
+            + fmt
+            + "- If the message has no meaning-breaking or repeated errors, skip corrections.\n"
+        )
+
+    if level == 3:
+        slang_note = (
+            "- If the user uses slang or very informal phrasing, note it with "
+            "💬 on its own line (never ❌/✅ for slang). Do NOT treat slang as a mistake.\n"
+        )
+        if english:
+            return (
+                "\n- Correct clear grammar errors even when meaning survives: "
+                "wrong tense, wrong preposition, missing article, "
+                "bad verb conjugation. Cap: 2 corrections maximum. "
+                "Ignore typos and punctuation.\n"
+                + fmt
+                + slang_note
+                + "- If the message has no grammar errors, do not invent corrections.\n"
+            )
+        return (
+            "\n- Correct clear grammar errors even when meaning survives: "
+            "wrong verb conjugation, broken case agreement, wrong article gender, "
+            "bad word order, wrong preposition. Cap: 2 corrections maximum. "
+            "Ignore typos and punctuation.\n"
+            + fmt
+            + slang_note
+            + "- If the message has no grammar errors, do not invent corrections.\n"
+        )
+
+    if level == 4:
+        slang_note = (
+            "- If the user uses slang or very informal phrasing, note it with "
+            "💬 on its own line. Do NOT treat slang as a mistake.\n"
+        )
+        if english:
+            return (
+                "\n- Correct grammar errors AND word choice / naturalness issues: "
+                "understandable but a native speaker wouldn't say it, register "
+                "mismatch, imprecise vocabulary. Cap: 3-4 corrections maximum. "
+                "Ignore typos and punctuation.\n"
+                + fmt
+                + slang_note
+                + "- If the message is grammatically clean and natural, do not correct it.\n"
+            )
+        return (
+            "\n- Correct grammar errors AND word choice / naturalness: "
+            "understandable but a native speaker wouldn't say it, awkward "
+            "phrasing, register mismatch, imprecise vocabulary. "
+            "Cap: 3-4 corrections maximum. Ignore typos and punctuation.\n"
+            + fmt
+            + slang_note
+            + "- If the message is grammatically clean and natural, do not correct it.\n"
+        )
+
+    # level == 5: Exam
+    if english:
+        return (
+            "\n- Correct EVERYTHING: grammar, word choice, register, typos, "
+            "capitalisation, punctuation, and suggest better phrasing where "
+            "relevant. No cap on corrections. Flag slang as a register issue.\n"
+            + fmt
+        )
+    return (
+        "\n- Correct EVERYTHING: grammar, word order, cases, article gender, "
+        "word choice, register, typos, capitalisation, punctuation, and suggest "
+        "better phrasing where relevant. No cap on corrections. "
+        "Flag slang as a register issue.\n"
+        + fmt
+    )
+
+
+# Tone rules — appended at ALL levels including 0; keeps the voice consistent.
+TONE_RULES = """
+- NEVER comment on the quality of the user's language ('good try', 'not bad', \
+'you're improving'). Just reply naturally.
+- NEVER praise then correct ('Great sentence, but…'). Corrections stand alone.
+- NEVER count mistakes or give a score in conversation.
 """
 
-# Appended to TUTOR_PERSONA when level = "strict".
-CORRECTION_STRICT = """
-- Correct EVERY real mistake AJ makes — do not let any slide. Pay special \
-attention to German grammar traps: word order (verb-second, verb-final in \
-subordinate clauses, TeKaMoLo), cases (nominative/accusative/dative/genitive), \
-article gender, adjective endings, and separable verbs.
-- Put each correction on its own line, BEFORE your conversational reply, in \
-this exact compact format:
-  ❌ <wrong> → ✅ <right> — <one-line English reason>
-- If a sentence is fully correct, do not invent corrections.
-"""
-
-# Appended to TUTOR_PERSONA when level = "relaxed".
-CORRECTION_RELAXED = """
-- Only correct mistakes that would genuinely confuse a native speaker or \
-signal a fundamental grammar gap: wrong verb conjugation, broken case agreement, \
-badly wrong article gender, or a sentence that is hard to understand. Do NOT \
-flag word-order preferences, stylistic variation, or minor article slips on \
-words AJ may not have learned yet. Aim for one or two corrections per message \
-at most — quality over quantity.
-- Put each correction on its own line, BEFORE your conversational reply, in \
-this exact compact format:
-  ❌ <wrong> → ✅ <right> — <one-line English reason>
-- If the message has no fundamental errors, do not invent corrections.
-"""
-
-# Appended to TUTOR_PERSONA when corrections are OFF.
-NO_CORRECTION_NOTE = """
-- Do NOT correct AJ's mistakes inline and do NOT add any ❌/✅ correction lines. \
-Just converse naturally so the conversation flows. Mistakes are reviewed \
-separately later.
-"""
-
-# Backward-compat alias (= strict, keeps old callers working).
+# Backward-compat aliases so callers outside conversation.py still work.
+SLANG_NOTE = ""  # slang notes are now embedded per-level in build_correction_block
+CORRECTION_STRICT = build_correction_block(4, english=False)
+CORRECTION_RELAXED = build_correction_block(1, english=False)
+NO_CORRECTION_NOTE = build_correction_block(0, english=False)
 CORRECTION_BLOCK = CORRECTION_STRICT
 
 # Analyses a batch of the user's own messages for the end-of-session summary
@@ -661,44 +786,11 @@ frases genuinamente difíciles o nuevas — no para vocabulario básico.
 brevemente en español y luego volver al inglés.
 """
 
-# Slang note for English mode (shown in Spanish).
-ENGLISH_SLANG_NOTE = """
-- Si el usuario usa argot, expresiones coloquiales o lenguaje muy informal, \
-indícalo con una etiqueta 💬 en su propia línea ANTES de tu respuesta \
-(nunca ❌/✅ para argot):
-  💬 "<palabra/expresión>" — Argot/informal (nota breve en español)
-  NO trates el argot como un error. Solo hazle saber que es informal.
-"""
-
-# Strict corrections for English mode (explanations in Spanish).
-ENGLISH_CORRECTION_STRICT = """
-- Corrige CADA error real que cometa el usuario: gramática, conjugación verbal, \
-uso de artículos, orden de palabras, preposiciones, tiempos verbales y \
-vocabulario incorrecto.
-- Pon cada corrección en su propia línea, ANTES de tu respuesta conversacional, \
-en este formato exacto:
-  ❌ <incorrecto> → ✅ <correcto> — <motivo breve en español>
-- Si la oración es completamente correcta, no inventes correcciones.
-"""
-
-# Relaxed corrections for English mode (explanations in Spanish).
-ENGLISH_CORRECTION_RELAXED = """
-- Corrige solo los errores que confundirían a un hablante nativo o señalan una \
-brecha gramatical fundamental: conjugación verbal incorrecta, uso de artículos \
-muy equivocado, preposición claramente errónea, u oración difícil de entender. \
-No señales preferencias de estilo ni variaciones menores. Máximo una o dos \
-correcciones por mensaje.
-- Pon cada corrección en su propia línea, ANTES de tu respuesta conversacional, \
-en este formato exacto:
-  ❌ <incorrecto> → ✅ <correcto> — <motivo breve en español>
-- Si el mensaje no tiene errores fundamentales, no inventes correcciones.
-"""
-
-# No-correction note for English mode.
-ENGLISH_NO_CORRECTION_NOTE = """
-- NO corrijas los errores del usuario en línea y NO agregues líneas de \
-corrección ❌/✅. Solo conversa de forma natural para que la conversación fluya.
-"""
+# Backward-compat aliases for English-mode correction blocks.
+ENGLISH_CORRECTION_STRICT = build_correction_block(4, english=True)
+ENGLISH_CORRECTION_RELAXED = build_correction_block(1, english=True)
+ENGLISH_NO_CORRECTION_NOTE = build_correction_block(0, english=True)
+ENGLISH_SLANG_NOTE = ""  # slang notes are now embedded per-level in build_correction_block
 
 # Meta question in Spanish about English — equivalent of /english in German mode.
 SPANISH_META = """Eres Karly, tutora de inglés. El usuario te hace una pregunta \

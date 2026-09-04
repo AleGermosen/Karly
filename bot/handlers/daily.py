@@ -17,6 +17,7 @@ from telegram.ext import (
     filters,
 )
 
+from bot import credits as credit_mod
 from bot.middleware import require_auth
 from db.repo import (
     get_user_by_telegram_id,
@@ -59,6 +60,12 @@ async def daily_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     en = mode == "english"
     context.user_data["daily_mode"] = mode
 
+    _credit_status = credit_mod.credits_check(user.id, credit_mod.COSTS["daily"])
+    if _credit_status != "ok":
+        _text, _kb = credit_mod.credit_error_response(en, _credit_status)
+        await update.effective_message.reply_text(_text, reply_markup=_kb)
+        return ConversationHandler.END
+
     gaps = []
     verdict = latest_assessment(user.id)
     if isinstance(verdict, dict):
@@ -86,8 +93,10 @@ async def daily_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     try:
         parsed, _ = await generate_json(Task.generate, prompt, system=system_prompt)
     except QuotaExceeded:
-        msg = "Límite alcanzado — inténtalo más tarde. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏 (All LLM quotas reached.)"
-        await update.effective_message.reply_text(msg)
+        await update.effective_message.reply_text(
+            credit_mod.capacity_exhausted_text(en),
+            reply_markup=credit_mod.capacity_exhausted_keyboard(en),
+        )
         return ConversationHandler.END
     except LLMUnavailable:
         msg = "No se pudo crear el reto. Inténtalo más tarde." if en else "Die tägliche Challenge ließ sich nicht erstellen. Versuch es später."
@@ -105,6 +114,7 @@ async def daily_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     context.user_data["daily_correct"] = 0
     context.user_data["daily_user_id"] = user.id
     record_practice(user.id)
+    credit_mod.spend(user.id, task="daily")
     return await _ask(update, context)
 
 

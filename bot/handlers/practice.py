@@ -444,16 +444,17 @@ async def on_typed(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         correct = item["term"].lower() in answer.lower() or answer.lower() in (
             item["term"].lower()
         )
-        quality = 4 if correct else 2
-        user_id = context.user_data.get("practice_user_id")
-        if user_id:
-            apply_hlr_grade(item["id"], user_id, quality)
         if en:
             mark = "✅ ¡Correcto!" if correct else f"❌ Era: *{item['term']}*"
+            how_well = "¿Qué tan bien lo sabías?"
         else:
             mark = "✅ Richtig!" if correct else f"❌ Es war: *{item['term']}*"
-        await update.effective_message.reply_text(mark)
-        return await _advance(update, context)
+            how_well = "Wie gut wusstest du es?"
+        context.user_data["await"] = "grade"
+        await update.effective_message.reply_text(
+            f"{mark}\n\n{how_well}", reply_markup=_grade_keyboard(en)
+        )
+        return IN_SESSION
 
     # sentence mode → LLM check
     await context.bot.send_chat_action(
@@ -477,22 +478,24 @@ async def on_typed(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         result = None
 
     if isinstance(result, dict):
-        correct = bool(result.get("correct"))
-        quality = 4 if correct else 2
         fb = result.get("feedback", "")
         corrected = result.get("corrected", "")
-        mark = "✅" if correct else "❌"
+        mark = "✅" if result.get("correct") else "❌"
         msg = f"{mark} {fb}"
         if corrected and corrected.strip().lower() != answer.strip().lower():
             msg += f"\n✅ {corrected}"
     else:
-        quality = 3
-        msg = "(No se pudo revisar — continuamos.)" if en else "(Konnte nicht prüfen — weiter geht's.)"
-    user_id = context.user_data.get("practice_user_id")
-    if user_id:
-        apply_hlr_grade(item["id"], user_id, quality)
-    await update.effective_message.reply_text(msg)
-    return await _advance(update, context)
+        msg = "(No se pudo revisar — elige tu nota.)" if en else "(Konnte nicht prüfen — wähle deine Note.)"
+
+    if en:
+        how_well = "¿Qué tan bien lo sabías?"
+    else:
+        how_well = "Wie gut wusstest du es?"
+    context.user_data["await"] = "grade"
+    await update.effective_message.reply_text(
+        f"{msg}\n\n{how_well}", reply_markup=_grade_keyboard(en)
+    )
+    return IN_SESSION
 
 
 async def _advance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:

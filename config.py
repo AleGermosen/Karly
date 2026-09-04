@@ -54,5 +54,37 @@ GROQ_MAX_TOKENS: int = int(os.getenv("GROQ_MAX_TOKENS", "1024"))
 GROQ_CONNECT_TIMEOUT: float = float(os.getenv("GROQ_CONNECT_TIMEOUT", "5.0"))
 GROQ_READ_TIMEOUT: float = float(os.getenv("GROQ_READ_TIMEOUT", "30.0"))
 
-# Conversation context window (messages) to respect free-tier limits.
-CONTEXT_WINDOW_MESSAGES: int = 20
+# Conversation context window — 8 recent turns keeps input tokens ~40% lower
+# than the old 20-turn window while preserving meaningful context.
+CONTEXT_WINDOW_MESSAGES: int = 8
+
+# Per-student daily LLM credit allowance. 20 credits ≈ 20 conversation turns,
+# or a course unit + daily challenge + a few chat messages.
+DAILY_CREDIT_LIMIT: int = int(os.getenv("DAILY_CREDIT_LIMIT", "20"))
+
+# --- Classroom ---
+# Telegram user-id of the teacher. Set this to enable /students, /student,
+# and /class commands and (when ACCESS_MODE="approval") the approval flow.
+_teacher = os.getenv("TEACHER_TELEGRAM_ID", "").strip()
+TEACHER_TELEGRAM_ID: int | None = int(_teacher) if _teacher else None
+
+# "open"     — anyone who can reach the bot is let straight in (default).
+# "approval" — new students are held as "pending" until the teacher approves.
+ACCESS_MODE: str = os.getenv("ACCESS_MODE", "open").strip()
+
+# --- Token budget (T.6 / T.7) ---
+# Total credits all students combined can spend per day. At 50 students × 20
+# each the theoretical max is 1,000; we run at 60% of the actual free-tier
+# ceiling so the real number should be lower than the provider limit.
+GLOBAL_DAILY_CREDIT_LIMIT: int = int(os.getenv("GLOBAL_DAILY_CREDIT_LIMIT", "1000"))
+# Before this UTC hour, only 75% of the global budget is available — a simple
+# reserve so night owls don't drain everything before the afternoon lesson.
+RESERVE_HOUR_UTC: int = int(os.getenv("RESERVE_HOUR_UTC", "14"))
+
+# Minimum seconds between metered actions for a single user (rate limit).
+RATE_LIMIT_SECONDS: float = float(os.getenv("RATE_LIMIT_SECONDS", "3.0"))
+# Maximum simultaneous LLM calls across the whole bot. Gemini's free tier
+# allows ~10 req/min; 8 slots keeps us comfortably inside that.
+LLM_CONCURRENCY_LIMIT: int = int(os.getenv("LLM_CONCURRENCY_LIMIT", "8"))
+# How long (seconds) a request waits for a free concurrency slot before giving up.
+LLM_QUEUE_TIMEOUT: float = float(os.getenv("LLM_QUEUE_TIMEOUT", "30.0"))

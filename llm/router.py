@@ -125,6 +125,11 @@ class LadderState:
 
 _ladder_state = LadderState()
 
+# Concurrency semaphore — caps simultaneous LLM calls across the whole bot.
+# Gemini's free tier allows ~10 req/min; keeping below that prevents 429s that
+# would push every student down to Ollama at the same time.
+_llm_semaphore = asyncio.Semaphore(config.LLM_CONCURRENCY_LIMIT)
+
 
 # ---------------------------------------------------------------------------
 # Backend shims — adapt existing clients to the unified signature
@@ -236,47 +241,63 @@ async def route_result(
     """Walk the ladder for *task* and return the first successful RouteResult.
 
     Raises AllBackendsExhausted if every rung is on cooldown or fails.
+    Raises LLMUnavailable if the concurrency queue times out.
     """
-    ladder = _LADDERS[task]
-    for rung in ladder:
-        state = await _ladder_state.get(rung)
-        if state.is_on_cooldown():
-            logger.debug("Skipping %s (cooldown until %s)", rung.label, state.cooldown_until)
-            continue
+    # Concurrency gate — wait for a free slot, but don't hang forever.
+    try:
+        await asyncio.wait_for(
+            _llm_semaphore.acquire(), timeout=config.LLM_QUEUE_TIMEOUT
+        )
+    except asyncio.TimeoutError:
+        raise LLMUnavailable(
+            "Server is busy right now — try again in a moment. 🙏"
+        )
 
-        try:
-            gen = await rung.backend(
-                prompt,
-                system=system,
-                history=history,
-                json_output=json_output,
-                model=rung.model_id,
-            )
-            return RouteResult(
-                text=gen.text,
-                rung=rung,
-                model=gen.model,
-                tokens_in=gen.tokens_in,
-                tokens_out=gen.tokens_out,
-            )
+    try:
+        ladder = _LADDERS[task]
+        for rung in ladder:
+            state = await _ladder_state.get(rung)
+            if state.is_on_cooldown():
+                logger.debug(
+                    "Skipping %s (cooldown until %s)", rung.label, state.cooldown_until
+                )
+                continue
 
-        except (RateLimited, QuotaExceeded) as exc:
-            reset_at = getattr(exc, "reset_at", None)
-            logger.warning(
-                "%s quota/rate exhausted (reset=%s); moving down ladder.",
-                rung.label, reset_at,
-            )
-            await _ladder_state.mark_daily(rung, reset_at)
+            try:
+                gen = await rung.backend(
+                    prompt,
+                    system=system,
+                    history=history,
+                    json_output=json_output,
+                    model=rung.model_id,
+                )
+                return RouteResult(
+                    text=gen.text,
+                    rung=rung,
+                    model=gen.model,
+                    tokens_in=gen.tokens_in,
+                    tokens_out=gen.tokens_out,
+                )
 
-        except (BackendUnavailable, LLMUnavailable) as exc:
-            logger.warning("%s transient failure: %s", rung.label, exc)
-            await _ladder_state.mark_transient(rung, seconds=60.0)
+            except (RateLimited, QuotaExceeded) as exc:
+                reset_at = getattr(exc, "reset_at", None)
+                logger.warning(
+                    "%s quota/rate exhausted (reset=%s); moving down ladder.",
+                    rung.label, reset_at,
+                )
+                await _ladder_state.mark_daily(rung, reset_at)
 
-        except Exception as exc:
-            logger.warning("%s unexpected error: %s", rung.label, exc)
-            await _ladder_state.mark_transient(rung, seconds=60.0)
+            except (BackendUnavailable, LLMUnavailable) as exc:
+                logger.warning("%s transient failure: %s", rung.label, exc)
+                await _ladder_state.mark_transient(rung, seconds=60.0)
 
-    raise AllBackendsExhausted("All LLM backends exhausted or on cooldown")
+            except Exception as exc:
+                logger.warning("%s unexpected error: %s", rung.label, exc)
+                await _ladder_state.mark_transient(rung, seconds=60.0)
+
+        raise AllBackendsExhausted("All LLM backends exhausted or on cooldown")
+    finally:
+        _llm_semaphore.release()
 
 
 async def route(

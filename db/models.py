@@ -41,19 +41,32 @@ class User(Base):
     cefr_estimate: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Daily practice reminder time as "HH:MM" (local), or None if disabled.
     reminder_time: Mapped[str | None] = mapped_column(String, nullable=True)
-    # Correction strictness: "strict" | "relaxed" | "off".
-    # "relaxed" = only real errors; "strict" = everything; "off" = none.
-    correction_level: Mapped[str] = mapped_column(String, default="relaxed")
+    # Correction strictness on a 0-5 integer scale.
+    # 0=Off, 1=Gentle (default), 2=Light, 3=Balanced, 4=Thorough, 5=Exam.
+    correction_level: Mapped[int] = mapped_column(Integer, default=1)
     # Which language the user is learning: "german" (default) or "english".
     # German mode: native English speaker learning German.
     # English mode: native Spanish speaker learning English.
     learning_mode: Mapped[str] = mapped_column(String, default="german")
+    # False until the user explicitly picks a language via /start or /language.
+    # Unset users are redirected to the language picker before any handler runs.
+    language_chosen: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    # Classroom fields.
+    # role: "student" (default) | "teacher"
+    # status: "active" (default) | "pending" (awaiting teacher approval) | "removed"
+    # joined_at: set when a pending student is approved.
+    # approved_by: telegram_id of the teacher who approved this student.
+    role: Mapped[str] = mapped_column(String, default="student")
+    class_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    status: Mapped[str] = mapped_column(String, default="active")
+    joined_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    approved_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     @property
     def corrections_on(self) -> bool:
         """Backward-compat shim — true when any corrections are active."""
-        return self.correction_level != "off"
+        return self.correction_level != 0
 
     assessments: Mapped[list["Assessment"]] = relationship(back_populates="user")
     vocab_items: Mapped[list["VocabItem"]] = relationship(back_populates="user")
@@ -170,3 +183,22 @@ class ConceptMastery(Base):
     )
     state_json: Mapped[str] = mapped_column(Text, default="{}")
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class LLMUsage(Base):
+    """One row per metered LLM action — used for per-student daily credit gates.
+
+    credits: cost in abstract credits (see bot/credits.py for the cost table).
+    tokens_in / tokens_out: may be None for backends that don't report them.
+    """
+
+    __tablename__ = "llm_usage"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    model: Mapped[str] = mapped_column(String)
+    tokens_in: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    tokens_out: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    task: Mapped[str] = mapped_column(String)   # "chat" | "quiz" | "daily" | …
+    credits: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)

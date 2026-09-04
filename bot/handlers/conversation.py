@@ -13,11 +13,13 @@ import asyncio
 import json
 import logging
 import re
+from datetime import datetime, timedelta, timezone
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 import config
+from bot import credits as credit_mod
 from bot.middleware import require_auth
 from db.models import VocabSource
 from db.repo import (
@@ -29,6 +31,7 @@ from db.repo import (
     recent_history,
     recent_user_messages,
     set_correction_level,
+    user_message_stats,
 )
 from llm import prompts
 from llm.errors import AllBackendsExhausted, LLMUnavailable, QuotaExceeded
@@ -38,9 +41,9 @@ from llm.structured import generate_json
 logger = logging.getLogger(__name__)
 
 QUOTA_MSG = "Tageslimit erreicht — versuch es später. 🙏 (All LLM quotas reached.)"
-QUOTA_MSG_ES = "Límite diario alcanzado — inténtalo más tarde. 🙏"
+QUOTA_MSG_EN = "Daily limit reached — try again later. 🙏"
 ERROR_MSG = "Entschuldigung, da ging etwas schief. Versuch es nochmal."
-ERROR_MSG_ES = "Lo siento, algo salió mal. Inténtalo de nuevo."
+ERROR_MSG_EN = "Sorry, something went wrong. Please try again."
 
 # Backend-transition notices (bilingual, matching Karly's style).
 _BACKEND_NOTICES: dict[str, str] = {
@@ -172,25 +175,28 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     history = recent_history(user.id, limit=config.CONTEXT_WINDOW_MESSAGES)
-    level = user.correction_level
+    level: int = user.correction_level if isinstance(user.correction_level, int) else 1
     learning_mode = getattr(user, "learning_mode", "german") or "german"
+    en = learning_mode == "english"
 
-    if learning_mode == "english":
+    # Warm-up rule: no corrections for the first 5 messages or after a 24h break,
+    # at any level below 5 (exam mode is opted-in explicitly, never silenced).
+    effective_level = level
+    if level < 5:
+        msg_count, last_at = user_message_stats(user.id)
+        if msg_count < 5:
+            effective_level = 0
+        elif last_at is not None:
+            last_naive = last_at.replace(tzinfo=None) if last_at.tzinfo else last_at
+            if datetime.utcnow() - last_naive > timedelta(hours=24):
+                effective_level = 0
+
+    if en:
         system = prompts.ENGLISH_TUTOR_PERSONA.format(level=_user_level(user.cefr_estimate))
-        if level == "strict":
-            system += prompts.ENGLISH_CORRECTION_STRICT + prompts.ENGLISH_SLANG_NOTE
-        elif level == "relaxed":
-            system += prompts.ENGLISH_CORRECTION_RELAXED + prompts.ENGLISH_SLANG_NOTE
-        else:
-            system += prompts.ENGLISH_NO_CORRECTION_NOTE + prompts.ENGLISH_SLANG_NOTE
     else:
         system = prompts.TUTOR_PERSONA.format(level=_user_level(user.cefr_estimate))
-        if level == "strict":
-            system += prompts.CORRECTION_STRICT + prompts.SLANG_NOTE
-        elif level == "relaxed":
-            system += prompts.CORRECTION_RELAXED + prompts.SLANG_NOTE
-        else:
-            system += prompts.NO_CORRECTION_NOTE + prompts.SLANG_NOTE
+    system += prompts.build_correction_block(effective_level, english=en)
+    system += prompts.TONE_RULES
 
     topic = context.user_data.get("topic")
     if topic:
@@ -204,25 +210,48 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 f"fits, steer toward its topic. Summary: {doc['summary']}"
             )
 
-    en = learning_mode == "english"
+    # Rate limit — throttle rapid-fire messages.
+    if not credit_mod.check_rate_limit(context, credit_mod.COSTS["chat"]):
+        await message.reply_text(credit_mod.rate_limited_text(en))
+        return
+
+    # Credit gates — per-student and class-wide.
+    _credit_status = credit_mod.credits_check(user.id, credit_mod.COSTS["chat"])
+    if _credit_status != "ok":
+        _text, _kb = credit_mod.credit_error_response(en, _credit_status)
+        await message.reply_text(_text, reply_markup=_kb)
+        return
+
     try:
         result = await _route_with_typing(
             context, message.chat_id, Task.chat, text, system=system, history=history
         )
     except (QuotaExceeded, AllBackendsExhausted):
-        await message.reply_text(QUOTA_MSG_ES if en else QUOTA_MSG)
+        await message.reply_text(
+            credit_mod.capacity_exhausted_text(en),
+            reply_markup=credit_mod.capacity_exhausted_keyboard(en),
+        )
         return
     except LLMUnavailable as exc:
         logger.error("LLM unavailable: %s", exc)
-        await message.reply_text(ERROR_MSG_ES if en else ERROR_MSG)
+        await message.reply_text(ERROR_MSG_EN if en else ERROR_MSG)
         return
 
     reply = result.text
-    corrections = _parse_corrections(reply) if level != "off" else []
+    corrections = _parse_corrections(reply) if level > 0 else []
     add_message(user.id, "user", text)
     add_message(user.id, "assistant", reply, corrections=corrections or None)
     if corrections:
         add_vocab_items(user.id, corrections, source=VocabSource.conversation)
+
+    # Record usage after a successful call.
+    credit_mod.spend(
+        user.id,
+        task="chat",
+        model=result.model,
+        tokens_in=result.tokens_in,
+        tokens_out=result.tokens_out,
+    )
 
     # Backend-change notification (send before the reply so it reads naturally).
     prev_label = context.user_data.get("last_backend_label")
@@ -271,7 +300,7 @@ async def on_correction_action(
         n = mark_due_by_terms(user.id, terms) if user else 0
         if en:
             await query.message.reply_text(
-                f"🎯 {n} palabra(s) marcada(s) para practicar — /flashcards."
+                f"🎯 {n} word(s) marked for practice — /flashcards."
             )
         else:
             await query.message.reply_text(
@@ -289,16 +318,29 @@ async def on_correction_action(
         system = (
             prompts.CORRECTION_EXPLAIN if action == "why" else prompts.CORRECTION_EXAMPLE
         )
+    _uid = user.id if user else 0
+    _credit_status = credit_mod.credits_check(_uid, credit_mod.COSTS["explain"])
+    if _credit_status != "ok":
+        _text, _kb = credit_mod.credit_error_response(en, _credit_status)
+        await query.message.reply_text(_text, reply_markup=_kb)
+        return
+
     try:
         result = await _route_with_typing(
             context, chat_id, Task.chat, block, system=system
         )
     except (QuotaExceeded, AllBackendsExhausted):
-        await query.message.reply_text(QUOTA_MSG_ES if en else QUOTA_MSG)
+        await query.message.reply_text(
+            credit_mod.capacity_exhausted_text(en),
+            reply_markup=credit_mod.capacity_exhausted_keyboard(en),
+        )
         return
     except LLMUnavailable:
-        await query.message.reply_text(ERROR_MSG_ES if en else ERROR_MSG)
+        await query.message.reply_text(ERROR_MSG_EN if en else ERROR_MSG)
         return
+
+    if user:
+        credit_mod.spend(user.id, task="explain", model=result.rung.model_id)
     await query.message.reply_text(result.text)
 
 
@@ -312,7 +354,7 @@ async def topic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if current:
             if en:
                 await update.effective_message.reply_text(
-                    f"Tema actual: {current}. /topic <x> para cambiar, /topic clear para borrar."
+                    f"Current topic: {current}. /topic <x> to change, /topic clear to reset."
                 )
             else:
                 await update.effective_message.reply_text(
@@ -322,7 +364,7 @@ async def topic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         else:
             if en:
                 await update.effective_message.reply_text(
-                    "No hay tema activo. Usa /topic <tema> (ej. /topic work meetings)."
+                    "No topic set. Use /topic <topic> (e.g. /topic job interviews)."
                 )
             else:
                 await update.effective_message.reply_text(
@@ -331,13 +373,13 @@ async def topic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
     if arg.lower() in ("clear", "reset", "none"):
         context.user_data.pop("topic", None)
-        msg = "Tema borrado." if en else "Thema zurückgesetzt. (Topic cleared.)"
+        msg = "Topic cleared." if en else "Thema zurückgesetzt. (Topic cleared.)"
         await update.effective_message.reply_text(msg)
         return
     context.user_data["topic"] = arg
     if en:
         await update.effective_message.reply_text(
-            f"Listo — hablamos sobre *{arg}*. ¡Empieza!"
+            f"Got it — let's talk about *{arg}*. Go ahead!"
         )
     else:
         await update.effective_message.reply_text(
@@ -347,6 +389,13 @@ async def topic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 @require_auth
 async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = get_user_by_telegram_id(update.effective_user.id)
+    if user and getattr(user, "learning_mode", "german") == "english":
+        await update.effective_message.reply_text(
+            "En modo inglés, usa /spanish para hacer preguntas en español."
+        )
+        return
+
     question = " ".join(context.args).strip() if context.args else ""
     if not question:
         await update.effective_message.reply_text(
@@ -411,69 +460,103 @@ async def spanish(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text(result.text)
 
 
+_LEVEL_DESC_DE = {
+    0: "Aus — nie ❌/✅ Zeilen",
+    1: "Sanft — nur wenn Sinn bricht (Standard)",
+    2: "Leicht — + Wiederholungsmuster",
+    3: "Ausgewogen — klare Grammatikfehler, max. 2",
+    4: "Gründlich — + Stil & Wortwahl, max. 4",
+    5: "Prüfung — alles, inkl. Tippfehler",
+}
+
+_LEVEL_DESC_EN = {
+    0: "Off — never ❌/✅ lines",
+    1: "Gentle — only meaning-breaking (default)",
+    2: "Light — + repeated patterns",
+    3: "Balanced — clear grammar errors, max 2",
+    4: "Thorough — + word choice/style, max 4",
+    5: "Exam — everything, incl. typos",
+}
+
+# Old string aliases still accepted for muscle memory.
+_STRING_ALIASES = {"off": 0, "aus": 0, "relaxed": 1, "locker": 1, "strict": 4, "on": 4, "an": 4}
+
+
+def _corrections_keyboard(current: int, en: bool) -> InlineKeyboardMarkup:
+    descs = _LEVEL_DESC_EN if en else _LEVEL_DESC_DE
+    rows = []
+    for lvl in range(6):
+        mark = " ✓" if lvl == current else ""
+        rows.append([InlineKeyboardButton(
+            f"{lvl}: {descs[lvl]}{mark}",
+            callback_data=f"setcorr:{lvl}",
+        )])
+    return InlineKeyboardMarkup(rows)
+
+
 @require_auth
 async def corrections(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/corrections strict|relaxed|off — set correction strictness."""
+    """/corrections [0-5|off|relaxed|strict] — set or view correction strictness."""
     user = get_user_by_telegram_id(update.effective_user.id)
     if user is None:
         return
     en = getattr(user, "learning_mode", "german") == "english"
+    current: int = user.correction_level if isinstance(user.correction_level, int) else 1
     arg = (context.args[0].lower() if context.args else "").strip()
 
-    if arg in ("strict", "on", "an", "ein"):
-        set_correction_level(user.id, "strict")
+    # Accept numeric or legacy-string argument.
+    new_level: int | None = None
+    if arg.isdigit() and 0 <= int(arg) <= 5:
+        new_level = int(arg)
+    elif arg in _STRING_ALIASES:
+        new_level = _STRING_ALIASES[arg]
+
+    if new_level is not None:
+        set_correction_level(user.id, new_level)
+        name = prompts.LEVEL_NAMES[new_level]
         if en:
+            desc = _LEVEL_DESC_EN[new_level]
             await update.effective_message.reply_text(
-                "Correcciones: STRICT — corrijo cada error, incluyendo gramática y vocabulario."
+                f"Corrections set to **{new_level} — {name}**.\n_{desc}_"
             )
         else:
+            desc = _LEVEL_DESC_DE[new_level]
             await update.effective_message.reply_text(
-                "Korrekturen: STRICT — ich korrigiere jeden Fehler, auch Wortstellung "
-                "und Stil. (Strict corrections on — every mistake flagged.)"
-            )
-        return
-    if arg in ("relaxed", "locker"):
-        set_correction_level(user.id, "relaxed")
-        if en:
-            await update.effective_message.reply_text(
-                "Correcciones: RELAXED — solo corrijo errores que confundirían a un nativo."
-            )
-        else:
-            await update.effective_message.reply_text(
-                "Korrekturen: RELAXED — ich korrigiere nur echte Fehler, die einen "
-                "Muttersprachler verwirren würden. Stilfragen ignoriere ich. "
-                "(Relaxed — only real errors flagged.)"
-            )
-        return
-    if arg in ("off", "aus"):
-        set_correction_level(user.id, "off")
-        if en:
-            await update.effective_message.reply_text(
-                "Correcciones DESACTIVADAS — hablamos libremente. Usa /summary para un análisis."
-            )
-        else:
-            await update.effective_message.reply_text(
-                "Korrekturen AUS — wir plaudern frei. Nutze /summary für eine "
-                "Auswertung. (Corrections off; use /summary later.)"
+                f"Korrekturen auf **{new_level} — {name}** gesetzt.\n_{desc}_"
             )
         return
 
-    level = user.correction_level
+    # No arg — show the picker.
     if en:
-        level_label = {"strict": "STRICT", "relaxed": "RELAXED", "off": "OFF"}.get(level, level)
-        await update.effective_message.reply_text(
-            f"Correcciones: {level_label}.\n"
-            "/corrections strict — corregir todo\n"
-            "/corrections relaxed — solo errores reales\n"
-            "/corrections off — sin correcciones"
-        )
+        header = f"Correction level: **{current} — {prompts.LEVEL_NAMES[current]}**\nChoose a level:"
     else:
-        level_label = {"strict": "STRICT", "relaxed": "RELAXED", "off": "AUS"}.get(level, level)
-        await update.effective_message.reply_text(
-            f"Korrekturen: {level_label}.\n"
-            "/corrections strict — alles korrigieren\n"
-            "/corrections relaxed — nur echte Fehler\n"
-            "/corrections off — keine Korrekturen"
+        header = f"Korrektur-Level: **{current} — {prompts.LEVEL_NAMES[current]}**\nLevel wählen:"
+    await update.effective_message.reply_text(
+        header, reply_markup=_corrections_keyboard(current, en)
+    )
+
+
+@require_auth
+async def on_corrections_pick(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Handle the /corrections inline-keyboard level buttons."""
+    query = update.callback_query
+    await query.answer()
+    new_level = int(query.data.split(":")[1])
+    user = get_user_by_telegram_id(update.effective_user.id)
+    if user is None:
+        return
+    en = getattr(user, "learning_mode", "german") == "english"
+    set_correction_level(user.id, new_level)
+    name = prompts.LEVEL_NAMES[new_level]
+    if en:
+        desc = _LEVEL_DESC_EN[new_level]
+        await query.edit_message_text(f"Corrections set to **{new_level} — {name}**.\n_{desc}_")
+    else:
+        desc = _LEVEL_DESC_DE[new_level]
+        await query.edit_message_text(
+            f"Korrekturen auf **{new_level} — {name}** gesetzt.\n_{desc}_"
         )
 
 
@@ -506,14 +589,14 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         result, _ = await _summary_analyze(context, update.effective_message.chat_id, batch, en=en)
     except (QuotaExceeded, AllBackendsExhausted):
-        await update.effective_message.reply_text(QUOTA_MSG_ES if en else QUOTA_MSG)
+        await update.effective_message.reply_text(QUOTA_MSG_EN if en else QUOTA_MSG)
         return
     except LLMUnavailable:
-        await update.effective_message.reply_text(ERROR_MSG_ES if en else ERROR_MSG)
+        await update.effective_message.reply_text(ERROR_MSG_EN if en else ERROR_MSG)
         return
 
     if not isinstance(result, dict):
-        await update.effective_message.reply_text(ERROR_MSG_ES if en else ERROR_MSG)
+        await update.effective_message.reply_text(ERROR_MSG_EN if en else ERROR_MSG)
         return
 
     items = [

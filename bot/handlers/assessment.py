@@ -19,6 +19,7 @@ from telegram.ext import (
     filters,
 )
 
+from bot import credits as credit_mod
 from bot.middleware import require_auth
 from db.repo import get_user_by_telegram_id, save_assessment, update_bkt_state
 from llm import prompts
@@ -119,10 +120,16 @@ def _mcq_keyboard(item_no: int, options: list) -> InlineKeyboardMarkup:
 
 # ── LLM calls ─────────────────────────────────────────────────────────────────
 
+def _is_valid_item(parsed: object) -> bool:
+    return isinstance(parsed, dict) and bool((parsed.get("prompt") or "").strip())
+
+
 async def _next_item(
     transcript: list[dict], needed_skills: list[str], target_level: str,
     context: ContextTypes.DEFAULT_TYPE,
-) -> dict:
+) -> dict | None:
+    """Return the next assessment item dict, or None if both attempts fail."""
+    skill = needed_skills[0] if needed_skills else "grammar"
     prompt = (
         "Interview transcript so far:\n"
         + (_transcript_text(transcript) or "(none yet — this is the first item)")
@@ -132,14 +139,26 @@ async def _next_item(
         + (", ".join(needed_skills) if needed_skills else "(any skill)")
         + "\n\nGive the next interview item as JSON."
     )
-    parsed, raw = await generate_json(
+    parsed, _ = await generate_json(
         Task.assess, prompt, system=_interview_prompt(context)
     )
-    if not isinstance(parsed, dict) or not parsed.get("prompt"):
-        logger.warning("Assessment item was not valid JSON; using open fallback.")
-        skill = needed_skills[0] if needed_skills else "production"
-        return {"type": "open", "skill": skill, "level": target_level, "prompt": raw.strip()}
-    return parsed
+    if _is_valid_item(parsed):
+        return parsed
+
+    # Retry with a minimal prompt to recover from formatting errors.
+    logger.warning("Assessment item was not valid JSON; retrying with simplified prompt.")
+    simple_prompt = (
+        f"Give ONE {skill} interview item at CEFR {target_level}. "
+        "Use type 'mcq' with 4 options. Return ONLY the JSON object, nothing else."
+    )
+    parsed, _ = await generate_json(
+        Task.assess, simple_prompt, system=_interview_prompt(context)
+    )
+    if _is_valid_item(parsed):
+        return parsed
+
+    logger.warning("Assessment item retry also failed; skipping item.")
+    return None
 
 
 async def _grade_open_batch(
@@ -228,13 +247,29 @@ async def _serve_next(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     try:
         item = await _next_item(transcript, needed, target_level, context)
     except QuotaExceeded:
-        msg = "Límite alcanzado — inténtalo más tarde. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏"
-        await context.bot.send_message(update.effective_chat.id, msg)
+        await context.bot.send_message(
+            update.effective_chat.id,
+            credit_mod.capacity_exhausted_text(en),
+            reply_markup=credit_mod.capacity_exhausted_keyboard(en),
+        )
         return ConversationHandler.END
     except LLMUnavailable:
         msg = "Algo falló. Inténtalo más tarde con /test." if en else "Da ging etwas schief bei der Einstufung. Versuch es später mit /test."
         await context.bot.send_message(update.effective_chat.id, msg)
         return ConversationHandler.END
+
+    if item is None:
+        # Both attempts produced unusable JSON — skip this slot.
+        skips = context.user_data.get("assess_skips", 0) + 1
+        context.user_data["assess_skips"] = skips
+        context.user_data["assess_count"] += 1
+        if skips >= 3:
+            # Too many consecutive failures — wrap up with what we have.
+            logger.error("3 consecutive assessment item failures; ending early.")
+            return await _finish(update, context, transcript)
+        return await _serve_next(update, context)
+
+    context.user_data["assess_skips"] = 0  # reset on success
 
     item_no = context.user_data["assess_item_no"] + 1
     context.user_data["assess_item_no"] = item_no
@@ -418,15 +453,29 @@ async def _finish(
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
-    user = get_user_by_telegram_id(update.effective_user.id)
-    if not isinstance(verdict, dict):
-        logger.warning("Verdict was not valid JSON; storing raw.")
-        if user:
-            save_assessment(
-                user.id, {"overall": None, "raw": raw, "gaps": []}, transcript
+    if not isinstance(verdict, dict) or not verdict.get("overall"):
+        logger.warning("Verdict was not valid JSON; retrying with explicit JSON hint.")
+        retry_prompt = prompt + "\n\nIMPORTANT: Return ONLY a valid JSON object. No prose, no markdown, no code fences."
+        try:
+            verdict, raw = await generate_json(
+                Task.assess, retry_prompt, system=_verdict_prompt(context)
             )
-        fallback = "No pude estructurar bien la evaluación, pero aquí está mi valoración:\n\n" if en else "Ich konnte die Auswertung nicht sauber strukturieren, aber hier ist meine Einschätzung:\n\n"
-        await update.effective_message.reply_text(fallback + raw[:1500])
+        except (QuotaExceeded, LLMUnavailable):
+            verdict = None
+
+    user = get_user_by_telegram_id(update.effective_user.id)
+    if not isinstance(verdict, dict) or not verdict.get("overall"):
+        logger.error("Verdict retry also failed; showing graceful error.")
+        if user:
+            save_assessment(user.id, {"overall": None, "gaps": []}, transcript)
+        msg = (
+            "Pude evaluar tus respuestas pero no formatear el resultado. "
+            "Tu progreso fue guardado. Intenta /profile más tarde."
+            if en else
+            "Ich konnte deine Antworten auswerten, aber das Ergebnis nicht formatieren. "
+            "Dein Fortschritt wurde gespeichert. Schau später in /profile nach."
+        )
+        await update.effective_message.reply_text(msg)
         _clear(context)
         return ConversationHandler.END
 
@@ -513,6 +562,7 @@ def _clear(context: ContextTypes.DEFAULT_TYPE) -> None:
         "assess_transcript", "assess_results", "assess_count",
         "assess_item_no", "assess_item", "assess_level",
         "assess_open_no", "assess_pending_open", "assess_user_id", "assess_mode",
+        "assess_skips",
     ):
         context.user_data.pop(key, None)
 

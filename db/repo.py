@@ -10,6 +10,7 @@ from db.models import (
     Assessment,
     ConceptMastery,
     Document,
+    LLMUsage,
     Message,
     PracticeLog,
     ReviewLog,
@@ -32,7 +33,12 @@ def get_user_by_telegram_id(telegram_id: int) -> User | None:
         )
 
 
-def get_or_create_user(telegram_id: int, name: str | None = None) -> User:
+def get_or_create_user(
+    telegram_id: int,
+    name: str | None = None,
+    default_status: str = "active",
+) -> User:
+    import config as _config
     with get_session() as session:
         user = (
             session.query(User)
@@ -40,7 +46,16 @@ def get_or_create_user(telegram_id: int, name: str | None = None) -> User:
             .one_or_none()
         )
         if user is None:
-            user = User(telegram_id=telegram_id, name=name)
+            is_teacher = bool(
+                _config.TEACHER_TELEGRAM_ID
+                and telegram_id == _config.TEACHER_TELEGRAM_ID
+            )
+            user = User(
+                telegram_id=telegram_id,
+                name=name,
+                role="teacher" if is_teacher else "student",
+                status="active" if is_teacher else default_status,
+            )
             session.add(user)
             session.flush()
         elif name and not user.name:
@@ -99,16 +114,26 @@ def recent_user_messages(user_id: int, limit: int = 30) -> list[str]:
     return [r[0] for r in rows]
 
 
-def set_correction_level(user_id: int, level: str) -> None:
-    """Set correction_level to 'strict', 'relaxed', or 'off'."""
+def set_correction_level(user_id: int, level: int) -> None:
+    """Set correction_level to an integer 0-5 (0=Off … 5=Exam)."""
     with get_session() as session:
         user = session.get(User, user_id)
         if user is not None:
-            user.correction_level = level
+            user.correction_level = max(0, min(5, int(level)))
 
 
-def set_corrections(user_id: int, on: bool) -> None:
-    set_correction_level(user_id, "strict" if on else "off")
+def user_message_stats(user_id: int) -> tuple[int, datetime | None]:
+    """Return (total_user_message_count, last_user_message_time) for warm-up rule."""
+    with get_session() as session:
+        rows = (
+            session.query(Message.created_at)
+            .filter(Message.user_id == user_id, Message.role == "user")
+            .order_by(Message.created_at.desc())
+            .all()
+        )
+    if not rows:
+        return 0, None
+    return len(rows), rows[0][0]
 
 
 def set_learning_mode(user_id: int, mode: str) -> None:
@@ -117,6 +142,52 @@ def set_learning_mode(user_id: int, mode: str) -> None:
         user = session.get(User, user_id)
         if user is not None:
             user.learning_mode = mode
+
+
+def set_language_chosen(user_id: int) -> None:
+    """Mark that the user has explicitly chosen their language."""
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if user is not None:
+            user.language_chosen = True
+
+
+# --- LLM usage / credit tracking -------------------------------------------
+
+def record_llm_usage(
+    user_id: int,
+    *,
+    model: str,
+    task: str,
+    credits: int,
+    tokens_in: int | None = None,
+    tokens_out: int | None = None,
+) -> None:
+    """Append one row to llm_usage for metering and billing."""
+    with get_session() as session:
+        session.add(LLMUsage(
+            user_id=user_id,
+            model=model,
+            task=task,
+            credits=credits,
+            tokens_in=tokens_in,
+            tokens_out=tokens_out,
+        ))
+
+
+def daily_credits_used(user_id: int) -> int:
+    """Sum of credits charged to user_id since midnight UTC today."""
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    with get_session() as session:
+        result = (
+            session.query(func.sum(LLMUsage.credits))
+            .filter(
+                LLMUsage.user_id == user_id,
+                LLMUsage.created_at >= today_start,
+            )
+            .scalar()
+        )
+    return int(result or 0)
 
 
 # --- Vocab -----------------------------------------------------------------
@@ -525,6 +596,66 @@ def review_history_for_dkt(
         for r in rows
     ]
     return reviews, seen, len(seen)
+
+
+# --- Classroom -----------------------------------------------------------------
+
+def get_user_by_id(user_id: int) -> User | None:
+    with get_session() as session:
+        return session.query(User).filter(User.id == user_id).one_or_none()
+
+
+def set_user_status(user_id: int, status: str) -> None:
+    with get_session() as session:
+        user = session.query(User).filter(User.id == user_id).one_or_none()
+        if user:
+            user.status = status
+
+
+def approve_student(user_id: int, approved_by: int, mode: str) -> None:
+    """Activate a pending student: set status, language, and timestamps."""
+    with get_session() as session:
+        user = session.query(User).filter(User.id == user_id).one_or_none()
+        if user:
+            user.status = "active"
+            user.learning_mode = mode
+            user.language_chosen = True
+            user.joined_at = datetime.utcnow()
+            user.approved_by = approved_by
+
+
+def list_students(include_pending: bool = True) -> list[User]:
+    """All student-role users, active and optionally pending."""
+    statuses = ["active", "pending"] if include_pending else ["active"]
+    with get_session() as session:
+        return (
+            session.query(User)
+            .filter(User.role == "student", User.status.in_(statuses))
+            .order_by(User.name)
+            .all()
+        )
+
+
+def student_last_active(user_id: int) -> datetime | None:
+    """Timestamp of the most recent message from this student (or None)."""
+    with get_session() as session:
+        return (
+            session.query(func.max(Message.created_at))
+            .filter(Message.user_id == user_id, Message.role == "user")
+            .scalar()
+        )
+
+
+def global_credits_used() -> int:
+    """Total credits spent by ALL users since midnight UTC today."""
+    since = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    with get_session() as session:
+        result = (
+            session.query(func.sum(LLMUsage.credits))
+            .filter(LLMUsage.created_at >= since)
+            .scalar()
+        )
+        return result or 0
 
 
 def hardest_items(user_id: int, limit: int = 5) -> list[dict]:

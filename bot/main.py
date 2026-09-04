@@ -15,6 +15,7 @@ from telegram.ext import (
 import config
 from bot.handlers import (
     assessment,
+    classroom,
     conversation,
     daily,
     documents,
@@ -53,6 +54,18 @@ def build_application() -> Application:
         CallbackQueryHandler(start.language_pick, pattern=r"^lang:")
     )
 
+    # Teacher classroom commands.
+    app.add_handler(CommandHandler("students", classroom.students))
+    app.add_handler(CommandHandler("student", classroom.student))
+    app.add_handler(CommandHandler("class", classroom.class_summary))
+    # Approval flow callbacks (DM buttons sent to teacher).
+    app.add_handler(
+        CallbackQueryHandler(classroom.on_approve_student, pattern=r"^approve_student:")
+    )
+    app.add_handler(
+        CallbackQueryHandler(classroom.on_decline_student, pattern=r"^decline_student:")
+    )
+
     # Conversation flows (registered before the catch-all handler).
     app.add_handler(assessment.build_handler())
     app.add_handler(practice.build_handler())
@@ -88,6 +101,10 @@ def build_application() -> Application:
     # Inline action buttons attached to corrected replies (📖/➕/🎯).
     app.add_handler(
         CallbackQueryHandler(conversation.on_correction_action, pattern=r"^corr:")
+    )
+    # Correction level picker buttons.
+    app.add_handler(
+        CallbackQueryHandler(conversation.on_corrections_pick, pattern=r"^setcorr:")
     )
 
     # Any non-command text goes to the tutor conversation handler.

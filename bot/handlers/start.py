@@ -1,19 +1,25 @@
 """/start, /help, /profile, /language command handlers."""
 from __future__ import annotations
 
+import logging
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
+import config
 from bot.middleware import require_auth
 from db.repo import (
     count_due,
     get_bkt_state,
     get_user_by_telegram_id,
     latest_assessment,
+    set_language_chosen,
     set_learning_mode,
     vocab_count,
 )
 from srs import bkt as bkt_mod
+
+logger = logging.getLogger(__name__)
 
 WELCOME_GERMAN = (
     "Hallo! Ich bin Karly, dein Deutsch-Tutor. 🇩🇪\n\n"
@@ -30,17 +36,19 @@ WELCOME_GERMAN = (
 )
 
 WELCOME_ENGLISH = (
-    "¡Hola! Soy Karly, tu tutora de inglés. 🇺🇸\n\n"
-    "Escríbeme en inglés — te respondo y te corrijo.\n\n"
-    "Comandos principales:\n"
-    "/practice — tarjetas de vocabulario (también /flashcards)\n"
-    "/daily — reto diario: 3 ejercicios cortos\n"
-    "/quiz — quiz rápido sobre tus puntos más débiles\n"
-    "/roleplay — escena de conversación en inglés\n"
-    "/test — prueba de nivel adaptativa\n"
-    "/profile — tu perfil de aprendizaje\n"
-    "/weekly — informe semanal de progreso\n\n"
-    "/help — todos los comandos"
+    "Hello! I'm Karly, your English tutor. 🇺🇸\n\n"
+    "Write to me in English — I'll reply and correct you.\n\n"
+    "Main commands:\n"
+    "/practice — vocabulary flashcards (also /flashcards)\n"
+    "/daily — daily challenge: 3 short exercises\n"
+    "/quiz — quick quiz on your weakest skills\n"
+    "/roleplay — conversation scene in English\n"
+    "/test — adaptive placement test\n"
+    "/profile — your learning profile\n"
+    "/weekly — weekly progress report\n"
+    "/docs — practice from a PDF\n"
+    "🎭 /impostor — social deduction game for the class\n\n"
+    "/help — all commands"
 )
 
 LANGUAGE_PICKER = (
@@ -85,6 +93,13 @@ HELP_GERMAN = (
     "/docfocus on|off — Gespräch aufs neueste Dokument lenken\n"
     "📄 Schick eine deutsche PDF → Fachbegriffe werden automatisch extrahiert\n\n"
 
+    "── Spiel ──\n"
+    "/impostor new — neues Impostor-Spiel erstellen (gibt Code zurück)\n"
+    "/impostor join <code> <name> — Spiel beitreten\n"
+    "/impostor start — Rollen austeilen (nur Host)\n"
+    "/impostor vote <name> — abstimmen\n"
+    "/impostor help — alle Spielbefehle\n\n"
+
     "── Sistema ──\n"
     "/language — cambiar a modo inglés\n"
     "/status — Backend-Ladder & Groq-Quota (verbleibende Anfragen)\n"
@@ -96,57 +111,64 @@ HELP_GERMAN = (
 )
 
 HELP_ENGLISH = (
-    "Karly — tu tutora de inglés.\n"
-    "Escríbeme en inglés; te corrijo. Todos los comandos:\n\n"
+    "Karly — your English tutor.\n"
+    "Write in English; I'll correct you. All commands:\n\n"
 
-    "── Aprender ──\n"
-    "/practice — tarjetas de vocabulario (también /flashcards): elige mazo y dirección\n"
-    "/flip — cambiar dirección EN↔ES (dentro de /practice)\n"
-    "/daily — reto diario: espacio en blanco + traducir + responder\n"
-    "/quiz — 7 preguntas MCQ sobre tus habilidades más débiles\n"
-    "/roleplay — escena de conversación: elige escenario, /done para feedback\n"
-    "/test — prueba de nivel adaptativa (~10 preguntas); /done para terminar antes, /cancel para cancelar\n\n"
+    "── Learning ──\n"
+    "/practice — flashcards (also /flashcards): choose deck and direction\n"
+    "/flip — switch EN↔ES direction (during /practice)\n"
+    "/daily — daily challenge: fill-in-the-blank + translate + reply\n"
+    "/quiz — 7 MCQ questions on your weakest skills\n"
+    "/roleplay — conversation scene: choose a scenario, /done for feedback\n"
+    "/test — adaptive placement test (~10 questions); /done to finish early, /cancel to quit\n\n"
 
-    "── Perfil y estadísticas ──\n"
-    "/profile — nivel, dominio de habilidades, tarjetas pendientes\n"
-    "/review — racha, tarjetas pendientes, vocabulario más difícil\n"
-    "/weekly — informe semanal: sesiones, precisión, correcciones, dominio\n"
-    "/summary — analizar tus errores recientes y guardarlos para practicar\n\n"
+    "── Profile & Stats ──\n"
+    "/profile — level, skill mastery, cards due\n"
+    "/review — streak, cards due, hardest vocabulary\n"
+    "/weekly — weekly report: sessions, accuracy, corrections, mastery\n"
+    "/summary — review recent mistakes and save them for practice\n\n"
 
-    "── Conversación ──\n"
-    "/corrections strict|relaxed|off — nivel de correcciones (sin arg = estado actual)\n"
-    "/topic <tema> — enfocar la conversación en un tema (/topic clear para borrar)\n"
-    "/spanish <pregunta> — hacer una pregunta en español\n"
-    "/remind HH:MM — recordatorio diario (/remind off para desactivar)\n\n"
+    "── Conversation tools ──\n"
+    "/corrections strict|relaxed|off — correction level (no arg = current status)\n"
+    "/topic <topic> — steer the conversation to a topic (/topic clear to reset)\n"
+    "/spanish <question> — ask a question in Spanish\n"
+    "/remind HH:MM — set a daily reminder (/remind off to disable)\n\n"
 
-    "── Documentos ──\n"
-    "/docs — tus PDFs subidos\n"
-    "/learn <id> — lección a partir de un documento\n"
-    "/docfocus on|off — orientar la conversación hacia el último documento\n"
-    "📄 Envía un PDF en inglés → se extrae el vocabulario automáticamente\n\n"
+    "── Documents ──\n"
+    "/docs — your uploaded PDFs\n"
+    "/learn <id> — start a lesson from a document\n"
+    "/docfocus on|off — focus conversation on the latest document\n"
+    "📄 Send an English PDF → vocabulary is extracted automatically\n\n"
 
-    "── Sistema ──\n"
-    "/language — cambiar a modo alemán\n"
-    "/status — estado del backend y cuota de Groq\n"
-    "/backend on|off — mostrar el modelo activo en cada respuesta\n"
-    "/cancel — cancelar la sesión activa\n"
-    "/stop — terminar el ejercicio en curso (/practice, /quiz, /daily, /roleplay)\n"
-    "/start — mensaje de bienvenida\n"
-    "/help — este resumen"
+    "── Games ──\n"
+    "/impostor new — create an Impostor game (generates a code)\n"
+    "/impostor join <code> <name> — join a game\n"
+    "/impostor start — assign roles (host only)\n"
+    "/impostor vote <name> — vote to eliminate\n"
+    "/impostor help — all game commands\n\n"
+
+    "── System ──\n"
+    "/language — switch to German mode\n"
+    "/status — backend status and Groq quota\n"
+    "/backend on|off — show active model in every reply\n"
+    "/cancel — cancel the active session\n"
+    "/stop — end current exercise (/practice, /quiz, /daily, /roleplay)\n"
+    "/start — welcome message\n"
+    "/help — this overview"
 )
 
 
 @require_auth
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = get_user_by_telegram_id(update.effective_user.id)
-    if user is None or user.learning_mode == "german":
+    if user and getattr(user, "status", "active") == "pending" and user.language_chosen:
+        # Student already picked language but is waiting for approval.
         await update.effective_message.reply_text(
-            LANGUAGE_PICKER, reply_markup=_PICKER_KB
+            "⏳ Still waiting for your teacher to approve you. "
+            "We'll send you a message as soon as you're in!"
         )
-    else:
-        await update.effective_message.reply_text(
-            LANGUAGE_PICKER, reply_markup=_PICKER_KB
-        )
+        return
+    await update.effective_message.reply_text(LANGUAGE_PICKER, reply_markup=_PICKER_KB)
 
 
 async def language_pick(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -158,12 +180,69 @@ async def language_pick(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     user = get_user_by_telegram_id(update.effective_user.id)
     if user is None:
         return
+
+    was_new = not user.language_chosen
     set_learning_mode(user.id, mode)
+    set_language_chosen(user.id)
+
+    # Approval flow: hold pending students and notify the teacher.
+    if (
+        config.ACCESS_MODE == "approval"
+        and getattr(user, "status", "active") == "pending"
+        and was_new
+        and config.TEACHER_TELEGRAM_ID
+    ):
+        lang_label = "🇩🇪 German" if mode == "german" else "🇺🇸 English"
+        student_name = user.name or str(update.effective_user.id)
+        tg_handle = (
+            f"@{update.effective_user.username}"
+            if update.effective_user.username
+            else f"id={update.effective_user.id}"
+        )
+        from telegram import InlineKeyboardButton as IKB, InlineKeyboardMarkup as IKM
+        kb = IKM([[
+            IKB("✅ German mode", callback_data=f"approve_student:{user.id}:german"),
+            IKB("✅ English mode", callback_data=f"approve_student:{user.id}:english"),
+            IKB("❌ Decline", callback_data=f"decline_student:{user.id}"),
+        ]])
+        try:
+            await context.bot.send_message(
+                chat_id=config.TEACHER_TELEGRAM_ID,
+                text=(
+                    f"👤 *{student_name}* ({tg_handle}) wants to join Karly!\n"
+                    f"They chose: {lang_label}\n\n"
+                    "Approve or decline:"
+                ),
+                reply_markup=kb,
+            )
+        except Exception:
+            logger.exception("Failed to notify teacher of pending student %s", user.id)
+
+        if mode == "german":
+            await query.edit_message_text(
+                "⏳ Danke! Dein Lehrer muss dich noch freischalten. "
+                "Wir melden uns bald!\n\n"
+                "(Your teacher will approve you shortly.)"
+            )
+        else:
+            await query.edit_message_text(
+                "⏳ Thanks! Your teacher needs to approve you before you start. "
+                "We'll notify you soon!"
+            )
+        return
 
     if mode == "german":
-        await query.edit_message_text(WELCOME_GERMAN)
+        welcome = WELCOME_GERMAN + (
+            "\n\n👉 *Start here:* do /test to find your level, "
+            "then just write to me in German!"
+        )
+        await query.edit_message_text(welcome)
     else:
-        await query.edit_message_text(WELCOME_ENGLISH)
+        welcome = WELCOME_ENGLISH + (
+            "\n\n👉 *Start here:* do /test to find your level, "
+            "then just write to me in English!"
+        )
+        await query.edit_message_text(welcome)
 
 
 @require_auth
@@ -203,29 +282,29 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     count = vocab_count(user.id)
 
     if en:
-        lines = ["📋 *Tu Perfil*\n"]
+        lines = ["📋 *Your Profile*\n"]
         if verdict:
-            lines.append(f"Nivel (general): *{verdict.get('overall', '?')}*")
+            lines.append(f"Level (overall): *{verdict.get('overall', '?')}*")
             skills = verdict.get("skills") or {}
             if skills:
-                lines.append("Por habilidad:")
+                lines.append("By skill:")
                 for k, v in skills.items():
                     lines.append(f"  • {k.capitalize()}: {v}")
             gaps = verdict.get("gaps") or []
             if gaps:
-                lines.append("\nPuntos débiles:")
+                lines.append("\nTop gaps:")
                 for g in gaps[:5]:
                     lines.append(f"  • {g}")
         else:
-            lines.append("Todavía no has hecho la prueba de nivel. Empieza con /test.")
-        lines.append(f"\nVocabulario/correcciones guardados: *{count}*")
+            lines.append("No placement test yet. Start with /test.")
+        lines.append(f"\nSaved vocabulary/corrections: *{count}*")
         due = count_due(user.id)
         if due:
-            lines.append(f"🃏 Pendientes para practicar: *{due}* — /flashcards")
+            lines.append(f"🃏 Due for practice: *{due}* — /flashcards")
         bkt_state = get_bkt_state(user.id)
         active = {s: e for s, e in bkt_state.items() if e.get("p", 0) > bkt_mod.P_L0 + 0.001}
         if active:
-            lines.append("\n🧠 *Dominio de habilidades (BKT):*")
+            lines.append("\n🧠 *Skill mastery (BKT):*")
             for skill, entry in active.items():
                 p = entry.get("p", 0.0)
                 lvl = entry.get("level")

@@ -1,6 +1,6 @@
 # Karly — Roadmap & Future Work
 
-Living plan for Karly's evolution. Updated 2026-09-03.
+Living plan for Karly's evolution. Updated 2026-09-04.
 
 ---
 
@@ -9,23 +9,20 @@ Living plan for Karly's evolution. Updated 2026-09-03.
 **What's working today:** Dual-language tutor bot — German mode (native English speaker learning German, fully featured) and English mode (native Spanish speaker learning English, **now fully featured with all German-mode features**). Adaptive placement test, spaced-repetition flashcards (HLR scheduler, MCQ mode, deck picker, EN→ES/ES→EN flip), daily challenge, rapid quiz targeting weak skills, English roleplay scenes (6 scenarios), weekly progress report, PDF vocabulary extraction, social deduction game (The Impostor), open auth, BKT skill mastery, DKT LSTM (gated), systemd deploy on OptiPlex.
 
 **What to build next (solo phase):**
-1. **English mode should be in English** — the interface is currently Spanish; it should mirror German mode, with Spanish kept for explanations only
-2. **Correction strictness as a 0–5 dial** — replaces `strict / relaxed / off`. 0 is silent, 5 is exam-grade, and the default sits at 1: corrects only what breaks meaning, ignores everything else entirely
+1. ✅ **English mode should be in English** — done: interface is now English; Spanish kept for explanations only
+2. ✅ **Correction strictness as a 0–5 dial** — done: `strict / relaxed / off` replaced with 0–5 integer scale; picker UI, warm-up rule, tone rules all implemented
 3. **Games in `/help`** — The Impostor exists but is invisible
 4. **English-mode polish** — small remaining items listed below (`/english` block, backend notice language)
 5. Voice notes — speak German/English, get a text correction back
-6. Assessment JSON hardening — retry/skip on bad output instead of raw dump
-7. Manual grade override buttons on typed answers
+6. ✅ Assessment JSON hardening — done: two-layer retry + graceful skip after 3 consecutive failures
+7. ✅ Manual grade override buttons on typed answers — done: grade keyboard always shown after feedback
 
 **Next phase, planned:** give Karly a course — a topic list per CEFR level with a short
 lesson and a set of exercises each, the way test-english.com is organised, written once
 into the repo instead of invented live. **English runs the full ladder, A1 to C1**, built
 one level at a time. Plan and pending tasks in [`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md).
 
-**Also planned — classroom controls:** English mode is for your students, so the bot
-needs a roster, an approve-before-joining gate, and a teacher view of who's using it and
-how they're doing. See [Classroom phase](#classroom-phase--teacher-controls) below —
-starting with Step 0, the blockers to clear before the first student joins.
+**Classroom controls (Steps 0–3 done):** roster with roles, approval flow (ACCESS_MODE=approval), and teacher views (`/students`, `/student`, `/class`) are all implemented. Per-student daily credit cap and graceful quota exhaustion are live. Remaining: Steps 4–6 (privacy policy, assignments, CSV export), token budget T.6–T.10. See [Classroom phase](#classroom-phase--teacher-controls) below.
 
 **How many students fit for free?** Ungated: roughly **10–20**. **With the budget gates
 planned in [Token budget](#token-budget--making-50-daily-students-fit) — 50 students all
@@ -149,15 +146,15 @@ These are quality improvements that make sense before opening to other users.
 
 ### English-mode polish (remaining items)
 
-Feature parity is **complete** as of 2026-09-03 — all five blocked handlers are unblocked, all UI strings have Spanish equivalents, all prompts are English-aware. What's left is cosmetic/minor:
+Feature parity is **complete** as of 2026-09-03 — all five blocked handlers are unblocked, all UI strings have been switched to English, all prompts are English-aware. What's left is cosmetic/minor:
 
-| Item | File | What to do |
+| Item | File | Status |
 |---|---|---|
-| Update `WELCOME_ENGLISH` | `bot/handlers/start.py` | Add `/practice`, `/daily`, `/quiz`, `/roleplay`, `/test`, `/weekly`, `/docs` to the welcome message — they now all work in English mode |
-| Update `HELP_ENGLISH` | `bot/handlers/start.py` | Add all commands now available in English mode (same list as HELP_GERMAN but Spanish labels) |
-| Block `/english` in English mode | `bot/handlers/conversation.py` | In `english()`: if user's `learning_mode == "english"`, reply "En modo inglés, usa /spanish para hacer preguntas en español." and return early |
-| Spanish stale-correction message | `bot/handlers/conversation.py` | In `on_correction_action`, the "Diese Korrektur ist zu alt" line fires before mode is known — either look up the user there or keep it bilingual |
-| Backend notices in Spanish | `bot/handlers/conversation.py` | `_BACKEND_NOTICES` and `_RECOVERED_NOTICE` are currently German+English; in English mode they should be Spanish+English. Low priority — backend transitions are rare. |
+| ✅ Update `WELCOME_ENGLISH` | `bot/handlers/start.py` | Done — commands added, interface in English |
+| ✅ Update `HELP_ENGLISH` | `bot/handlers/start.py` | Done — all commands listed in English |
+| Block `/english` in English mode | `bot/handlers/conversation.py` | Still pending — in `english()`: if `learning_mode == "english"`, reply redirect to `/spanish` |
+| Spanish stale-correction message | `bot/handlers/conversation.py` | Still pending — "Diese Korrektur ist zu alt" should be bilingual |
+| Backend notices in Spanish | `bot/handlers/conversation.py` | Still pending — low priority; backend transitions are rare |
 
 ---
 
@@ -273,11 +270,11 @@ Recommended: block it cleanly — "En modo inglés, usa /spanish para hacer preg
 
 ---
 
-#### Implementation order (completed 2026-09-03)
+#### Implementation order
 
 1. **Group 1** ✅ — all 14 English prompts written in `prompts.py`
 2. **Group 2** ✅ — all five handlers unblocked and mode-aware: assessment, daily, quiz, roleplay, practice
-3. **Group 3** ✅ — mode-aware UI strings across conversation.py, start.py, report.py, documents.py
+3. **Group 3** ✅ — mode-aware UI strings switched to English across all handlers; Spanish kept for explanations
 4. **Group 4** ⏳ — `/english` block in English mode (see "English-mode polish" above)
 
 ---
@@ -604,17 +601,17 @@ between a silent partner and a patient one.
 
 #### Tasks
 
-| # | Task | What to do |
+| # | Task | Status |
 |---|---|---|
-| **S.1** | **Build the correction block from flags, not six prose blobs** | Six levels × two languages = twelve hand-written prompt constants that will drift apart within a month. Instead: one template, filled from a small per-level table (`cap`, `threshold`, `slang`, `typos`, `style`). Adding a level or retuning one becomes a data change |
-| **S.2** | **Say the quiet part in the prompt** | At levels 1–2 the model must be told that **returning no corrections is the expected outcome for most messages**, not a failure to find any. Without that line an LLM will always find something |
-| **S.3** | **Migrate the existing column** | `correction_level` is a string today. Map `off`→0, `relaxed`→**1**, `strict`→**4**. Level 5 is stricter than today's strict, so nobody gets silently upgraded into it |
-| **S.4** | **`/corrections` becomes a picker** | Six buttons with a one-line description each, in the user's language, and the current level marked. Typing `/corrections 3` should work too |
-| **S.5** | **Warm-up rule** | No corrections for a user's first few messages, or when returning after a break, at any level below 5. Let them settle in |
-| **S.6** | **Tone rules in the persona, at every level** | Never comment on the *quality* of their language, never praise-then-correct ("Good try, but…"), never count mistakes. Strictness changes *how much* is said, never *how* it's said |
-| **S.7** | **Sensible default by level** | Suggest, don't force: an A1 student at level 5 will drown. Default from the placement test — beginners start at 1, advanced learners can be offered 3 |
-| **S.8** | **Class default** | The teacher sets the starting level for a class; students can still change their own. Their choice always wins |
-| **S.9** | **Mention it once, early** | *"I'll mostly just chat. Want me to correct more? /corrections"* — then never bring it up again |
+| ✅ **S.1** | **Build the correction block from flags, not six prose blobs** | Done — `build_correction_block(level, en)` in `llm/prompts.py`; single template, per-level table |
+| ✅ **S.2** | **Say the quiet part in the prompt** | Done — level 1–2 blocks explicitly say "returning no corrections is the expected outcome" |
+| ✅ **S.3** | **Migrate the existing column** | Done — `_migrate_correction_level_to_int()` maps `off`→0, `relaxed`→1, `strict`→4 |
+| ✅ **S.4** | **`/corrections` becomes a picker** | Done — 6-button inline picker; `/corrections 3` also works |
+| ✅ **S.5** | **Warm-up rule** | Done — no corrections for first 5 messages or after 24h break (levels 1–4) |
+| ✅ **S.6** | **Tone rules in the persona, at every level** | Done — `TONE_RULES` block appended at every level |
+| **S.7** | **Sensible default by level** | Pending — suggest level from placement test result |
+| **S.8** | **Class default** | Pending — teacher sets starting level; student choice overrides |
+| **S.9** | **Mention it once, early** | Pending — nudge message after first correction |
 
 ---
 
@@ -643,19 +640,13 @@ Let AJ speak a German or English sentence and receive a text correction back. Op
 - **Gate:** voice message handler in `bot/main.py` (`filters.VOICE`); transcription replaces the text message in the conversation flow
 - **Why:** speaking practice is the hardest skill to drill over text; this is the highest-impact stretch feature
 
-### Assessment JSON hardening
+### Assessment JSON hardening ✅ Done
 
-When the LLM returns malformed JSON during `/test`, the current fallback dumps the raw string as an open item. Better: retry once with a simpler prompt, then skip the item entirely if it still fails.
+`_next_item()` retries with a simplified prompt on bad JSON, skips after a second failure, and aborts the session gracefully after 3 consecutive skips. `_finish()` also retries with a JSON-only hint before showing an error.
 
-- File: `bot/handlers/assessment.py` → `_next_item()`
-- One retry with a stripped-down prompt; skip + log on second failure
+### Manual grade override on typed answers ✅ Done
 
-### Manual grade override on typed answers
-
-Cloze and sentence answers are auto-mapped to grade 2 (wrong) or 4 (correct). Power users want to say "I knew it but typed it wrong" → grade 5.
-
-- After feedback is shown, append the grade buttons (`_grade_keyboard()`) so the user can override before advancing
-- Small change to `on_typed()` in `practice.py`
+`on_typed()` in `practice.py` now always shows the grade keyboard after feedback (cloze and sentence modes). Students can tap any grade to override the auto-grade before advancing.
 
 ---
 
@@ -684,14 +675,14 @@ Tasks, not observations. Found by reading both plans against the current code.
 
 **Must be done before the first invite:**
 
-| # | Task | Where | What to do |
+| # | Task | Where | Status |
 |---|---|---|---|
-| **0.1** | **Stop new students landing in German mode** | `db/models.py`, `bot/middleware.py`, approval flow | `learning_mode` defaults to `"german"`, so an approved Spanish-speaking student meets a German tutor and won't know `/language` exists. Set the language at approval time (you pick it when you tap Approve), or give each class a default language that new members inherit. **This is the one that breaks on day one** |
-| **0.2** | **Define the first five minutes** | `bot/handlers/start.py` | Write the actual sequence a new student sees: welcome (in their language) → what this bot is → `/test` → their level → "here's what to do next". A class of beginners will not explore on their own. One screen, three taps, no jargon |
-| **0.3** | **Measure real usage before inviting a class** | — | Run a week yourself and count turns. Compare against the free-tier ceilings in "Cost and capacity" above. Invite in waves — 5 students, then 15, then the rest — rather than 50 on day one |
-| **0.4** | **Enable Groq's Developer tier** | Groq console | Free — add a card, get ~10× the rate limits, pay nothing until you spend. Five minutes, and it's the difference between 20 students and 50 |
-| **0.5** | **Per-student daily cap** | `bot/middleware.py` | Designed in full in [Token budget](#token-budget--making-50-daily-students-fit), tasks T.1–T.5. Meters LLM calls rather than messages, so the free features stay unlimited |
-| **0.6** | **Handle running out of quota gracefully** | `llm/router.py`, `bot/handlers/*` | When every rung is exhausted, `/test`, `/course` and `/quiz` break rather than degrade, because Ollama can't produce JSON. Detect it and say so — *"I'm out of capacity for today, try flashcards or a game"* — and steer to the zero-LLM features instead of erroring |
+| ✅ **0.1** | **Stop new students landing in German mode** | `db/models.py`, `bot/middleware.py`, approval flow | Done — `language_chosen` flag + middleware gate intercepts any user who hasn't picked; approval buttons set the language at approval time |
+| **0.2** | **Define the first five minutes** | `bot/handlers/start.py` | Pending — approved students get a welcome message + "start with /test" nudge, but no full onboarding sequence yet |
+| **0.3** | **Measure real usage before inviting a class** | — | Operational — run a week, invite in waves |
+| **0.4** | **Enable Groq's Developer tier** | Groq console | Operational — free card, ~10× rate limits |
+| ✅ **0.5** | **Per-student daily cap** | `bot/credits.py`, `db/repo.py` | Done — 20-credit/day allowance; credit costs in `COSTS` dict; `check_credits` + `spend` in every metered handler |
+| ✅ **0.6** | **Handle running out of quota gracefully** | `bot/credits.py`, `bot/handlers/*` | Done — `capacity_exhausted_text/keyboard` shown on `QuotaExceeded` across all handlers; points to free features (flashcards, game) |
 
 **Before the second week:**
 
@@ -709,48 +700,45 @@ Tasks, not observations. Found by reading both plans against the current code.
 
 ---
 
-### Step 1 — Roster and roles
+### Step 1 — Roster and roles ✅ Done
 
-Every user gets a `role` and, if they're a student, a `class`.
+Every user gets a `role` and a `status`.
 
-| Item | What to do |
+| Item | Status |
 |---|---|
-| `role` column on `users` | `teacher` / `student` / `guest`. You are the only teacher initially |
-| `class` column (or a `classes` table if you teach more than one group) | Lets `/students` and the weekly digest be scoped to one group |
-| `status` column | `pending` / `active` / `paused` / `removed`. Nothing is ever hard-deleted — a removed student's history stays for your records |
-| `joined_at`, `approved_by` | Basic audit trail |
+| ✅ `role` column on `users` | Done — `"teacher"` / `"student"` (default). Set from `TEACHER_TELEGRAM_ID` env var on startup |
+| `class_name` column | Done — column exists; class scoping for `/students` is future work |
+| ✅ `status` column | Done — `"pending"` / `"active"` (default) / `"removed"`. Soft-delete only |
+| ✅ `joined_at`, `approved_by` | Done — set at approval time |
 
-### Step 2 — Approval flow
+### Step 2 — Approval flow ✅ Done
 
-What you asked for: a confirmation when someone wants to start using the bot.
+| Behaviour | Status |
+|---|---|
+| New student sends `/start`, sees language picker | ✅ Done |
+| After language pick, student sees "waiting for approval" message | ✅ Done |
+| Teacher gets DM with student name, chosen language, [✅ German] [✅ English] [❌ Decline] buttons | ✅ Done |
+| On approval: student status → active, language set, welcome DM sent | ✅ Done |
+| On decline: student status → removed; subsequent `/start` shows "no access" | ✅ Done |
+| Declined user re-sending `/start` doesn't re-notify teacher | ✅ Done — only notified on first language pick |
 
-1. A new person sends `/start`. They get a friendly "waiting for your teacher to let you
-   in" message and can't use anything else.
-2. **You get a DM:** `👤 Ana García (@ana_g) wants to join. [✅ Approve] [❌ Decline]`,
-   with a **[Approve + assign to class]** option if you run more than one group.
-3. You tap. The student is told immediately and lands in the onboarding sequence from
-   Step 0.2 — **in the language you set for them when approving** (Step 0.1).
-4. Declines are remembered, so a declined user re-sending `/start` doesn't spam you.
-
-**Access modes** — one setting, three behaviours:
+**Access modes** — configured via `ACCESS_MODE` env var:
 
 | Mode | Behaviour |
 |---|---|
-| `open` | Anyone can use it (today's behaviour) |
-| `approval` | New users wait for your tap ← **the classroom default** |
-| `code` | Students join with a class code you hand out in the lesson, and you confirm afterwards. Reuses the code mechanic already designed for The Impostor |
+| `open` | Anyone can use it — default |
+| `approval` | New users wait for teacher approval — set `ACCESS_MODE=approval` + `TEACHER_TELEGRAM_ID` |
+| `code` | Pending — would reuse The Impostor game-code mechanic |
 
-### Step 3 — What you can see
+### Step 3 — What you can see ✅ Done (core commands)
 
-Three commands, teacher-only.
-
-| Command | Shows |
+| Command | Status |
 |---|---|
-| `/students` | The roster: name, level, last active, current streak, cards due, units passed. Sorted by "who needs attention" — least recently active first |
-| `/student <name>` | One student in depth: CEFR per skill, units passed and failed, accuracy trend over recent weeks, weakest topics, error patterns, total messages and time on task |
-| `/class` | Weekly digest for the whole group: who was active and who wasn't, average accuracy, units completed, and **the mistakes most students are making** — the most useful thing on this list for planning a lesson |
+| ✅ `/students` | Done — roster with status icons (🟢🟡🔴⏳), level, last-active, streak |
+| ✅ `/student <name>` | Done — CEFR level + skills + gaps + last active + streak + cards + sessions + joined date |
+| ✅ `/class` | Done — weekly snapshot: active count, inactive list, pending count |
 
-**Alerts, pushed to you rather than polled:**
+**Alerts (not yet built):**
 
 | Trigger | Message |
 |---|---|
@@ -758,7 +746,7 @@ Three commands, teacher-only.
 | A student fails the same unit 3 times | `⚠️ Marco has failed "Present perfect" 3 times — worth covering in class.` |
 | A student finishes a level | `🎉 Sofía cleared A2.` |
 
-Weekly digest arrives on a schedule you set, reusing the existing reminder job queue.
+Weekly digest on a schedule — pending (would reuse the reminder job queue).
 
 ### Step 4 — What you deliberately don't see
 
@@ -802,15 +790,16 @@ Only worth building after the curriculum phase ([`CURRICULUM_PLAN.md`](CURRICULU
 
 ### Suggested order
 
-0. Clear the day-one blockers (Step 0) — especially the German-mode default
-1. Roster and roles (Step 1) — nothing works without it
-2. Approval flow (Step 2) — the gate you asked for; makes it safe to hand out
-3. Usage tracking (Step 5) — start collecting early, it's worthless retroactively
-4. `/students` and `/student` (Step 3) — the day-to-day view
-5. `/class` digest and alerts (Step 3) — the weekly rhythm
-6. Assignments and export (Step 6) — after the course exists
+0. ✅ Clear the day-one blockers (Step 0) — especially the German-mode default
+1. ✅ Roster and roles (Step 1) — nothing works without it
+2. ✅ Approval flow (Step 2) — the gate you asked for; makes it safe to hand out
+3. ✅ Usage tracking (Step 5 / T.1) — collecting from day one
+4. ✅ `/students` and `/student` (Step 3) — the day-to-day view
+5. ✅ `/class` digest (Step 3) — the weekly snapshot
+6. Alerts, pushed to teacher (Step 3) — pending
+7. Assignments and export (Step 6) — after the course exists
 
-Steps 0–3 are the minimum to put the bot in front of a class.
+Steps 0–3 are the minimum to put the bot in front of a class. **All of them are done.**
 
 ---
 
@@ -944,20 +933,20 @@ first — they raise the ceiling for everyone instead of dividing a fixed pie.
 
 ### Tasks, in order
 
-| # | Task | Why this order |
+| # | Task | Status |
 |---|---|---|
-| **T.1** | Usage tracking — one row per LLM call with tokens and task (Classroom Step 5) | You cannot budget what you don't measure. Everything below needs this table |
-| **T.2** | B.1 — shorten conversation history | Biggest single saving, and it's independent of everything else |
-| **T.3** | B.3 + B.4 — output cap and prompt trim | Quick, safe, compounding |
-| **T.4** | Free vs metered classification | Decide once, in one place, which actions cost credits |
-| **T.5** | Per-student daily allowance + the redirect message | The main gate. Useless before T.4 |
-| **T.6** | Global ceiling + reserve pool | Protects the class from itself |
-| **T.7** | Rate limit + concurrency queue | Fixes the whole-class-at-once lesson case |
-| **T.8** | B.2 — shared daily challenge | Bigger win once there are actually 50 students |
-| **T.9** | `/budget` and the 70% alert | Now you can tune the numbers with real data |
-| **T.10** | Streak bonus, `/grant`, low-balance nudges | Polish — makes the limit feel like a game |
+| ✅ **T.1** | Usage tracking — `LLMUsage` table, one row per LLM call | Done — `record_llm_usage` in `db/repo.py`; `spend()` wired into all metered handlers |
+| ✅ **T.2** | B.1 — shorten conversation history | Done — `CONTEXT_WINDOW_MESSAGES = 8` (was 20); ~40% input token reduction |
+| **T.3** | B.3 + B.4 — output cap and prompt trim | Pending — explicit `max_tokens` per task, trim system prompt length |
+| ✅ **T.4** | Free vs metered classification | Done — `COSTS` dict in `bot/credits.py`; free features always 0 |
+| ✅ **T.5** | Per-student daily allowance + the redirect message | Done — `check_credits` / `spend` / `daily_credits_used`; exhaustion message points to free features |
+| ✅ **T.6** | Global ceiling + reserve pool | Done — `GLOBAL_DAILY_CREDIT_LIMIT` (default 1000); before `RESERVE_HOUR_UTC` (default 14:00 UTC) only 75% is available; shows class-wide exhaustion message distinct from per-user message |
+| ✅ **T.7** | Rate limit + concurrency queue | Done — `check_rate_limit()` per-user cooldown in `chat()` via `context.user_data`; `asyncio.Semaphore(LLM_CONCURRENCY_LIMIT)` in `route_result()` with `LLM_QUEUE_TIMEOUT` before raising `LLMUnavailable` |
+| **T.8** | B.2 — shared daily challenge | Pending — bigger win once there are 50 students |
+| **T.9** | `/budget` and the 70% alert | Pending — needs real data first |
+| **T.10** | Streak bonus, `/grant`, low-balance nudges | Pending — polish |
 
-**T.1–T.5 are enough to safely invite 50 students.** The rest is tuning.
+**T.1–T.7 are done. T.8–T.10 are tuning for later.**
 
 ---
 
