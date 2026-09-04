@@ -69,6 +69,18 @@ class User(Base):
     # Which class (classes.id) this student is in. Teacher can change.
     class_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
+    # Subscription / public-tier limits (F-15, F-16, F-21).
+    subscribed: Mapped[bool] = mapped_column(Boolean, default=False)
+    subscription_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # 3-hour session window counter.
+    session_count: Mapped[int] = mapped_column(Integer, default=0)
+    session_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Weekly counter (resets every Monday 00:00 UTC).
+    week_count: Mapped[int] = mapped_column(Integer, default=0)
+    week_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Purchased one-time credits (never expire).
+    topup_credits: Mapped[int] = mapped_column(Integer, default=0)
+
     @property
     def corrections_on(self) -> bool:
         """Backward-compat shim — true when any corrections are active."""
@@ -228,6 +240,20 @@ class ClassSetting(Base):
     key: Mapped[str] = mapped_column(String, primary_key=True)
     value: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class Payment(Base):
+    """One row per Telegram Stars payment — subscriptions and top-up packs."""
+
+    __tablename__ = "payments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    kind: Mapped[str] = mapped_column(String)  # "subscription" | "topup"
+    stars_amount: Mapped[int] = mapped_column(Integer)
+    credits_purchased: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    telegram_charge_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
 
 class LLMUsage(Base):

@@ -25,11 +25,15 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import config
 from db.repo import (
+    add_topup_credits,
     daily_credits_granted,
     daily_credits_used,
+    get_public_limits_state,
     global_credits_used,
     practice_streak,
     record_llm_usage,
+    reset_expired_windows,
+    update_public_limits,
 )
 
 # ---------------------------------------------------------------------------
@@ -121,9 +125,107 @@ def rate_limited_text(en: bool) -> str:
     return "⏳ Langsamer bitte — kurz warten vor der nächsten Nachricht. (Too fast!)"
 
 
+def session_limit_text(en: bool, reset_in_min: int) -> str:
+    if en:
+        return (
+            f"⏱ You've reached your session limit. "
+            f"Your allowance resets in about *{reset_in_min} min*.\n\n"
+            "Subscribe for more practice time, or buy a top-up pack:"
+        )
+    return (
+        f"⏱ Dein Session-Limit ist erreicht. "
+        f"Dein Kontingent wird in ca. *{reset_in_min} Min.* zurückgesetzt.\n\n"
+        "Abonniere für mehr Übungszeit oder kauf ein Top-up-Paket:"
+    )
+
+
+def week_limit_text(en: bool) -> str:
+    if en:
+        return (
+            "📅 You've used your weekly message allowance. "
+            "Your limit resets next Monday.\n\n"
+            "Subscribe to keep going, or buy a top-up pack:"
+        )
+    return (
+        "📅 Du hast dein Wochenkontingent verbraucht. "
+        "Es wird am Montag zurückgesetzt.\n\n"
+        "Abonniere für mehr Übungszeit oder kauf ein Top-up-Paket:"
+    )
+
+
+def _limit_keyboard(en: bool) -> InlineKeyboardMarkup:
+    if en:
+        return InlineKeyboardMarkup([
+            [InlineKeyboardButton("⭐ Subscribe (100 Stars/month)", callback_data="pay:subscribe")],
+            [InlineKeyboardButton("➕ Buy message pack — /topup", callback_data="pay:topup")],
+        ])
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("⭐ Abonnieren (100 Stars/Monat)", callback_data="pay:subscribe")],
+        [InlineKeyboardButton("➕ Nachrichten kaufen — /topup", callback_data="pay:topup")],
+    ])
+
+
 # ---------------------------------------------------------------------------
 # Credit checks
 # ---------------------------------------------------------------------------
+
+def public_limit_check(user_id: int) -> tuple[str, bool]:
+    """Check session/weekly public tier limits.
+
+    Returns (status, use_topup) where status is one of:
+      'ok'             — within session + week allowance
+      'session_limit'  — session exhausted, no topup
+      'week_limit'     — week exhausted, no topup
+    and use_topup=True when topup credits cover an otherwise-blocked call.
+    Teachers and superusers always get ('ok', False).
+    """
+    from datetime import datetime
+    reset_expired_windows(user_id)
+    state = get_public_limits_state(user_id)
+    if not state:
+        return "ok", False
+
+    role = state.get("role", "student")
+    if role in ("teacher", "superuser"):
+        return "ok", False
+
+    # Check subscription expiry.
+    subscribed = state["subscribed"]
+    if subscribed and state["subscription_expires_at"]:
+        if state["subscription_expires_at"] < datetime.utcnow():
+            subscribed = False  # expired — treat as free (cleared by nightly job)
+
+    session_cap = config.SESSION_CAP_SUBSCRIBER if subscribed else config.SESSION_CAP_FREE
+    week_cap = config.WEEK_CAP_SUBSCRIBER if subscribed else config.WEEK_CAP_FREE
+    topup = state["topup_credits"]
+    session_count = state["session_count"]
+    week_count = state["week_count"]
+
+    within_session = session_count < session_cap
+    within_week = week_count < week_cap
+
+    if within_session and within_week:
+        return "ok", False
+    if topup > 0:
+        return "ok", True
+    if not within_week:
+        return "week_limit", False
+    return "session_limit", False
+
+
+def session_reset_minutes(user_id: int) -> int:
+    """Minutes until the current session window resets."""
+    from datetime import datetime
+    state = get_public_limits_state(user_id)
+    session_start = state.get("session_start")
+    if not session_start:
+        return 0
+    window_end = session_start + __import__("datetime").timedelta(
+        hours=config.SESSION_WINDOW_HOURS
+    )
+    remaining = (window_end - datetime.utcnow()).total_seconds()
+    return max(0, int(remaining / 60))
+
 
 def _global_limit_for_now() -> int:
     """Return the effective global ceiling, accounting for the reserve pool."""
@@ -142,11 +244,12 @@ def _effective_user_limit(user_id: int) -> int:
 
 
 def credits_check(user_id: int, cost: int) -> str:
-    """Return 'ok', 'global_limit', or 'user_limit'.
+    """Return 'ok', 'global_limit', 'user_limit', 'session_limit', or 'week_limit'.
 
-    Accounts for:
-    • Per-class daily ceiling (with reserve pool before RESERVE_HOUR_UTC)
-    • Per-student base limit + teacher grants + streak bonus (up to +5)
+    Checks in order:
+    1. Classroom daily ceiling (global pool + per-student daily cap).
+    2. Public subscription tier limits (session window + weekly cap).
+    Topup credits transparently cover tier-limit hits — returns 'ok' in that case.
     """
     if cost <= 0:
         return "ok"
@@ -154,7 +257,8 @@ def credits_check(user_id: int, cost: int) -> str:
         return "global_limit"
     if daily_credits_used(user_id) + cost > _effective_user_limit(user_id):
         return "user_limit"
-    return "ok"
+    status, _ = public_limit_check(user_id)
+    return status
 
 
 def check_credits(user_id: int, cost: int) -> bool:
@@ -169,11 +273,16 @@ def credits_remaining(user_id: int) -> int:
 
 
 def credit_error_response(
-    en: bool, status: str
+    en: bool, status: str, user_id: int | None = None
 ) -> tuple[str, InlineKeyboardMarkup]:
     """Return (text, keyboard) for a credits_check failure."""
     if status == "global_limit":
         return global_exhausted_text(), global_exhausted_keyboard()
+    if status == "session_limit":
+        mins = session_reset_minutes(user_id) if user_id else 60
+        return session_limit_text(en, mins), _limit_keyboard(en)
+    if status == "week_limit":
+        return week_limit_text(en), _limit_keyboard(en)
     return credits_exhausted_text(en), credits_exhausted_keyboard(en)
 
 
@@ -209,7 +318,7 @@ def spend(
     tokens_in: int | None = None,
     tokens_out: int | None = None,
 ) -> None:
-    """Record one LLM usage row. Call after a successful LLM call."""
+    """Record one LLM usage row and update public tier counters."""
     cost = COSTS.get(task, 1)
     record_llm_usage(
         user_id,
@@ -219,3 +328,5 @@ def spend(
         tokens_in=tokens_in,
         tokens_out=tokens_out,
     )
+    _, use_topup = public_limit_check(user_id)
+    update_public_limits(user_id, use_topup=use_topup)

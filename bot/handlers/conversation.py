@@ -63,23 +63,23 @@ _BACKEND_NOTICES_DE: dict[str, str] = {
 }
 
 _BACKEND_NOTICES_EN: dict[str, str] = {
-    "⚡ Groq": "⚡ Running on Groq — fast.",
+    "⚡ Groq": "⚡ Usando Groq — rápido.",
     "⚡ Groq Mini": (
-        "⚡ Groq's main model hit its limit — switching to the smaller model. "
-        "Still fast. Resets at midnight UTC."
+        "⚡ El modelo principal de Groq alcanzó su límite — cambiando al modelo más pequeño. "
+        "Sigue siendo rápido. Se reinicia a medianoche (UTC)."
     ),
     "🤖 Gemini": (
-        "🐢 Groq's free quota is used up — switching to Gemini. "
-        "A bit slower (~20s)."
+        "🐢 La cuota gratuita de Groq se agotó — cambiando a Gemini. "
+        "Un poco más lento (~20s)."
     ),
     "🐌 Ollama": (
-        "🐌 All cloud quotas are exhausted — running locally (Ollama) now. "
-        "Slow (~1 min/reply), but it works."
+        "🐌 Todas las cuotas en la nube están agotadas — ejecutando localmente (Ollama) ahora. "
+        "Lento (~1 min/respuesta), pero funciona."
     ),
 }
 
 _RECOVERED_NOTICE_DE = "⚡ Zurück auf Groqs schnellem Modell!"
-_RECOVERED_NOTICE_EN = "⚡ Back on Groq's fast model!"
+_RECOVERED_NOTICE_EN = "⚡ ¡De vuelta en el modelo rápido de Groq!"
 
 # Matches:  ❌ wrong → ✅ right — reason
 _CORRECTION_RE = re.compile(

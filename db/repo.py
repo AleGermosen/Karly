@@ -15,6 +15,7 @@ from db.models import (
     Document,
     LLMUsage,
     Message,
+    Payment,
     PracticeLog,
     ReviewLog,
     User,
@@ -1065,3 +1066,123 @@ def users_with_reminders() -> list[tuple[int, int, str]]:
             .all()
         )
         return [(r[0], r[1], r[2]) for r in rows]
+
+
+# --- Subscription / top-ups / payments (F-15, F-16, F-21) ------------------
+
+def get_user_by_id(user_id: int) -> User | None:
+    with get_session() as session:
+        return session.get(User, user_id)
+
+
+def set_subscribed(user_id: int, days: int = 30) -> None:
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if user is not None:
+            user.subscribed = True
+            user.subscription_expires_at = datetime.utcnow() + timedelta(days=days)
+
+
+def clear_expired_subscriptions() -> int:
+    """Clear subscriptions past their expiry date. Returns number cleared."""
+    now = datetime.utcnow()
+    cleared = 0
+    with get_session() as session:
+        expired = (
+            session.query(User)
+            .filter(User.subscribed.is_(True), User.subscription_expires_at < now)
+            .all()
+        )
+        for u in expired:
+            u.subscribed = False
+            cleared += 1
+    return cleared
+
+
+def add_topup_credits(user_id: int, amount: int) -> None:
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if user is not None:
+            user.topup_credits = (user.topup_credits or 0) + amount
+
+
+def record_payment(
+    user_id: int,
+    *,
+    kind: str,
+    stars_amount: int,
+    credits_purchased: int | None = None,
+    telegram_charge_id: str | None = None,
+) -> None:
+    with get_session() as session:
+        session.add(Payment(
+            user_id=user_id,
+            kind=kind,
+            stars_amount=stars_amount,
+            credits_purchased=credits_purchased,
+            telegram_charge_id=telegram_charge_id,
+        ))
+
+
+def get_public_limits_state(user_id: int) -> dict:
+    """Return a snapshot of the user's session/week/topup state for limit checks."""
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if user is None:
+            return {}
+        return {
+            "role": user.role,
+            "subscribed": user.subscribed,
+            "subscription_expires_at": user.subscription_expires_at,
+            "session_count": user.session_count or 0,
+            "session_start": user.session_start,
+            "week_count": user.week_count or 0,
+            "week_start": user.week_start,
+            "topup_credits": user.topup_credits or 0,
+        }
+
+
+def update_public_limits(user_id: int, *, use_topup: bool) -> None:
+    """Increment session/week counters, or decrement topup if use_topup is True."""
+    now = datetime.utcnow()
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if user is None:
+            return
+        if use_topup:
+            user.topup_credits = max(0, (user.topup_credits or 0) - 1)
+        else:
+            user.session_count = (user.session_count or 0) + 1
+            user.week_count = (user.week_count or 0) + 1
+            if user.session_start is None:
+                user.session_start = now
+            if user.week_start is None:
+                user.week_start = now
+
+
+def reset_expired_windows(user_id: int) -> None:
+    """Reset session/week counters if their windows have expired.
+
+    Call this before reading the counters so stale values don't block users.
+    """
+    now = datetime.utcnow()
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if user is None:
+            return
+        # Session window: 3 hours.
+        import config as _cfg
+        session_hours = _cfg.SESSION_WINDOW_HOURS
+        if (
+            user.session_start is None
+            or (now - user.session_start).total_seconds() > session_hours * 3600
+        ):
+            user.session_count = 0
+            user.session_start = now
+
+        # Week window: resets each Monday at 00:00 UTC.
+        monday = now - timedelta(days=now.weekday())
+        monday_start = monday.replace(hour=0, minute=0, second=0, microsecond=0)
+        if user.week_start is None or user.week_start < monday_start:
+            user.week_count = 0
+            user.week_start = monday_start

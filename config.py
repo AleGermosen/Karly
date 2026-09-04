@@ -93,3 +93,22 @@ RATE_LIMIT_SECONDS: float = float(os.getenv("RATE_LIMIT_SECONDS", "3.0"))
 LLM_CONCURRENCY_LIMIT: int = int(os.getenv("LLM_CONCURRENCY_LIMIT", "8"))
 # How long (seconds) a request waits for a free concurrency slot before giving up.
 LLM_QUEUE_TIMEOUT: float = float(os.getenv("LLM_QUEUE_TIMEOUT", "30.0"))
+
+# --- Public subscription tiers (F-15, F-16, F-21) ---
+# Session window: messages reset after this many hours of inactivity.
+SESSION_WINDOW_HOURS: int = 3
+# Per-session message caps.
+SESSION_CAP_FREE: int = int(os.getenv("SESSION_CAP_FREE", "10"))
+SESSION_CAP_SUBSCRIBER: int = int(os.getenv("SESSION_CAP_SUBSCRIBER", "40"))
+# Per-week message caps (resets Monday 00:00 UTC).
+WEEK_CAP_FREE: int = int(os.getenv("WEEK_CAP_FREE", "40"))
+WEEK_CAP_SUBSCRIBER: int = int(os.getenv("WEEK_CAP_SUBSCRIBER", "200"))
+# Telegram Stars price for a 30-day subscription.
+SUBSCRIBE_PRICE_STARS: int = int(os.getenv("SUBSCRIBE_PRICE_STARS", "100"))
+SUBSCRIBE_DAYS: int = int(os.getenv("SUBSCRIBE_DAYS", "30"))
+# Top-up packs: (label, extra_messages, stars_price).
+TOPUP_PACKS: list[tuple[str, int, int]] = [
+    ("Small",  10,  25),
+    ("Medium", 30,  60),
+    ("Large",  75, 120),
+]

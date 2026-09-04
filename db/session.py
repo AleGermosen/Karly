@@ -28,6 +28,14 @@ _MIGRATIONS: dict[str, dict[str, str]] = {
         "approved_by": "INTEGER",
         "teacher_id": "INTEGER",
         "class_id": "INTEGER",
+        # F-15 / F-16 / F-21 — subscription and public tier limits.
+        "subscribed": "BOOLEAN NOT NULL DEFAULT 0",
+        "subscription_expires_at": "DATETIME",
+        "session_count": "INTEGER NOT NULL DEFAULT 0",
+        "session_start": "DATETIME",
+        "week_count": "INTEGER NOT NULL DEFAULT 0",
+        "week_start": "DATETIME",
+        "topup_credits": "INTEGER NOT NULL DEFAULT 0",
     },
     "vocab_items": {
         "hlr_half_life": "REAL NOT NULL DEFAULT 0.0",

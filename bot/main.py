@@ -11,6 +11,7 @@ from telegram.ext import (
     CommandHandler,
     Defaults,
     MessageHandler,
+    PreCheckoutQueryHandler,
     filters,
 )
 
@@ -24,6 +25,7 @@ from bot.handlers import (
     drill,
     export,
     game,
+    payments,
     practice,
     pronounce,
     quiz,
@@ -130,6 +132,24 @@ def build_application() -> Application:
     for handler in game.build_handlers():
         app.add_handler(handler)
 
+    # Subscription and top-up payments (F-16, F-21).
+    app.add_handler(CommandHandler("subscribe", payments.subscribe_handler))
+    app.add_handler(CommandHandler("topup", payments.topup_handler))
+    app.add_handler(
+        CallbackQueryHandler(payments.on_topup_pack_pick, pattern=r"^topup:")
+    )
+    app.add_handler(PreCheckoutQueryHandler(payments.pre_checkout_handler))
+    app.add_handler(
+        MessageHandler(filters.SUCCESSFUL_PAYMENT, payments.payment_confirmed_handler)
+    )
+    # Limit-hit buttons: pay:subscribe → /subscribe, pay:topup → /topup.
+    app.add_handler(
+        CallbackQueryHandler(payments.subscribe_handler, pattern=r"^pay:subscribe$")
+    )
+    app.add_handler(
+        CallbackQueryHandler(payments.topup_handler, pattern=r"^pay:topup$")
+    )
+
     # "Free features" buttons shown on credit/quota exhaustion messages.
     app.add_handler(
         CallbackQueryHandler(conversation.on_free_feature_tap, pattern=r"^free:")
@@ -167,6 +187,8 @@ MENU_COMMANDS = [
     BotCommand("test", "Einstufungstest starten"),
     BotCommand("profile", "Dein Lernprofil ansehen"),
     BotCommand("mybudget", "Verbleibende Credits heute"),
+    BotCommand("subscribe", "Abonnement (mehr Nachrichten)"),
+    BotCommand("topup", "Nachrichten-Paket kaufen"),
     BotCommand("pronounce", "Aussprache als Sprachnachricht"),
     BotCommand("review", "Übungs-Statistik & Streak"),
     BotCommand("topic", "Gespräch auf ein Thema lenken"),
@@ -180,11 +202,20 @@ MENU_COMMANDS = [
 ]
 
 
+async def _expire_subscriptions(context) -> None:  # noqa: ANN001
+    from db.repo import clear_expired_subscriptions
+    n = clear_expired_subscriptions()
+    if n:
+        logger.info("Cleared %d expired subscription(s).", n)
+
+
 async def _post_init(app: Application) -> None:
     """Startup hooks: publish the command menu; probe Ollama; restore reminders."""
     await app.bot.set_my_commands(MENU_COMMANDS)
     await ollama_client.health_check()
     await reminders.reschedule_all(app)
+    # Daily job to clear expired subscriptions (runs every 6 hours).
+    app.job_queue.run_repeating(_expire_subscriptions, interval=6 * 3600, first=60)
 
 
 def main() -> None:
