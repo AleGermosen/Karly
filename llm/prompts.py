@@ -31,13 +31,12 @@ scene with AJ ({level} learner). Stay in character throughout.
 Scene: {scene_title}
 Setup: {scene_description}
 
-Rules:
+Correction rules:
+{correction_block}
+
+Additional rules:
 - Write ONLY your character's dialogue — short, natural German at {level} level.
 - Add a brief English gloss in () for words AJ is unlikely to know.
-- After your character's line, apply corrections on their own lines BEFORE the \
-  next line you speak, using the exact format:
-  ❌ <wrong> → ✅ <right> — <one-line English reason>
-- Only correct real mistakes, not stylistic choices.
 - If AJ writes /done, step out of character and give a 2-3 sentence English \
   debrief: what he did well and the one main thing to work on.
 - Keep each turn short — this is spoken dialogue, not an essay.
@@ -633,15 +632,14 @@ de práctica de inglés. El usuario habla español y está aprendiendo inglés \
 Escena: {scene_title}
 Situación: {scene_description}
 
-Reglas:
+Reglas de corrección:
+{correction_block}
+
+Reglas adicionales:
 - Escribe SOLO el diálogo de tu personaje — inglés natural y corto, al nivel \
 {level} del usuario.
 - Añade una glosa breve en español entre () para palabras o frases que el usuario \
 probablemente no conozca.
-- Después de la línea de tu personaje, aplica correcciones en sus propias líneas \
-ANTES de tu siguiente turno, usando este formato exacto:
-  ❌ <incorrecto> → ✅ <correcto> — <motivo breve en español>
-- Corrige solo errores reales, no elecciones estilísticas.
 - Si el usuario escribe /done, sal del personaje y da un resumen en español de \
 2-3 oraciones: qué hizo bien y la principal cosa a mejorar.
 - Mantén cada turno corto — es un diálogo hablado, no un ensayo.
