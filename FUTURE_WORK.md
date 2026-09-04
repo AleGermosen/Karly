@@ -128,11 +128,16 @@ is **10 requests per minute across all students at once**.
   ≈ 90M input + 22.5M output tokens. At `gpt-oss-120b` rates ($0.15/M in, $0.60/M out)
   that's **roughly $27/month**. Infrastructure stays $0 while it runs on the OptiPlex.
 
-**Honest summary:** the free tier comfortably covers **10–20 students**, stretches to
-**~50** if they mostly drill rather than chat and don't all pile in at once, and **will
-not** carry 100. The curriculum phase materially increases these numbers, because banked
-exercises cost nothing to serve. Budget about **$27/month** for 100 active students —
-which is the point at which it's worth deciding whether this stays free for them.
+**Honest summary:** *ungated*, the free tier comfortably covers **10–20 students**,
+stretches to **~50** if they mostly drill rather than chat and don't all pile in at once,
+and **will not** carry 100. The curriculum phase materially increases these numbers,
+because banked exercises cost nothing to serve. Budget about **$27/month** for 100 active
+students.
+
+**With budget gates, 50 daily students is the design target and it fits** — see
+[Token budget](#token-budget--making-50-daily-students-fit). Note that shortening the
+conversation history and sharing one daily challenge per class are each worth more than
+the gates themselves, because they raise the ceiling rather than dividing a fixed pie.
 
 ---
 
@@ -659,7 +664,7 @@ Tasks, not observations. Found by reading both plans against the current code.
 | **0.2** | **Define the first five minutes** | `bot/handlers/start.py` | Write the actual sequence a new student sees: welcome (in their language) → what this bot is → `/test` → their level → "here's what to do next". A class of beginners will not explore on their own. One screen, three taps, no jargon |
 | **0.3** | **Measure real usage before inviting a class** | — | Run a week yourself and count turns. Compare against the free-tier ceilings in "Cost and capacity" above. Invite in waves — 5 students, then 15, then the rest — rather than 50 on day one |
 | **0.4** | **Enable Groq's Developer tier** | Groq console | Free — add a card, get ~10× the rate limits, pay nothing until you spend. Five minutes, and it's the difference between 20 students and 50 |
-| **0.5** | **Per-student daily cap** | `bot/middleware.py` | A friendly stop at N messages/day so one student (or a stuck loop) can't drain the shared quota for the class. Build it *with* usage tracking (Step 5), not after |
+| **0.5** | **Per-student daily cap** | `bot/middleware.py` | Designed in full in [Token budget](#token-budget--making-50-daily-students-fit), tasks T.1–T.5. Meters LLM calls rather than messages, so the free features stay unlimited |
 | **0.6** | **Handle running out of quota gracefully** | `llm/router.py`, `bot/handlers/*` | When every rung is exhausted, `/test`, `/course` and `/quiz` break rather than degrade, because Ollama can't produce JSON. Detect it and say so — *"I'm out of capacity for today, try flashcards or a game"* — and steer to the zero-LLM features instead of erroring |
 
 **Before the second week:**
