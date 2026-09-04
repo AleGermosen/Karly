@@ -36,6 +36,8 @@ _MIGRATIONS: dict[str, dict[str, str]] = {
         "week_count": "INTEGER NOT NULL DEFAULT 0",
         "week_start": "DATETIME",
         "topup_credits": "INTEGER NOT NULL DEFAULT 0",
+        # F-19 — placement status.
+        "placement_status": "TEXT",
     },
     "vocab_items": {
         "hlr_half_life": "REAL NOT NULL DEFAULT 0.0",

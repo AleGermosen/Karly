@@ -42,15 +42,19 @@ from db.repo import (
     global_credits_used,
     grant_credits,
     latest_assessment,
+    list_all_students,
     list_classes,
     list_students,
+    list_students_by_teacher,
     list_students_for_teacher,
     list_students_in_class,
     list_teachers,
+    log_broadcast,
     practice_streak,
     set_class_setting,
     set_class_topic,
     set_correction_level,
+    set_placement_status,
     set_user_role,
     set_user_status,
     student_last_active,
@@ -966,6 +970,7 @@ async def on_set_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         )
     try:
         await context.bot.send_message(chat_id=student_user.telegram_id, text=welcome)
+        await send_placement_prompt(context.bot, student_user)
     except Exception:
         logger.exception("Could not notify student %s of approval", student_user.telegram_id)
 
@@ -1006,3 +1011,209 @@ async def on_decline_student(update: Update, context: ContextTypes.DEFAULT_TYPE)
     set_user_status(user_db_id, "removed")
     student_name = student_user.name or str(student_user.telegram_id)
     await query.edit_message_text(f"❌ Declined: *{student_name}*")
+
+
+# ---------------------------------------------------------------------------
+# F-18 — /broadcast: teacher messages to class or all students
+# ---------------------------------------------------------------------------
+
+_BROADCAST_DELAY = 0.05  # 50 ms between sends — well within Telegram's 30 msg/s limit
+
+
+@require_auth
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/broadcast [class] message — send a message to students."""
+    import asyncio
+
+    caller = _caller(update)
+    if not _is_teacher_or_above(caller):
+        await update.effective_message.reply_text("🚫 Teacher only.")
+        return
+
+    if not context.args:
+        await update.effective_message.reply_text(
+            "Usage:\n"
+            "/broadcast *message* — all your students\n"
+            "/broadcast *ClassName* *message* — one class\n"
+            "Superuser: /broadcast all *message* — every student"
+        )
+        return
+
+    raw = " ".join(context.args)
+    first = context.args[0].lower()
+
+    # Determine recipients.
+    if first == "all" and _is_superuser(caller):
+        recipients = list_all_students()
+        scope_label = "all students"
+        class_id = None
+        message_text = raw[len("all"):].strip()
+    else:
+        my_classes = list_classes(caller.id)
+        match = next((c for c in my_classes if raw.lower().startswith(c.name.lower())), None)
+        if match:
+            message_text = raw[len(match.name):].strip()
+            recipients = list_students_in_class(match.id)
+            scope_label = f"class *{match.name}*"
+            class_id = match.id
+        else:
+            recipients = list_students_by_teacher(caller.id)
+            scope_label = "all your students"
+            message_text = raw
+            class_id = None
+
+    if not message_text:
+        await update.effective_message.reply_text("Message text cannot be empty.")
+        return
+
+    n = len(recipients)
+    if n == 0:
+        await update.effective_message.reply_text("No students found to message.")
+        return
+
+    # Confirmation step via inline buttons stored in context.
+    context.user_data["_broadcast_pending"] = {
+        "recipients": [u.telegram_id for u in recipients],
+        "message_text": message_text,
+        "scope_label": scope_label,
+        "class_id": class_id,
+    }
+    kb = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(f"✅ Send to {n} student(s)", callback_data="broadcast:confirm"),
+            InlineKeyboardButton("❌ Cancel", callback_data="broadcast:cancel"),
+        ]
+    ])
+    await update.effective_message.reply_text(
+        f"Send this to *{n}* student(s) in {scope_label}?\n\n_{message_text}_",
+        reply_markup=kb,
+    )
+
+
+async def on_broadcast_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle broadcast confirm/cancel inline buttons."""
+    import asyncio
+
+    query = update.callback_query
+    await query.answer()
+    action = query.data.split(":")[1]
+    pending = context.user_data.pop("_broadcast_pending", None)
+
+    if action == "cancel" or pending is None:
+        await query.edit_message_text("Broadcast cancelled.")
+        return
+
+    telegram_ids = pending["recipients"]
+    message_text = pending["message_text"]
+    sent = 0
+    blocked = 0
+    for tid in telegram_ids:
+        try:
+            await context.bot.send_message(chat_id=tid, text=message_text)
+            sent += 1
+        except Exception:
+            blocked += 1
+        await asyncio.sleep(_BROADCAST_DELAY)
+
+    caller = _caller(update)
+    log_broadcast(
+        teacher_id=caller.id,
+        message_text=message_text,
+        recipient_count=sent,
+        class_id=pending.get("class_id"),
+    )
+    summary = f"📤 Sent to *{sent}* student(s)."
+    if blocked:
+        summary += f" _{blocked} could not be reached (blocked or deactivated)._"
+    await query.edit_message_text(summary)
+
+
+# ---------------------------------------------------------------------------
+# F-19 — placement prompt sent right after approval
+# ---------------------------------------------------------------------------
+
+async def send_placement_prompt(bot, student: "User") -> None:
+    """Send the placement quiz offer to a newly approved student."""
+    set_placement_status(student.id, "pending")
+    mode = getattr(student, "learning_mode", "german")
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("▶️ Start now", callback_data=f"placement:start:{student.id}")],
+        [InlineKeyboardButton("⏰ Later", callback_data=f"placement:later:{student.id}")],
+        [InlineKeyboardButton("📋 I know my level", callback_data=f"placement:skip:{student.id}")],
+    ])
+    if mode == "german":
+        text = (
+            "🎯 *Einstufungstest*\n\n"
+            "Bevor wir anfangen — möchtest du einen kurzen Einstufungstest machen? (~5 Minuten)\n"
+            "Das hilft mir, das richtige Level für dich zu setzen."
+        )
+    else:
+        text = (
+            "🎯 *Placement quiz*\n\n"
+            "Before we start — would you like a quick placement quiz? (~5 minutes)\n"
+            "It helps me set the right level for you."
+        )
+    try:
+        await bot.send_message(chat_id=student.telegram_id, text=text, reply_markup=kb)
+    except Exception:
+        logger.exception("Could not send placement prompt to %s", student.telegram_id)
+
+
+async def on_placement_pick(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle placement quiz option buttons."""
+    query = update.callback_query
+    await query.answer()
+    _, action, raw_id = query.data.split(":")
+    user_db_id = int(raw_id)
+
+    user = get_user_by_id(user_db_id)
+    if user is None:
+        return
+    mode = getattr(user, "learning_mode", "german")
+    en = mode == "english"
+
+    if action == "start":
+        set_placement_status(user_db_id, "pending")
+        await query.edit_message_text(
+            "¡Perfecto! Send /test to begin." if en else "Super! Schick /test um zu beginnen."
+        )
+    elif action == "later":
+        context.user_data["_placement_remind"] = True
+        await query.edit_message_text(
+            "No problem — I'll remind you next time you write to me." if en
+            else "Kein Problem — ich erinnere dich beim nächsten Mal."
+        )
+    elif action == "skip":
+        kb = InlineKeyboardMarkup([[
+            InlineKeyboardButton(lvl, callback_data=f"placement_level:{user_db_id}:{lvl}")
+            for lvl in ["A1", "A2", "B1"]
+        ], [
+            InlineKeyboardButton(lvl, callback_data=f"placement_level:{user_db_id}:{lvl}")
+            for lvl in ["B2", "C1"]
+        ]])
+        await query.edit_message_text(
+            "Choose your level:" if en else "Level auswählen:", reply_markup=kb
+        )
+
+
+async def on_placement_level_pick(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle manual level selection from the placement skip flow."""
+    from db.repo import save_assessment
+
+    query = update.callback_query
+    await query.answer()
+    _, raw_id, level = query.data.split(":")
+    user_db_id = int(raw_id)
+
+    user = get_user_by_id(user_db_id)
+    if user is None:
+        return
+    en = getattr(user, "learning_mode", "german") == "english"
+
+    save_assessment(user_db_id, {"overall": level, "gaps": []}, "[]")
+    set_placement_status(user_db_id, "skipped")
+
+    await query.edit_message_text(
+        f"✅ Level set to *{level}*. Let's go!" if en
+        else f"✅ Level auf *{level}* gesetzt. Los geht's!"
+    )

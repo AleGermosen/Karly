@@ -258,18 +258,25 @@ async def impostor(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     fn = dispatch.get(sub)
     if fn is None:
+        # No subcommand — show the inline keyboard hub.
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        kb = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("▶️ New game", callback_data="imp_hub:new"),
+                InlineKeyboardButton("📋 Rules", callback_data="imp_hub:rules"),
+            ],
+            [
+                InlineKeyboardButton("👥 Players", callback_data="imp_hub:players"),
+                InlineKeyboardButton("🗳 Vote", callback_data="imp_hub:vote"),
+            ],
+            [
+                InlineKeyboardButton("🔄 My role", callback_data="imp_hub:role"),
+                InlineKeyboardButton("🏳 End game", callback_data="imp_hub:end"),
+            ],
+        ])
         await update.effective_message.reply_text(
-            "Unknown subcommand. Try:\n"
-            "/impostor new — create a game\n"
-            "/impostor join <code> <name> — join a game\n"
-            "/impostor add <name> — add an offline player (host)\n"
-            "/impostor players — see who has joined\n"
-            "/impostor start — begin the game (host)\n"
-            "/impostor vote <name> — vote to eliminate\n"
-            "/impostor skip — abstain from voting\n"
-            "/impostor status — check vote progress\n"
-            "/impostor role — see your role card again\n"
-            "/impostor end — abort the game (host)"
+            "🕵️ *The Impostor*\n\nChoose an action or use a subcommand directly:",
+            reply_markup=kb,
         )
         return
 
@@ -784,10 +791,64 @@ async def _cmd_end(update: Update, context: ContextTypes.DEFAULT_TYPE, args: lis
     await update.effective_message.reply_text(f"Game `{code}` ended.", parse_mode="Markdown")
 
 
+_RULES = (
+    "🕵️ *The Impostor — Rules*\n\n"
+    "Players are assigned a secret word. One player (the Impostor) gets a *different* word.\n\n"
+    "Each player gives a one-word clue about their word. After all clues are in, the group votes "
+    "to eliminate who they think the Impostor is.\n\n"
+    "🔵 *Crewmates win* if they eliminate the Impostor.\n"
+    "🔴 *Impostor wins* if they survive to the end or outnumber crewmates.\n\n"
+    "Commands:\n"
+    "/impostor new — create a game\n"
+    "/impostor join CODE NAME — join\n"
+    "/impostor start — begin (host only)\n"
+    "/impostor vote NAME — vote to eliminate\n"
+    "/impostor role — see your role card again"
+)
+
+
+async def _on_hub_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /impostor hub inline buttons."""
+    query = update.callback_query
+    await query.answer()
+    action = query.data.split(":")[1]
+
+    if action == "rules":
+        await query.message.reply_text(_RULES)
+        return
+
+    # Map hub buttons to the same sub-commands handled by impostor().
+    hub_map = {
+        "new": ["new"],
+        "players": ["players"],
+        "vote": [],  # prompt them to type /impostor vote NAME
+        "role": ["role"],
+        "end": ["end"],
+    }
+
+    if action == "vote":
+        await query.message.reply_text(
+            "Type: /impostor vote *NAME* to eliminate a player."
+        )
+        return
+
+    sub_args = hub_map.get(action, [])
+    context.args = sub_args
+    fn = {
+        "new": _cmd_new,
+        "players": _cmd_players,
+        "role": _cmd_role,
+        "end": _cmd_end,
+    }.get(action)
+    if fn:
+        await fn(update, context, sub_args)
+
+
 # ── handler registration ───────────────────────────────────────────────────────
 
 def build_handlers() -> list:
     return [
         CommandHandler("impostor", impostor),
         CallbackQueryHandler(_cmd_vote_inline, pattern=r"^iv:"),
+        CallbackQueryHandler(_on_hub_button, pattern=r"^imp_hub:"),
     ]

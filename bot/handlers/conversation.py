@@ -737,13 +737,19 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     lines = [f"⚙️ *Backend-Status* — aktiv: {current}\n"]
 
+    poisoned = []
     for r in rungs:
         if r["state"] == "ready":
             lines.append(f"  {r['label']}: ✅ frei")
         else:
             avail = r.get("available_at")
             reset_str = avail.strftime("%H:%M UTC") if avail else "?"
-            lines.append(f"  {r['label']}: ⛔ Limit (Reset {reset_str})")
+            reason = r.get("reason") or "limit"
+            lines.append(f"  {r['label']}: ⛔ {reason} (Reset {reset_str})")
+            poisoned.append(r["label"])
+
+    if poisoned:
+        lines.append(f"\n⚠️ *Poisoned rungs:* {', '.join(poisoned)}")
 
     quota = quota_snapshot()
     if quota:

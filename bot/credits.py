@@ -20,6 +20,7 @@ cost 0 and are never gated.
 from __future__ import annotations
 
 from datetime import datetime
+from functools import wraps
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
@@ -309,6 +310,44 @@ def check_rate_limit(context, cost: int = 1) -> bool:
 # ---------------------------------------------------------------------------
 # Spend
 # ---------------------------------------------------------------------------
+
+def metered(task_name: str):
+    """Decorator for handlers that spend credits.
+
+    Wraps an async handler so it automatically checks credits before running
+    and calls spend() after a successful LLM result. The decorated handler
+    must receive `user` (a User ORM object) and `en` (bool) as its first two
+    positional args after update/context, and must return the LLM result or
+    None on failure.
+
+    Usage::
+
+        @require_auth
+        @metered("chat")
+        async def my_handler(update, context, user, en):
+            ...
+            return result  # LLM RouteResult, or None to skip spend
+    """
+    def decorator(handler):
+        @wraps(handler)
+        async def wrapper(update, context, *args, **kwargs):
+            from db.repo import get_user_by_telegram_id as _get_user
+            user = _get_user(update.effective_user.id) if not args else args[0]
+            en = getattr(user, "learning_mode", "german") == "english" if user else False
+            cost = COSTS.get(task_name, 1)
+            status = credits_check(user.id, cost) if user else "ok"
+            if status != "ok":
+                text, kb = credit_error_response(en, status, user.id if user else None)
+                await update.effective_message.reply_text(text, reply_markup=kb)
+                return
+            result = await handler(update, context, *args, **kwargs)
+            if result is not None and user:
+                model = getattr(getattr(result, "rung", None), "model_id", "unknown")
+                spend(user.id, task=task_name, model=model)
+            return result
+        return wrapper
+    return decorator
+
 
 def spend(
     user_id: int,

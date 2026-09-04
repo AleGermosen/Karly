@@ -8,12 +8,15 @@ from sqlalchemy import func
 
 from db.models import (
     Assessment,
+    Broadcast,
     Class,
     ClassSetting,
     ConceptMastery,
     CreditGrant,
     Document,
     LLMUsage,
+    MediaSubmission,
+    MediaTask,
     Message,
     Payment,
     PracticeLog,
@@ -1186,3 +1189,192 @@ def reset_expired_windows(user_id: int) -> None:
         if user.week_start is None or user.week_start < monday_start:
             user.week_count = 0
             user.week_start = monday_start
+
+
+# --- F-17: personal vocabulary -----------------------------------------------
+
+def find_personal_word(user_id: int, term: str) -> bool:
+    """Return True if the user already has this term in their personal deck."""
+    with get_session() as session:
+        row = (
+            session.query(VocabItem)
+            .filter(
+                VocabItem.user_id == user_id,
+                VocabItem.term == term,
+                VocabItem.source == VocabSource.personal,
+            )
+            .first()
+        )
+        return row is not None
+
+
+def add_personal_word(
+    user_id: int,
+    term: str,
+    definition: str,
+    example: str,
+    part_of_speech: str,
+) -> None:
+    """Insert one personal flashcard into the user's HLR deck."""
+    with get_session() as session:
+        session.add(VocabItem(
+            user_id=user_id,
+            term=term,
+            translation=f"({part_of_speech}) {definition}",
+            context_sentence=example,
+            source=VocabSource.personal,
+        ))
+
+
+# --- F-18: broadcasts --------------------------------------------------------
+
+def log_broadcast(
+    teacher_id: int,
+    message_text: str,
+    recipient_count: int,
+    class_id: int | None = None,
+) -> None:
+    with get_session() as session:
+        session.add(Broadcast(
+            teacher_id=teacher_id,
+            class_id=class_id,
+            message_text=message_text,
+            recipient_count=recipient_count,
+        ))
+
+
+def list_all_students() -> list[User]:
+    """All active students across all classes."""
+    with get_session() as session:
+        return (
+            session.query(User)
+            .filter(User.role == "student", User.status == "active")
+            .all()
+        )
+
+
+def list_students_by_teacher(teacher_id: int) -> list[User]:
+    """All active students assigned to a given teacher."""
+    with get_session() as session:
+        return (
+            session.query(User)
+            .filter(
+                User.role == "student",
+                User.status == "active",
+                User.teacher_id == teacher_id,
+            )
+            .all()
+        )
+
+
+# --- F-19: placement status --------------------------------------------------
+
+def set_placement_status(user_id: int, status: str) -> None:
+    """status: 'pending' | 'completed' | 'skipped'"""
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if user is not None:
+            user.placement_status = status
+
+
+# --- F-22: media tasks -------------------------------------------------------
+
+def create_media_task(
+    teacher_id: int,
+    title: str,
+    reference_summary: str,
+    media_url: str | None = None,
+    class_id: int | None = None,
+) -> int:
+    with get_session() as session:
+        t = MediaTask(
+            teacher_id=teacher_id,
+            class_id=class_id,
+            title=title,
+            reference_summary=reference_summary,
+            media_url=media_url,
+        )
+        session.add(t)
+        session.flush()
+        return t.id
+
+
+def get_active_media_task(class_id: int | None, teacher_id: int | None = None) -> "MediaTask | None":
+    """Return the most recent open task for this class/teacher."""
+    with get_session() as session:
+        q = session.query(MediaTask).filter(MediaTask.closed_at.is_(None))
+        if class_id is not None:
+            q = q.filter(MediaTask.class_id == class_id)
+        elif teacher_id is not None:
+            q = q.filter(MediaTask.teacher_id == teacher_id)
+        return q.order_by(MediaTask.created_at.desc()).first()
+
+
+def close_media_task(task_id: int) -> None:
+    with get_session() as session:
+        t = session.get(MediaTask, task_id)
+        if t is not None:
+            t.closed_at = datetime.utcnow()
+
+
+def upsert_media_submission(
+    task_id: int,
+    student_id: int,
+    submission_text: str,
+    score_comprehension: int,
+    score_accuracy: int,
+    score_language: int,
+    feedback: str,
+) -> None:
+    with get_session() as session:
+        existing = (
+            session.query(MediaSubmission)
+            .filter(
+                MediaSubmission.task_id == task_id,
+                MediaSubmission.student_id == student_id,
+            )
+            .first()
+        )
+        total = score_comprehension + score_accuracy + score_language
+        if existing:
+            existing.submission_text = submission_text
+            existing.score_comprehension = score_comprehension
+            existing.score_accuracy = score_accuracy
+            existing.score_language = score_language
+            existing.score_total = total
+            existing.feedback = feedback
+            existing.submitted_at = datetime.utcnow()
+        else:
+            session.add(MediaSubmission(
+                task_id=task_id,
+                student_id=student_id,
+                submission_text=submission_text,
+                score_comprehension=score_comprehension,
+                score_accuracy=score_accuracy,
+                score_language=score_language,
+                score_total=total,
+                feedback=feedback,
+            ))
+
+
+def get_media_submissions(task_id: int) -> list[dict]:
+    with get_session() as session:
+        rows = (
+            session.query(MediaSubmission, User.name)
+            .join(User, User.id == MediaSubmission.student_id)
+            .filter(MediaSubmission.task_id == task_id)
+            .order_by(MediaSubmission.score_total.desc())
+            .all()
+        )
+        return [
+            {
+                "name": name or str(sub.student_id),
+                "total": sub.score_total,
+                "comprehension": sub.score_comprehension,
+                "accuracy": sub.score_accuracy,
+                "language": sub.score_language,
+                "feedback": sub.feedback,
+                "submitted_at": sub.submitted_at,
+            }
+            for sub, name in rows
+        ]

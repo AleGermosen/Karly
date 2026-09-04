@@ -834,6 +834,36 @@ helper. Give the translation, article/gender for nouns, and one short example \
 sentence. Be brief.
 """
 
+# F-17 — /addword personal vocabulary lookup. {lang_pair} filled at runtime.
+ADDWORD_LOOKUP = """You are a bilingual dictionary for {lang_pair} learners.
+Given a word or phrase, return ONLY a JSON object with these keys:
+  word         — the canonical form of the word (string)
+  part_of_speech — e.g. noun, verb, adjective (string)
+  definition   — a clear, short definition in the learner's native language (string)
+  example      — one natural example sentence using the word in the target language (string)
+Return nothing but the JSON object. No markdown, no explanation.
+"""
+
+# F-22 — media comprehension grading rubric.
+MEDIA_GRADE = """You are grading a student's summary of a media piece (short film, audio, or song).
+
+Reference summary (teacher's answer key):
+{reference}
+
+Student's submission:
+{submission}
+
+Grade on three axes (integers only):
+  comprehension  0-4  — how much key content was captured
+  accuracy       0-3  — no invented details not in the reference
+  language       0-3  — grammar, vocabulary, fluency in the target language
+
+Return ONLY a JSON object:
+{{"comprehension": <int>, "accuracy": <int>, "language": <int>,
+  "feedback_comprehension": "<one sentence>",
+  "feedback_language": "<one sentence>"}}
+"""
+
 # --- English-mode prompts (native Spanish speaker learning English) ----------
 # All prompts below are for users whose native language is Spanish and who are
 # learning English. Instructions to the user appear in Spanish; the conversation

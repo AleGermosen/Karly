@@ -30,6 +30,7 @@ class VocabSource(str, enum.Enum):
     conversation = "conversation"
     assessment = "assessment"
     document = "document"
+    personal = "personal"
 
 
 class User(Base):
@@ -80,6 +81,8 @@ class User(Base):
     week_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     # Purchased one-time credits (never expire).
     topup_credits: Mapped[int] = mapped_column(Integer, default=0)
+    # F-19 — placement quiz status: "pending" | "completed" | "skipped" | None
+    placement_status: Mapped[str | None] = mapped_column(String, nullable=True)
 
     @property
     def corrections_on(self) -> bool:
@@ -240,6 +243,51 @@ class ClassSetting(Base):
     key: Mapped[str] = mapped_column(String, primary_key=True)
     value: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class Broadcast(Base):
+    """Log of teacher broadcast messages (F-18)."""
+
+    __tablename__ = "broadcasts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    teacher_id: Mapped[int] = mapped_column(Integer, index=True)  # users.id
+    class_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    message_text: Mapped[str] = mapped_column(Text)
+    recipient_count: Mapped[int] = mapped_column(Integer, default=0)
+    sent_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class MediaTask(Base):
+    """Teacher-posted media comprehension task (F-22)."""
+
+    __tablename__ = "media_tasks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    teacher_id: Mapped[int] = mapped_column(Integer, index=True)  # users.id
+    class_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    title: Mapped[str] = mapped_column(String)
+    media_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    reference_summary: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class MediaSubmission(Base):
+    """Student summary submitted for a media task (F-22)."""
+
+    __tablename__ = "media_submissions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey("media_tasks.id"), index=True)
+    student_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    submission_text: Mapped[str] = mapped_column(Text)
+    score_comprehension: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    score_accuracy: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    score_language: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    score_total: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
+    submitted_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
 
 class Payment(Base):

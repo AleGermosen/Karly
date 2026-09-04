@@ -25,6 +25,7 @@ from bot.handlers import (
     drill,
     export,
     game,
+    media,
     payments,
     practice,
     pronounce,
@@ -33,6 +34,7 @@ from bot.handlers import (
     report,
     roleplay,
     start,
+    vocab,
 )
 from db.session import init_db
 from llm import ollama_client
@@ -81,6 +83,12 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("moveclass", classroom.moveclass))
     app.add_handler(CommandHandler("classsetcorr", classroom.classsetcorr))
     app.add_handler(CommandHandler("export", export.export_csv))
+    app.add_handler(CommandHandler("broadcast", classroom.broadcast))
+    app.add_handler(CommandHandler("addword", vocab.addword))
+    app.add_handler(media.build_setmedia_handler())
+    app.add_handler(CommandHandler("task", media.task_cmd))
+    app.add_handler(CommandHandler("results", media.results))
+    app.add_handler(CommandHandler("clearmedia", media.clearmedia))
     # Superuser-only teacher management.
     app.add_handler(CommandHandler("addteacher", classroom.addteacher))
     app.add_handler(CommandHandler("removeteacher", classroom.removeteacher))
@@ -97,6 +105,15 @@ def build_application() -> Application:
     )
     app.add_handler(
         CallbackQueryHandler(classroom.on_decline_student, pattern=r"^decline_student:")
+    )
+    app.add_handler(
+        CallbackQueryHandler(classroom.on_broadcast_confirm, pattern=r"^broadcast:")
+    )
+    app.add_handler(
+        CallbackQueryHandler(classroom.on_placement_pick, pattern=r"^placement:")
+    )
+    app.add_handler(
+        CallbackQueryHandler(classroom.on_placement_level_pick, pattern=r"^placement_level:")
     )
 
     # Conversation flows (registered before the catch-all handler).
@@ -162,6 +179,11 @@ def build_application() -> Application:
     # Correction level picker buttons.
     app.add_handler(
         CallbackQueryHandler(conversation.on_corrections_pick, pattern=r"^setcorr:")
+    )
+
+    # Media task submission (checked before the catch-all tutor handler).
+    app.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, media.task_submission)
     )
 
     # Any non-command text goes to the tutor conversation handler.
