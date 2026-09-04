@@ -24,7 +24,13 @@ one level at a time. Plan and pending tasks in [`CURRICULUM_PLAN.md`](CURRICULUM
 
 **Also planned — classroom controls:** English mode is for your students, so the bot
 needs a roster, an approve-before-joining gate, and a teacher view of who's using it and
-how they're doing. See [Classroom phase](#classroom-phase--teacher-controls) below.
+how they're doing. See [Classroom phase](#classroom-phase--teacher-controls) below —
+starting with Step 0, the blockers to clear before the first student joins.
+
+**How many students fit for free?** Roughly **10–20 comfortably**, ~50 if they mostly
+drill rather than chat, and **not 100**. Enabling Groq's Developer tier is free and
+raises that a lot; 100 active students costs about **$27/month**. Numbers and the
+reasoning in [Cost and capacity](#cost-and-capacity--how-many-students-fit-on-the-free-tier).
 
 **When you're ready to open to the public:**
 → Multi-tenant foundation → Usage metering → Entitlements → Telegram Stars payments
@@ -59,15 +65,73 @@ Turn Karly into a subscription SaaS: many Telegram users, **Groq as the primary 
 
 Ollama is excluded from structured tasks (`/test`, doc analysis) — the 3B model can't reliably produce JSON. Per-rung cooldowns are in-process only; they reset on restart (Redis moves this in Phase B).
 
-### Cost today
+### Cost and capacity — how many students fit on the free tier
 
-| Scenario | Volume | LLM cost | Infra |
+> ⚠️ **Verify these numbers before relying on them.** They're from public write-ups, not
+> from your own dashboards, and providers change limits often. Check
+> `console.groq.com` → Settings → Limits and `ai.google.dev` rate limits, and record what
+> you actually see here.
+
+**The free-tier limits that matter** (per organisation, not per key — extra API keys
+don't help):
+
+| Backend | Requests/day | Requests/min | Tokens/day |
 |---|---|---|---|
-| Just me (now) | ~1,500 turns/mo | $0 (free tier) | $0 |
-| Beta (hundreds) | 60k turns/mo | ~$20–100/mo | ~$10–20/mo |
-| Scale (thousands) | 600k turns/mo | ~$200–950/mo | ~$100–300/mo |
+| Groq `openai/gpt-oss-120b` (primary) | ~1,000 | ~30 | **~200K** ← the binding limit |
+| Groq `openai/gpt-oss-20b` (fallback) | higher | ~30 | higher |
+| Gemini Flash (fallback) | ~1,500 | **~10** ← the binding limit | effectively unlimited for us |
+| Ollama, local | unlimited | unlimited | unlimited (but 3B, chat only) |
 
-One tutor turn ≈ 2,000 input + 500 output tokens. Verify Groq rates at console.groq.com — they change.
+**The trap in that table:** Groq's 200K tokens/day sounds generous but a tutor turn is
+~2,500 tokens, so the primary backend alone is **~80 conversation turns per day, for
+everyone combined**. Gemini's 1,500 requests/day is the real workhorse, and its ceiling
+is **10 requests per minute across all students at once**.
+
+**Not all features cost the same** — this is the lever that decides your capacity:
+
+| What a student does | LLM calls | Notes |
+|---|---|---|
+| `/practice` flashcard review | **0** | Pure local scheduling. Free forever |
+| `/quiz`, `/course` exercises *after* the curriculum phase | **0** | Answers come from the committed bank |
+| The Impostor game | **0** | No LLM in the game at all |
+| `/course` unit, 15 questions | **2** | Only the write-your-own-sentence items |
+| `/daily` | 1 | |
+| One conversation message | 1 (~2,500 tokens) | **The expensive one** |
+| `/test` placement | ~12 | One-off per student |
+
+**So capacity depends on the activity mix, not the headcount:**
+
+| Students | Mostly chatting | Mostly drilling (flashcards, course, games) |
+|---|---|---|
+| **10** | ✅ Comfortable | ✅ Effortless |
+| **25** | ⚠️ Workable if spread through the day | ✅ Fine |
+| **50** | ❌ Over the daily ceiling | ⚠️ Workable |
+| **100** | ❌ No | ❌ No |
+
+**Two things break before daily volume does:**
+
+1. **Simultaneous use.** Thirty students opening the bot during the same lesson will hit
+   30 requests/min instantly, whatever the daily budget says. **A whole class using it at
+   once in a lesson is the hardest case, not the average day.**
+2. **Falling off the bottom of the ladder.** When Groq and Gemini are both exhausted the
+   only rung left is Ollama 3B, which can't produce reliable JSON — so `/test`, `/course`
+   and `/quiz` **break rather than slow down**.
+
+**Two moves, in order:**
+
+- **Enable Groq's Developer tier — it's free.** You add a card and get roughly 10× the
+  rate limits, still paying nothing until you actually spend. This is the single highest-
+  leverage thing on this page and it takes five minutes. It moves 50 students from "no"
+  to "comfortable".
+- **Then pay, because it's cheap.** 100 students × ~15 turns/day ≈ 45,000 turns/month
+  ≈ 90M input + 22.5M output tokens. At `gpt-oss-120b` rates ($0.15/M in, $0.60/M out)
+  that's **roughly $27/month**. Infrastructure stays $0 while it runs on the OptiPlex.
+
+**Honest summary:** the free tier comfortably covers **10–20 students**, stretches to
+**~50** if they mostly drill rather than chat and don't all pile in at once, and **will
+not** carry 100. The curriculum phase materially increases these numbers, because banked
+exercises cost nothing to serve. Budget about **$27/month** for 100 active students —
+which is the point at which it's worth deciding whether this stays free for them.
 
 ---
 
@@ -478,6 +542,20 @@ Small task, real payoff: a feature nobody can find has no users. Worth doing at 
 time as the `/help` and welcome-message updates already listed under English-mode polish
 above — same files, same edit.
 
+**Games sit outside the learning process, deliberately.** They're an add-on that makes
+students want to open the bot, not a teaching tool. So:
+
+| Rule | Why |
+|---|---|
+| **No corrections during a game** | Whatever the correction setting says. Being marked up mid-game kills it |
+| **No mastery, BKT, or vocabulary capture from game messages** | Game chat is not evidence about their English. Letting it into the skill model would quietly poison `/profile` and `/quiz` targeting |
+| **Doesn't count toward the practice streak** | The streak should mean study. Keep the reward honest |
+| **Does count as activity** in `/students` and the class digest | You still want to know a quiet student is at least showing up |
+| **Free to run** | The game makes no LLM calls, so it costs nothing against the quota — which makes it the right thing to point students at when capacity is tight (Step 0.6) |
+
+Present them that way in `/help` too: a **Games** section clearly separate from the
+learning commands, not mixed in among them.
+
 ---
 
 ### Relaxed corrections — the default, and genuinely relaxed
@@ -485,6 +563,11 @@ above — same files, same edit.
 **Goal: nobody should feel judged for talking.** Students especially will go quiet if
 every message comes back marked up. The bot should feel like a patient conversation
 partner by default, and become a strict examiner only when asked.
+
+**The rule in one line: relaxed mode cares about the important stuff and ignores the
+rest — entirely.** Not "mentions it more gently", not "collects it for the end of the
+message". Ignores it. A message with three small slips and clear meaning gets zero
+corrections and a normal reply.
 
 **Already done:** `correction_level` defaults to `"relaxed"` (`db/models.py`). No change
 needed there — the default is right.
@@ -496,7 +579,8 @@ is exactly the feeling to design out.
 
 | Item | What to do |
 |---|---|
-| Loosen `CORRECTION_RELAXED` / `ENGLISH_CORRECTION_RELAXED` | Correct **only** what actually blocks understanding — a sentence a native speaker would misread. Not conjugation slips, not article gender, not prepositions, as long as the meaning lands |
+| Loosen `CORRECTION_RELAXED` / `ENGLISH_CORRECTION_RELAXED` | Correct **only** what actually blocks understanding — a sentence a native speaker would misread. Not conjugation slips, not article gender, not prepositions, as long as the meaning lands. **Everything else is ignored completely** — not softened, not saved for later in the message, not mentioned |
+| Say the quiet part in the prompt | The model should be told explicitly that **returning no corrections at all is the expected outcome for most messages**, not a failure to find any. Without that line an LLM will always find something |
 | Hard cap | **At most one** correction per message, and none at all if the message is understandable. Today's "one or two" still reads as a licence to find something |
 | Never flag | Typos, missing capitals or punctuation, contractions, casual register, incomplete sentences in a fast exchange |
 | Slang | Silent in relaxed mode — drop the 💬 tag entirely. Keep it in strict, where the user has opted into being told. Slang is a sign of fluency, not an error |
@@ -564,21 +648,32 @@ is knowing who they are and letting them in. See
 
 ### Step 0 — Blockers to clear before any student joins
 
-Found by reading both plans against the current code. These aren't features; they're
-things that will go wrong on day one if nobody looks at them first.
+Tasks, not observations. Found by reading both plans against the current code.
 
-| Gap | Why it bites | Fix |
+**Must be done before the first invite:**
+
+| # | Task | Where | What to do |
+|---|---|---|---|
+| **0.1** | **Stop new students landing in German mode** | `db/models.py`, `bot/middleware.py`, approval flow | `learning_mode` defaults to `"german"`, so an approved Spanish-speaking student meets a German tutor and won't know `/language` exists. Set the language at approval time (you pick it when you tap Approve), or give each class a default language that new members inherit. **This is the one that breaks on day one** |
+| **0.2** | **Define the first five minutes** | `bot/handlers/start.py` | Write the actual sequence a new student sees: welcome (in their language) → what this bot is → `/test` → their level → "here's what to do next". A class of beginners will not explore on their own. One screen, three taps, no jargon |
+| **0.3** | **Measure real usage before inviting a class** | — | Run a week yourself and count turns. Compare against the free-tier ceilings in "Cost and capacity" above. Invite in waves — 5 students, then 15, then the rest — rather than 50 on day one |
+| **0.4** | **Enable Groq's Developer tier** | Groq console | Free — add a card, get ~10× the rate limits, pay nothing until you spend. Five minutes, and it's the difference between 20 students and 50 |
+| **0.5** | **Per-student daily cap** | `bot/middleware.py` | A friendly stop at N messages/day so one student (or a stuck loop) can't drain the shared quota for the class. Build it *with* usage tracking (Step 5), not after |
+| **0.6** | **Handle running out of quota gracefully** | `llm/router.py`, `bot/handlers/*` | When every rung is exhausted, `/test`, `/course` and `/quiz` break rather than degrade, because Ollama can't produce JSON. Detect it and say so — *"I'm out of capacity for today, try flashcards or a game"* — and steer to the zero-LLM features instead of erroring |
+
+**Before the second week:**
+
+| # | Task | Where | What to do |
+|---|---|---|---|
+| **0.7** | **Back up the database** | `deploy/` | `karly.db` will hold other people's work. A nightly copy off the OptiPlex, kept for a couple of weeks. Trivial to add, genuinely painful to skip |
+| **0.8** | **Decide on consent** | — | If any student is a minor, storing their writing and reading a dashboard about them needs a decision made deliberately. One line in the welcome telling students what their teacher can see covers the ordinary case |
+
+**Watch, don't build yet:**
+
+| # | Item | Trigger to act |
 |---|---|---|
-| **New users land in German mode** | `learning_mode` defaults to `"german"` (`db/models.py`). A Spanish-speaking student who joins gets a German tutor speaking German at them, and won't know `/language` exists | Approval sets the student's language — or a class carries a default. **This is the day-one bug**; everything else is a degradation, this is a wall |
-| **The first five minutes are undefined** | After you approve someone, what happens? Straight to chat? Placement test? Nothing in either plan says | Define it: welcome → `/test` → level → "here's what to do next". A class of beginners will not explore on their own |
-| **Free-tier quota with a class is untested** | The cost table jumps from "just me, 1,500 turns/mo" to "beta, hundreds". Twenty students is neither. When Groq's daily limit is hit the ladder falls to Ollama 3B, which **can't do structured tasks** — so `/test` and `/course` don't slow down, they break | Estimate before inviting. Build usage tracking (Step 5) *first*, and add the per-student daily cap with it |
-| **No backup** | `karly.db` sits on the OptiPlex and will hold other people's work and progress | A nightly copy off the box. Trivial to add, genuinely painful to skip |
-| **Reminder timezone** | Reminders are stored `HH:MM` in *server* local time (see Technical notes) | Fine if the class is in your timezone. If not, per-user timezone becomes real work |
-| **Sync SQLAlchemy in async handlers** | Flagged in Scale Step 1 as "fine at one user, blocks the event loop under concurrency" | Probably fine for ~20 occasional users. Just know it is the first thing that will break, and what the symptom looks like (everything slow at once, not one user failing) |
-| **Consent, if any student is a minor** | You'll be storing their writing and reading a dashboard about them | Decide whether this applies to your class before inviting, not after |
-
-**Order:** clear the day-one bug and decide the quota question before the first invite.
-Backup before the second week. The rest can follow.
+| **0.9** | Reminder timezone — stored as `HH:MM` in *server* local time | Only matters if students aren't in your timezone |
+| **0.10** | Sync SQLAlchemy in async handlers (Scale Step 1) | Symptom is *everything* slow at once, not one user failing. Fine at ~20 occasional users; revisit around 50 |
 
 ---
 
@@ -601,7 +696,8 @@ What you asked for: a confirmation when someone wants to start using the bot.
    in" message and can't use anything else.
 2. **You get a DM:** `👤 Ana García (@ana_g) wants to join. [✅ Approve] [❌ Decline]`,
    with a **[Approve + assign to class]** option if you run more than one group.
-3. You tap. The student is told immediately and lands in the normal `/start` flow.
+3. You tap. The student is told immediately and lands in the onboarding sequence from
+   Step 0.2 — **in the language you set for them when approving** (Step 0.1).
 4. Declines are remembered, so a declined user re-sending `/start` doesn't spam you.
 
 **Access modes** — one setting, three behaviours:
