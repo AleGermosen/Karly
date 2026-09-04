@@ -83,21 +83,21 @@ HELP_GERMAN = (
 
     "── Gesprächs-Tools ──\n"
     "/corrections strict|relaxed|off — Korrektur-Level setzen (kein Arg = Status)\n"
-    "/topic <Thema> — Gespräch auf ein Thema lenken (/topic clear zum Löschen)\n"
-    "/english <Frage> — Meta-Frage auf Englisch stellen\n"
+    "/topic THEMA — Gespräch auf ein Thema lenken (/topic clear zum Löschen)\n"
+    "/english FRAGE — Meta-Frage auf Englisch stellen\n"
     "/remind HH:MM — tägliche Erinnerung setzen (/remind off zum Ausschalten)\n\n"
 
     "── Dokumente ──\n"
     "/docs — deine hochgeladenen PDFs\n"
-    "/learn <id> — Lektion aus einem Dokument starten\n"
+    "/learn ID — Lektion aus einem Dokument starten\n"
     "/docfocus on|off — Gespräch aufs neueste Dokument lenken\n"
     "📄 Schick eine deutsche PDF → Fachbegriffe werden automatisch extrahiert\n\n"
 
     "── Spiel ──\n"
     "/impostor new — neues Impostor-Spiel erstellen (gibt Code zurück)\n"
-    "/impostor join <code> <name> — Spiel beitreten\n"
+    "/impostor join CODE NAME — Spiel beitreten\n"
     "/impostor start — Rollen austeilen (nur Host)\n"
-    "/impostor vote <name> — abstimmen\n"
+    "/impostor vote NAME — abstimmen\n"
     "/impostor help — alle Spielbefehle\n\n"
 
     "── Sistema ──\n"
@@ -130,21 +130,21 @@ HELP_ENGLISH = (
 
     "── Conversation tools ──\n"
     "/corrections strict|relaxed|off — correction level (no arg = current status)\n"
-    "/topic <topic> — steer the conversation to a topic (/topic clear to reset)\n"
-    "/spanish <question> — ask a question in Spanish\n"
+    "/topic TOPIC — steer the conversation to a topic (/topic clear to reset)\n"
+    "/spanish QUESTION — ask a question in Spanish\n"
     "/remind HH:MM — set a daily reminder (/remind off to disable)\n\n"
 
     "── Documents ──\n"
     "/docs — your uploaded PDFs\n"
-    "/learn <id> — start a lesson from a document\n"
+    "/learn ID — start a lesson from a document\n"
     "/docfocus on|off — focus conversation on the latest document\n"
     "📄 Send an English PDF → vocabulary is extracted automatically\n\n"
 
     "── Games ──\n"
     "/impostor new — create an Impostor game (generates a code)\n"
-    "/impostor join <code> <name> — join a game\n"
+    "/impostor join CODE NAME — join a game\n"
     "/impostor start — assign roles (host only)\n"
-    "/impostor vote <name> — vote to eliminate\n"
+    "/impostor vote NAME — vote to eliminate\n"
     "/impostor help — all game commands\n\n"
 
     "── System ──\n"
@@ -259,37 +259,37 @@ HELP_TEACHER = (
 
     "── Roster ──\n"
     "/students — your roster: status, level, streak, last active\n"
-    "/student <name> — full profile (CEFR, skills, gaps, activity)\n"
+    "/student NAME — full profile (CEFR, skills, gaps, activity)\n"
     "/class — weekly snapshot + skill error rates + class topics\n\n"
 
     "── Classes ──\n"
-    "/newclass <name> — create a new class\n"
+    "/newclass NAME — create a class (/newclass Beginners english)\n"
     "/classes — list your classes with student count and topics\n"
-    "/moveclass <student> <class> — move a student to another class\n\n"
+    "/moveclass STUDENT CLASS — move a student to another class\n\n"
 
     "── Topic & Drills ──\n"
     "/assign — show current topics for your classes\n"
-    "/assign <topic> — set topic for all your classes (e.g. /assign present perfect)\n"
-    "/assign <class>: <topic> — set topic for one class\n"
+    "/assign TOPIC — set topic for all your classes\n"
+    "/assign CLASS: TOPIC — set topic for one class\n"
     "/assign clear — remove all topics\n"
-    "/classtopic — show the current topic (same command students use)\n\n"
+    "/classtopic — show the current topic\n\n"
 
     "── Credits & Budget ──\n"
     "/budget — global credit usage, reserve status, top consumers\n"
-    "/grant <name> <n> — give a student N extra credits today\n\n"
+    "/grant NAME N — give a student N extra credits today\n\n"
 
     "── Superuser only ──\n"
-    "/addteacher <name> — promote a student to teacher\n"
-    "/removeteacher <name> — demote a teacher to student\n"
+    "/addteacher NAME — promote a student to teacher\n"
+    "/removeteacher NAME — demote a teacher to student\n"
     "/teachers — list all teachers with class and student counts\n\n"
 
     "── Your learning ──\n"
-    "All student commands work for you too: /test, /practice, /drill, /quiz,\n"
-    "/daily, /roleplay, /weekly, /profile, /corrections, /summary, /docs\n\n"
+    "All student commands work for you too: /test, /practice, /drill,\n"
+    "/quiz, /daily, /roleplay, /weekly, /profile, /corrections, /docs\n\n"
 
     "── Setup ──\n"
-    "ACCESS_MODE=approval in .env → new users wait for your approval\n"
-    "SUPERUSER_TELEGRAM_ID=<your id> → grants superuser role"
+    "ACCESS\\_MODE=approval in .env → new users wait for approval\n"
+    "SUPERUSER\\_TELEGRAM\\_ID=your\\_id → grants superuser role"
 )
 
 
