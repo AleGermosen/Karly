@@ -14,6 +14,7 @@ from db.models import (
     ConceptMastery,
     CreditGrant,
     Document,
+    ItemAttempt,
     LLMUsage,
     MediaSubmission,
     MediaTask,
@@ -21,6 +22,7 @@ from db.models import (
     Payment,
     PracticeLog,
     ReviewLog,
+    UnitProgress,
     User,
     VocabItem,
     VocabSource,
@@ -1378,3 +1380,95 @@ def get_media_submissions(task_id: int) -> list[dict]:
             }
             for sub, name in rows
         ]
+
+
+# ---------------------------------------------------------------------------
+# Course — unit progress (H3 / H4)
+# ---------------------------------------------------------------------------
+
+def get_unit_progress(user_id: int, unit_id: str) -> UnitProgress | None:
+    with get_session() as session:
+        return (
+            session.query(UnitProgress)
+            .filter(UnitProgress.user_id == user_id, UnitProgress.unit_id == unit_id)
+            .one_or_none()
+        )
+
+
+def get_all_unit_progress(user_id: int) -> dict[str, UnitProgress]:
+    """Return {unit_id: UnitProgress} for all units the user has touched."""
+    with get_session() as session:
+        rows = session.query(UnitProgress).filter(UnitProgress.user_id == user_id).all()
+        return {r.unit_id: r for r in rows}
+
+
+def record_unit_attempt(
+    user_id: int,
+    unit_id: str,
+    score: float,  # 0.0–1.0
+    pass_mark: float = 0.80,
+) -> UnitProgress:
+    """Upsert a unit attempt and return the updated progress row."""
+    with get_session() as session:
+        row = (
+            session.query(UnitProgress)
+            .filter(UnitProgress.user_id == user_id, UnitProgress.unit_id == unit_id)
+            .one_or_none()
+        )
+        if row is None:
+            row = UnitProgress(user_id=user_id, unit_id=unit_id)
+            session.add(row)
+        row.attempts += 1
+        row.last_attempt_at = datetime.utcnow()
+        if score > row.best_score:
+            row.best_score = score
+        if score >= pass_mark:
+            row.passed = True
+        return row
+
+
+def record_item_attempt(
+    user_id: int,
+    unit_id: str,
+    item_id: str,
+    item_type: str,
+    correct: bool,
+    answer_given: str | None = None,
+) -> ItemAttempt:
+    with get_session() as session:
+        row = ItemAttempt(
+            user_id=user_id,
+            unit_id=unit_id,
+            item_id=item_id,
+            item_type=item_type,
+            correct=correct,
+            answer_given=answer_given,
+        )
+        session.add(row)
+        return row
+
+
+def get_missed_items(user_id: int, unit_id: str) -> list[str]:
+    """Return item_ids that the user got wrong at least once in this unit."""
+    with get_session() as session:
+        wrong = (
+            session.query(ItemAttempt.item_id)
+            .filter(
+                ItemAttempt.user_id == user_id,
+                ItemAttempt.unit_id == unit_id,
+                ItemAttempt.correct == False,  # noqa: E712
+            )
+            .distinct()
+            .all()
+        )
+        return [r.item_id for r in wrong]
+
+
+def mark_flashcard_created(user_id: int, unit_id: str, item_id: str) -> None:
+    with get_session() as session:
+        session.query(ItemAttempt).filter(
+            ItemAttempt.user_id == user_id,
+            ItemAttempt.unit_id == unit_id,
+            ItemAttempt.item_id == item_id,
+            ItemAttempt.flashcard_created == False,  # noqa: E712
+        ).update({"flashcard_created": True})

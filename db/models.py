@@ -321,3 +321,42 @@ class LLMUsage(Base):
     task: Mapped[str] = mapped_column(String)   # "chat" | "quiz" | "daily" | …
     credits: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class UnitProgress(Base):
+    """One row per (user, unit) — tracks course progress (H3/H4).
+
+    passed: True when the student reached the pass mark (≥ 80%) on any attempt.
+    best_score: highest percentage achieved across all attempts (0.0–1.0).
+    attempts: total number of times the student started the unit.
+    """
+
+    __tablename__ = "unit_progress"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    unit_id: Mapped[str] = mapped_column(String, index=True)  # e.g. "en.a1.g01"
+    passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    best_score: Mapped[float] = mapped_column(Float, default=0.0)  # 0.0–1.0
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class ItemAttempt(Base):
+    """One row per question answered in a course unit (H3/H4).
+
+    Correct answers with score < pass mark still feed H4's flashcard pipeline.
+    item_id maps to the 'id' field in the JSONL bank (e.g. 'en.a1.g01.mcq.01').
+    """
+
+    __tablename__ = "item_attempts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    unit_id: Mapped[str] = mapped_column(String, index=True)
+    item_id: Mapped[str] = mapped_column(String)  # bank question id
+    item_type: Mapped[str] = mapped_column(String)  # mcq | cloze | transform | produce
+    correct: Mapped[bool] = mapped_column(Boolean)
+    answer_given: Mapped[str | None] = mapped_column(Text, nullable=True)
+    flashcard_created: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)

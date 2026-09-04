@@ -3,7 +3,7 @@
 # Remote targets need KARLY_HOST set, e.g.:
 #   export KARLY_HOST=marcus@192.168.8.228
 
-.PHONY: help run test deploy logs status restart stop
+.PHONY: help run test curriculum-lint deploy logs status restart stop
 
 help:
 	@echo "Local:"
@@ -21,6 +21,12 @@ run:
 
 test:
 	.venv/bin/python -m unittest discover -s tests -v
+
+curriculum-lint:
+	python3 scripts/curriculum_lint.py
+
+curriculum-rehash:
+	python3 scripts/curriculum_lint.py --rehash
 
 deploy:
 	./deploy/deploy.sh

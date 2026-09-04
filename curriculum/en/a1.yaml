@@ -1,0 +1,222 @@
+- id: en.a1.g01
+  kind: grammar
+  level: A1
+  order: 1
+  title_target: The verb to be — present simple
+  title_l1: El verbo to be — presente simple
+  can_do: I can introduce myself and say where I am from.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'The verb ''to be'' has three forms in the present: am, is, are.'
+  - 'Use am only with I: I am a student. → Soy estudiante.'
+  - 'Use is with he, she, it: She is my teacher. → Ella es mi profesora.'
+  - 'Use are with you, we, they: They are from Mexico. → Son de México.'
+  - 'Short forms (contractions) are normal in speech: I''m, you''re, he''s, she''s,
+    it''s, we''re, they''re.'
+  - 'Negative: add ''not'' after the verb. I am not tired. / She isn''t here.'
+  - 'Question: move ''to be'' before the subject. Are you ready? / Is he a doctor?'
+  examples:
+  - target: I'm from the Dominican Republic.
+    gloss: Soy de la República Dominicana.
+  - target: She isn't my sister — she's my cousin.
+    gloss: No es mi hermana, es mi prima.
+  - target: Are you and Carlos students?
+    gloss: ¿Ustedes y Carlos son estudiantes?
+  pitfalls:
+  - Spanish has ser and estar; English 'to be' covers both. 'I'm tired' (estar) and
+    'I'm a doctor' (ser) use the same verb.
+  - 'Never drop the subject: Spanish ''Soy estudiante'' becomes ''I am a student'',
+    not just ''Am a student''.'
+  - 'In questions the subject and verb switch order: ''Are you…?'' NOT ''You are…?''
+    with a question mark.'
+  - '''It'' is used for things, animals and weather: ''It is cold today.'' Spanish
+    speakers often skip it.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:e49613a43b5e0fd6
+- id: en.a1.g02
+  kind: grammar
+  level: A1
+  order: 2
+  title_target: 'Articles: a, an, the'
+  title_l1: 'Los artículos: a, an, the'
+  can_do: I can talk about people and things, saying whether they are new or known.
+  prereqs:
+  - en.a1.g01
+  skill: grammar
+  explain:
+  - '''A'' and ''an'' are indefinite articles — use them the first time you mention
+    something.'
+  - 'Use ''a'' before consonant sounds: a book, a university (sounds like ''yoo'').'
+  - 'Use ''an'' before vowel sounds: an apple, an hour (the h is silent).'
+  - '''The'' is the definite article — use it when the listener already knows which
+    one you mean.'
+  - 'Use ''the'' the second time you mention something: I have a dog. The dog is big.'
+  - 'No article with general plural nouns: ''Dogs are friendly.'' NOT ''The dogs are
+    friendly.'''
+  - 'No article with most names: ''I live in Santo Domingo.'' NOT ''I live in the
+    Santo Domingo.'''
+  examples:
+  - target: I saw a film last night. The film was great.
+    gloss: Vi una película anoche. La película estuvo genial.
+  - target: Can I have an orange, please?
+    gloss: ¿Me da una naranja, por favor?
+  - target: Teachers need patience.
+    gloss: Los maestros necesitan paciencia. (general — no article in English)
+  pitfalls:
+  - 'Spanish always uses articles with general nouns: ''Los perros son amigables.''
+    English drops the article: ''Dogs are friendly.'''
+  - It depends on the sound, not the letter. 'An honest man' — h is silent. 'A university'
+    — sounds like 'you'.
+  - 'Countries and cities take no article: France, Paris, Mexico. A few exceptions:
+    the United States, the Dominican Republic.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:5469e12f4dcb061b
+- id: en.a1.g03
+  kind: grammar
+  level: A1
+  order: 3
+  title_target: Present simple — affirmative and negative
+  title_l1: Presente simple — afirmativo y negativo
+  can_do: I can describe habits, routines and facts.
+  prereqs:
+  - en.a1.g01
+  skill: grammar
+  explain:
+  - Use the present simple for habits, routines, and facts that are always true.
+  - 'Base form for I / you / we / they: I work, you live, we study.'
+  - 'Add -s for he / she / it: he works, she lives, it costs.'
+  - 'Spelling rules: add -es after -s, -sh, -ch, -x, -o (washes, goes). Drop -y →
+    -ies (study → studies).'
+  - 'Negative: use do not / does not + base form. I don''t like coffee. She doesn''t
+    work here.'
+  - '''Does'' is used with he/she/it in negatives and questions — the main verb goes
+    back to base form.'
+  - 'Time markers: every day, always, usually, never, on Mondays, in the morning.'
+  examples:
+  - target: My brother works in a hospital.
+    gloss: Mi hermano trabaja en un hospital.
+  - target: I don't drink coffee — I prefer tea.
+    gloss: No tomo café, prefiero el té.
+  - target: She studies English every evening.
+    gloss: Ella estudia inglés todas las tardes.
+  pitfalls:
+  - 'Never add -s to I / you / we / they: ''They works here'' is wrong — ''They work
+    here''.'
+  - 'In negatives with he/she/it: ''She doesn''t works'' is wrong — ''She doesn''t
+    work''.'
+  - 'Spanish speakers often omit the subject: ''Trabaja en un hospital.'' In English
+    the subject is required: ''He works in a hospital.'''
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:46fb922a40a42167
+- id: en.a1.g04
+  kind: grammar
+  level: A1
+  order: 4
+  title_target: Present simple — questions and short answers
+  title_l1: Presente simple — preguntas y respuestas cortas
+  can_do: I can ask and answer basic questions about daily life.
+  prereqs:
+  - en.a1.g03
+  skill: grammar
+  explain:
+  - 'Yes/no questions: Do / Does + subject + base verb. Do you like music? Does she
+    live here?'
+  - 'Short answer: Yes, I do. / No, she doesn''t. Never ''Yes, I like.'' or ''No,
+    she doesn''t likes.'''
+  - 'Wh- questions put the question word first: What, Where, When, Why, Who, How.'
+  - 'Wh- + do/does + subject + verb: Where do you live? What does he do?'
+  - 'When ''who'' or ''what'' is the subject, there is no do/does: Who lives here?
+    What happens next?'
+  - 'Intonation: yes/no questions rise at the end; wh- questions fall.'
+  examples:
+  - target: Do you have a pen? — Yes, I do.
+    gloss: ¿Tienes un bolígrafo? — Sí, tengo.
+  - target: What does your sister do? — She's a nurse.
+    gloss: ¿A qué se dedica tu hermana? — Es enfermera.
+  - target: Where do they study? — At the university.
+    gloss: ¿Dónde estudian? — En la universidad.
+  pitfalls:
+  - '''Do you like?'' not ''Like you?'' — English uses an auxiliary; Spanish changes
+    word order without one.'
+  - 'Short answers use the auxiliary, not the main verb: ''Yes, I do'' NOT ''Yes,
+    I like.'''
+  - '''Does he works?'' is wrong — the base form must be used: ''Does he work?'''
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:b9c2ddd47b0db306
+- id: en.a1.g05
+  kind: grammar
+  level: A1
+  order: 5
+  title_target: Plural nouns and this / that / these / those
+  title_l1: Sustantivos en plural y this / that / these / those
+  can_do: I can point at things and talk about more than one.
+  prereqs:
+  - en.a1.g02
+  skill: grammar
+  explain:
+  - 'Most plurals: add -s. book → books, student → students.'
+  - 'After -s, -sh, -ch, -x, -z add -es: bus → buses, watch → watches.'
+  - 'Consonant + -y → -ies: city → cities, baby → babies.'
+  - 'Common irregular plurals: man/men, woman/women, child/children, person/people,
+    foot/feet.'
+  - '''This'' (singular near) / ''that'' (singular far): This book is mine. That car
+    is big.'
+  - '''These'' (plural near) / ''those'' (plural far): These shoes are new. Those
+    students are great.'
+  - 'This/that/these/those can stand alone: ''What is this?'' / ''Those are my keys.'''
+  examples:
+  - target: These children are my students.
+    gloss: Estos niños son mis estudiantes.
+  - target: That woman is my neighbour.
+    gloss: Esa mujer es mi vecina.
+  - target: How much are those shoes?
+    gloss: ¿Cuánto cuestan esos zapatos?
+  pitfalls:
+  - 'People is already plural: ''Many people are here.'' NOT ''Many peoples are here.'''
+  - '''Informations'', ''advices'', ''furnitures'' are wrong in English — these nouns
+    have no plural form.'
+  - Don't confuse 'this is' (introducing something) with 'it is' (referring to something
+    already known).
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:510e31937473c198

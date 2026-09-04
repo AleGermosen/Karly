@@ -10,3 +10,4 @@ pypdf
 # installed the bot still works fine using HLR/BKT only.
 numpy
 tensorflow-cpu
+pyyaml>=6.0

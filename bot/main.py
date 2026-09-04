@@ -20,6 +20,7 @@ from bot.handlers import (
     assessment,
     classroom,
     conversation,
+    course,
     daily,
     documents,
     drill,
@@ -116,6 +117,10 @@ def build_application() -> Application:
         CallbackQueryHandler(classroom.on_placement_level_pick, pattern=r"^placement_level:")
     )
 
+    # Course handlers (H3/H4) — registered before the catch-all text handler.
+    for handler in course.build_handlers():
+        app.add_handler(handler)
+
     # Conversation flows (registered before the catch-all handler).
     app.add_handler(assessment.build_handler())
     app.add_handler(practice.build_handler())
@@ -198,6 +203,7 @@ def build_application() -> Application:
 # expected frequency. Debug commands (/status, /backend) are intentionally
 # omitted. Order is static for now; usage-sorted ordering is future work.
 MENU_COMMANDS = [
+    BotCommand("course", "📚 English course — lesson + exercises"),
     BotCommand("practice", "Vokabeln üben (Spaced Repetition)"),
     BotCommand("flashcards", "Karteikarten üben (wie /practice)"),
     BotCommand("daily", "Tägliche Mini-Challenge (3 Aufgaben)"),
