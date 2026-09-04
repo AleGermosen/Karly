@@ -10,7 +10,7 @@ Living plan for Karly's evolution. Updated 2026-09-03.
 
 **What to build next (solo phase):**
 1. **English mode should be in English** — the interface is currently Spanish; it should mirror German mode, with Spanish kept for explanations only
-2. **Relaxed corrections should feel relaxed** — already the default, but it still corrects too much and tags slang. Nobody should feel judged for talking
+2. **Correction strictness as a 0–5 dial** — replaces `strict / relaxed / off`. 0 is silent, 5 is exam-grade, and the default sits at 1: corrects only what breaks meaning, ignores everything else entirely
 3. **Games in `/help`** — The Impostor exists but is invisible
 4. **English-mode polish** — small remaining items listed below (`/english` block, backend notice language)
 5. Voice notes — speak German/English, get a text correction back
@@ -564,47 +564,73 @@ learning commands, not mixed in among them.
 
 ---
 
-### Relaxed corrections — the default, and genuinely relaxed
+### Correction strictness — a 0–5 scale
 
-**Goal: nobody should feel judged for talking.** Students especially will go quiet if
-every message comes back marked up. The bot should feel like a patient conversation
-partner by default, and become a strict examiner only when asked.
+**Replaces `strict / relaxed / off` with a dial from 0 to 5.** Three settings can't
+express what's actually wanted: today's "relaxed" still corrects conjugation and article
+gender, and there's nothing between it and full markup. A dial keeps what works — an off
+switch and an exam-grade setting — and puts a genuinely quiet mode at the bottom where
+it belongs.
 
-**The rule in one line: relaxed mode cares about the important stuff and ignores the
-rest — entirely.** Not "mentions it more gently", not "collects it for the end of the
-message". Ignores it. A message with three small slips and clear meaning gets zero
-corrections and a normal reply.
+**Goal, unchanged: nobody should feel judged for talking.** Students go quiet if every
+message comes back marked up. Default to a patient conversation partner; become an
+examiner only when asked.
 
-**Already done:** `correction_level` defaults to `"relaxed"` (`db/models.py`). No change
-needed there — the default is right.
+---
 
-**What needs changing is what "relaxed" means.** Today's relaxed prompt still corrects
-"wrong verb conjugation, badly wrong article gender", and slang always gets a 💬 tag even
-though the prompt says slang isn't a mistake. Being tagged for saying something casually
-is exactly the feeling to design out.
+#### The scale
 
-| Item | What to do |
+The axis is **what threshold of error is worth mentioning**, plus a cap on how many.
+
+| Level | Name | Corrects | Cap | Slang | Typos & punctuation |
+|---|---|---|---|---|---|
+| **0** | **Off** | Nothing, ever. Pure conversation | — | ignored | ignored |
+| **1** | **Gentle** ← **default** | Only what genuinely breaks meaning — a sentence a native speaker would misread. **Most messages get nothing** | 1 | ignored | ignored |
+| **2** | **Light** | Level 1, plus mistakes they keep repeating — a pattern earns a mention even when the meaning was clear | 1 | ignored | ignored |
+| **3** | **Balanced** | Clear grammar errors even when meaning survives: wrong tense, wrong preposition, missing article | 2 | 💬 noted, not an error | ignored |
+| **4** | **Thorough** | Level 3, plus word choice and naturalness — understandable, but a native wouldn't say it — and register mismatch | 3–4 | 💬 noted | ignored |
+| **5** | **Exam** | Everything. Typos, capitals, punctuation, style, and better-phrasing suggestions. Exam-marking mode | none | flagged as register | **corrected** |
+
+**Level 1 is the one that matters, and it's the default.** It means what it says:
+*cares about the important stuff and ignores the rest — entirely.* Not "mentions it more
+gently", not "saves it for the end". Ignores it. A message with three small slips and
+clear meaning gets zero corrections and a normal reply.
+
+**Level 0 is not the same as level 1.** At 0 nothing is ever shown. At 1 the bot will
+still speak up if it genuinely can't tell what you meant — which is the difference
+between a silent partner and a patient one.
+
+---
+
+#### Tasks
+
+| # | Task | What to do |
+|---|---|---|
+| **S.1** | **Build the correction block from flags, not six prose blobs** | Six levels × two languages = twelve hand-written prompt constants that will drift apart within a month. Instead: one template, filled from a small per-level table (`cap`, `threshold`, `slang`, `typos`, `style`). Adding a level or retuning one becomes a data change |
+| **S.2** | **Say the quiet part in the prompt** | At levels 1–2 the model must be told that **returning no corrections is the expected outcome for most messages**, not a failure to find any. Without that line an LLM will always find something |
+| **S.3** | **Migrate the existing column** | `correction_level` is a string today. Map `off`→0, `relaxed`→**1**, `strict`→**4**. Level 5 is stricter than today's strict, so nobody gets silently upgraded into it |
+| **S.4** | **`/corrections` becomes a picker** | Six buttons with a one-line description each, in the user's language, and the current level marked. Typing `/corrections 3` should work too |
+| **S.5** | **Warm-up rule** | No corrections for a user's first few messages, or when returning after a break, at any level below 5. Let them settle in |
+| **S.6** | **Tone rules in the persona, at every level** | Never comment on the *quality* of their language, never praise-then-correct ("Good try, but…"), never count mistakes. Strictness changes *how much* is said, never *how* it's said |
+| **S.7** | **Sensible default by level** | Suggest, don't force: an A1 student at level 5 will drown. Default from the placement test — beginners start at 1, advanced learners can be offered 3 |
+| **S.8** | **Class default** | The teacher sets the starting level for a class; students can still change their own. Their choice always wins |
+| **S.9** | **Mention it once, early** | *"I'll mostly just chat. Want me to correct more? /corrections"* — then never bring it up again |
+
+---
+
+#### What the scale does not touch
+
+| | |
 |---|---|
-| Loosen `CORRECTION_RELAXED` / `ENGLISH_CORRECTION_RELAXED` | Correct **only** what actually blocks understanding — a sentence a native speaker would misread. Not conjugation slips, not article gender, not prepositions, as long as the meaning lands. **Everything else is ignored completely** — not softened, not saved for later in the message, not mentioned |
-| Say the quiet part in the prompt | The model should be told explicitly that **returning no corrections at all is the expected outcome for most messages**, not a failure to find any. Without that line an LLM will always find something |
-| Hard cap | **At most one** correction per message, and none at all if the message is understandable. Today's "one or two" still reads as a licence to find something |
-| Never flag | Typos, missing capitals or punctuation, contractions, casual register, incomplete sentences in a fast exchange |
-| Slang | Silent in relaxed mode — drop the 💬 tag entirely. Keep it in strict, where the user has opted into being told. Slang is a sign of fluency, not an error |
-| First messages | No corrections at all for a user's first few messages, or when returning after a break. Let them warm up |
-| Tone rule in the persona | Explicitly: never comment on the *quality* of their language, never praise-then-correct ("Good try, but…"), never count mistakes |
-| `/corrections` discoverability | Mention once, early, that corrections can be turned up: *"I'll mostly just chat. Want me to correct more? /corrections strict"* — then never mention it again |
+| **Course exercises** | Inside a unit an answer is right or wrong and is marked as such — that's what starting an exercise asked for. Strictness governs *conversation* only |
+| **Games** | Ignored entirely. No corrections mid-game at any level |
+| **What gets recorded** | Unchanged at every level, including 0 |
 
 **Nothing is lost by staying quiet.** Mistakes are still captured even when they aren't
-shown: they feed `/summary`, the weekly report, the BKT skill model, flashcards, and — once
-the classroom phase lands — your view of what the class is getting wrong. The learner
-gets an uninterrupted conversation; you still get the data. That's the whole argument for
-making relaxed the default, and it already works this way.
-
-**Possible rename, worth considering:** `strict / relaxed / off` describes the machine's
-behaviour, not the user's intent. Something like `exam / chat / off` — or letting the
-student pick "correct me a lot / a little / not while we're talking" — reads better to a
-nervous beginner. Cosmetic, but this is the setting most likely to be changed by someone
-who is already feeling self-conscious.
+shown: they feed `/summary`, the weekly report, the BKT skill model, flashcards, and —
+once the classroom phase lands — your view of what the class is getting wrong. The
+learner gets an uninterrupted conversation; you still get the data. **That is what makes
+a low default safe**, and it already works this way.
 
 ---
 

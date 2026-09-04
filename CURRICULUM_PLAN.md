@@ -210,10 +210,11 @@ matters:
   (FUTURE_WORK → "English mode should be in English") governs how much Spanish a student
   sees. Unit explanations and glosses have to respect it, or an A1 student gets an
   English-only grammar explanation they can't read.
-- **Relaxed corrections stop at the exercise boundary.** The "don't make them feel
-  judged" work applies to *conversation*. Inside a unit an answer is right or wrong and
-  is marked as such — that's what the student asked for by starting an exercise. Keep the
-  gentleness in the wording, not in the grading.
+- **Correction strictness stops at the exercise boundary.** The 0–5 strictness dial
+  (FUTURE_WORK → "Correction strictness") governs *conversation* only. Inside a unit an
+  answer is right or wrong and is marked as such at every level, including 0 — that's
+  what the student asked for by starting an exercise. Keep the gentleness in the wording,
+  not in the grading.
 
 ---
 
