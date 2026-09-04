@@ -12,11 +12,6 @@
 
 | # | Bug | Where | Impact |
 |---|-----|--------|--------|
-| **B-1** | Roleplay turns and `/summary`, `/learn` cost 0 credits — budget leak | `roleplay.py`, `conversation.py`, `documents.py` | Medium — a student can bypass the credit system entirely via roleplay |
-| **B-2** | Token cap for `assess` (512) may truncate verdict JSON; Gemini burns cap on thinking tokens | `router.py` `_TASK_MAX_TOKENS` | Medium — `/test` can silently fail when Groq is exhausted |
-| **B-3** | Daily cache hits still charge full 2 credits; shared prompt bakes in one student's gaps | `daily.py` | Low — price cache hits at 1 credit; drop personal gaps from the shared prompt |
-| **B-4** | Deck picker reverse-direction buttons hardcode `deck:all:rev`, ignoring specific deck choice | `practice.py` | Low |
-| **B-5** | `telegram_id` and `approved_by` columns are `Integer` — overflows for new Telegram accounts (>2³¹) | `db/models.py` | Low now, breaks on Postgres migration |
 | **B-6** | `get_or_create_user` never updates a user's name if it changed in Telegram | `db/repo.py` | Low |
 | **B-7** | Job-queue extra (`python-telegram-bot[job-queue]`) — if not installed, `/remind` silently does nothing | `deploy/` | Operational — verify on OptiPlex |
 
@@ -27,31 +22,30 @@
 | **F-1** | `/english` block in English mode — redirect to `/spanish` | Low | One-liner in `conversation.py` |
 | **F-2** | Bilingual stale-correction message | Low | `conversation.py` — currently German-only |
 | **F-3** | Backend notices in Spanish for English-mode students | Low | `_BACKEND_NOTICES` in `conversation.py` |
-| **F-4** | Games section in `/help` and `/start` — The Impostor is invisible | Medium | `start.py`, `MENU_COMMANDS` in `main.py` |
-| **F-5** | Correction strictness defaults from placement test (S.7) | Medium | Suggest level in `_finish()` |
-| **F-6** | Teacher sets class default correction level (S.8) | Low | After S.7 |
-| **F-7** | One-time correction nudge after first correction (S.9) | Low | `conversation.py` |
-| **F-8** | First-5-minutes onboarding for newly approved students (Step 0.2) | Medium | `start.py` — approved students get a structured start sequence |
-| **F-9** | Nightly database backup (Step 0.7) | High | `deploy/` — `karly.db` holds student work; a nightly copy is free insurance |
-| **F-10** | Consent line in welcome message (Step 0.8) | Medium | One sentence at `/start`: what the teacher can see |
-| **F-11** | `/mybudget` for students — show their own remaining credits | Low | New command; reuses `credits_remaining()` |
-| **F-12** | Show correction level in `/profile` | Low | One line; helps students understand their current setting |
+| **F-6** | Teacher sets class default correction level | Low | New command `/class setcorr N`; student can override |
 | **F-13** | Voice notes — speak German/English, get a text correction back | Future | Groq Whisper → existing correction pipeline |
-| **F-14** | Assignments + CSV export (Step 6) | Future | After curriculum phase exists |
+| **F-14** | Assignments + CSV export | Future | After curriculum phase exists |
 
-### ✅ Recently fixed (this session)
+### ✅ Recently completed (this session)
 
 | Fix | What changed |
 |-----|-------------|
-| **Buttons not responding** | `require_auth` wrapper discarded handler return values — ConversationHandlers never entered their states. Fixed: `return await handler(...)` |
-| **Roleplay silent after first turn** | History dicts used `"content"` key; all backends expect `"text"`. Fixed in `scene_message` and `scene_done` |
-| **Roleplay corrections never fired** | `_correction_block()` compared integer (0–5) against strings. Fixed: now calls `prompts.build_correction_block(level, english=en)` |
-| **Asterisks instead of bold text** | No `parse_mode` set anywhere. Fixed: `Defaults(parse_mode=ParseMode.MARKDOWN)` in `Application.builder()` |
-| **Credit exhaustion buttons broken** | `switch_inline_query_current_chat` requires inline mode and puts text in input field — an error loop. Fixed: `callback_data` buttons with `on_free_feature_tap` handler |
-| **`/start` showed picker to returning users** | Both branches were identical. Fixed: returning users see the welcome/commands message |
-| **Button spinner on blocked taps** | Middleware returned early without calling `query.answer()`. Fixed: `_dismiss_button()` called in every early-return branch |
-| **German reminders for English-mode students** | Reminder text was always German. Fixed: mode-aware text in `_send_reminder()` |
-| **Assessment starts too hard, asks to describe things** | Started at A2, allowed open/production questions. Fixed: starts at A1, MCQ and fill-in-the-blank only, auto-graded |
+| **Multi-teacher architecture** | Superuser role, `/addteacher`, `/removeteacher`, `/teachers`, multi-step approval (approve → teacher → class), per-teacher class management |
+| **Class management** | `/newclass [german\|english]`, `/classes`, `/moveclass`, `/assign` scoped per teacher, `/classtopic` |
+| **F-9 Nightly DB backup** | `deploy/karly-backup.{sh,service,timer}` — sqlite3 backup at 03:00, 14-day rolling window |
+| **B-1 Credit leak fixed** | Roleplay turns, `/english`, `/spanish`, `/summary`, `/learn` now all check and spend credits |
+| **B-2 Token cap raised** | `Task.assess` 512 → 1024 — fixes silent `/test` failures on Gemini |
+| **B-3 Cache credit fixed** | `/daily` cache hit costs 1 credit; fresh generation costs 2 |
+| **B-4 Deck picker fixed** | Each deck now shows fwd (→) and rev (←) buttons — any deck, any direction |
+| **B-5 BigInteger** | `telegram_id` and `approved_by` changed to `BigInteger` — safe for new Telegram accounts |
+| **F-4 Impostor visible** | `/impostor` added to German welcome message |
+| **F-5 Correction nudge from test** | After `/test`, correction level auto-set to match CEFR result; student notified |
+| **F-8 Student onboarding** | Approved students get a structured 4-step welcome instead of the generic message |
+| **F-10 Consent line** | Welcome messages explain what the teacher can (and cannot) see |
+| **F-11 `/mybudget`** | Students can check remaining credits, streak bonus, and cost table |
+| **F-12 Correction level in profile** | `/profile` shows current correction level (n/5 + label) |
+| **S.9 Corrections nudge** | First correction each session → one message explaining `/corrections 0–5` |
+| **`/help` markdown fix** | Angle brackets in help text were breaking Telegram's Markdown parser |
 
 ---
 
@@ -59,55 +53,24 @@
 
 **Dual-language tutor:** German mode (English speaker learning German) and English mode (Spanish speaker learning English) — both fully featured.
 
-**Core features:** adaptive placement test (A1 start, MCQ + fill-in-the-blank, auto-graded), spaced-repetition flashcards (HLR scheduler, MCQ/cloze/sentence modes, deck picker, direction flip), daily mini-challenge (shared per level, cached), rapid skill quiz, roleplay scenes (6 German + 6 English scenarios, corrections at right level), weekly progress report, PDF vocabulary extraction, The Impostor social deduction game, BKT skill mastery, DKT LSTM (gated, activates at 50+ reviews).
+**Core features:** adaptive placement test (A1 start, MCQ + fill-in-the-blank, auto-graded), spaced-repetition flashcards (HLR scheduler, MCQ/cloze/sentence modes, deck picker with per-deck fwd/rev direction), daily mini-challenge (shared per level, cached), rapid skill quiz, roleplay scenes (6 German + 6 English scenarios, corrections at right level), weekly progress report, PDF vocabulary extraction, The Impostor social deduction game, BKT skill mastery, DKT LSTM (gated, activates at 50+ reviews).
 
-**Classroom controls:** roster + roles, approval flow (`ACCESS_MODE=approval`), teacher dashboard (`/students`, `/student`, `/class`, `/budget`, `/grant`), per-student daily credit cap, global ceiling with reserve pool, rate limiting, concurrency queue, streak bonus, low-balance nudge.
+**Classroom controls:** superuser + teacher roles, multi-step approval flow (approve → assign teacher → assign class), per-teacher class management (`/newclass`, `/classes`, `/moveclass`, `/assign`), drill topic per class, roster views, skill error rates dashboard, per-student daily credit cap, global ceiling with reserve pool, rate limiting, concurrency queue, streak bonus, low-balance nudge, `/mybudget` for students.
 
 **Backend ladder:** Groq 120b → Groq 20b → Gemini 3.6-flash → Ollama (chat only). Per-rung cooldowns in-process.
 
 ---
 
-## Bug detail
-
-### B-1 — Unmetered LLM usage (budget leak)
-
-These handlers make LLM calls but have no `credits_check()` or `spend()`:
-
-| Handler | Function | Has credit gate? |
-|---------|----------|-----------------|
-| `roleplay.py` | `_launch_scene`, `scene_message`, `scene_done` | ❌ No |
-| `conversation.py` | `summary()` | ❌ No (cost defined in `COSTS` but never charged) |
-| `documents.py` | `learn()` | ❌ No (cost defined in `COSTS` but never charged) |
-| `conversation.py` | `english()`, `spanish()` | ❌ No |
-
-Fix: add `credits_check` + `spend` calls to each, following the same pattern as `chat()`.
-
-### B-2 — Token cap may break `/test` and Gemini structured tasks
-
-`_TASK_MAX_TOKENS["assess"] = 512` is tight for the verdict JSON (skills + gaps + summary). Gemini 2.5/3.x models may consume the entire `max_output_tokens` budget on internal thinking tokens and return empty text, causing `LLMUnavailable` and falling through to Ollama — which can't produce JSON.
-
-Fix: raise `assess` to 1024; consider passing a higher or uncapped limit to the Gemini rung specifically.
-
----
-
 ## Future directions
-
-### Correction strictness — remaining tasks (S.7–S.9)
-
-| # | Task | Notes |
-|---|------|-------|
-| **S.7** | Suggest correction level from placement test result | In `_finish()`: map CEFR level to suggested dial value; show as a one-time nudge |
-| **S.8** | Teacher sets class default level | New env var or `/class setcorr <n>`; student can override |
-| **S.9** | Mention corrections once, early | First time a correction fires, append: *"You can adjust correction detail with /corrections 0–5"* |
 
 ### Engineering quality
 
 | Idea | Value |
 |------|-------|
 | `TypedDict` for history message dicts | Prevents the `"content"` vs `"text"` class of bug at type-check time |
-| Ladder health check in `/status` | Show which rungs were recently poisoned by exceptions and why — the roleplay bug was invisible because failures silently become cooldowns |
-| Smoke-test script (`scripts/smoke.py`) | Drive every handler once with a fake LLM backend; catches KeyError, wrong return types, missing credit gates without needing Telegram |
-| Centralize credit metering | A single decorator/helper that wraps metered LLM calls — instead of each handler remembering to call `credits_check` + `spend`. The B-1 leak exists because the pattern is copy-paste |
+| Ladder health check in `/status` | Show which rungs were recently poisoned by exceptions and why |
+| Smoke-test script (`scripts/smoke.py`) | Drive every handler once with a fake LLM backend; catches KeyError, wrong return types, missing credit gates |
+| Centralize credit metering | A single decorator that wraps metered LLM calls — prevents future B-1-style leaks |
 
 ### Voice notes (future)
 
@@ -136,7 +99,7 @@ A topic list per CEFR level with a short lesson and a set of banked exercises ea
 
 **Groq compound models 404:** `groq/compound` and `groq/compound-mini` are agentic systems — they 404 on `/v1/chat/completions`. Use `openai/gpt-oss-120b` and `openai/gpt-oss-20b`.
 
-**BKT CEFR level tracking:** each BKT observation records the CEFR level of the item answered. "Grammar: 70%" means 70% mastery at A2, not a global score. A graduated BKT (separate instance per skill+level, graduating up at p > 0.95) is future work.
+**BKT CEFR level tracking:** each BKT observation records the CEFR level of the item answered. "Grammar: 70%" means 70% mastery at A2, not a global score.
 
 **SM-2 kept alongside HLR:** `apply_hlr_grade` runs both. SM-2 easiness/interval fields stay current so `/review` stats keep working.
 
