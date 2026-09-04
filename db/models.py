@@ -5,6 +5,7 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     DateTime,
     Enum,
@@ -35,7 +36,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    telegram_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
     name: Mapped[str | None] = mapped_column(String, nullable=True)
     # JSON string: per-skill CEFR estimate.
     cefr_estimate: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -62,7 +63,7 @@ class User(Base):
     class_name: Mapped[str | None] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String, default="active")
     joined_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    approved_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    approved_by: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     # Which teacher (users.id) manages this student. Only superuser can change.
     teacher_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # Which class (classes.id) this student is in. Teacher can change.

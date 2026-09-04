@@ -37,13 +37,14 @@ from db.repo import (
 # ---------------------------------------------------------------------------
 
 COSTS: dict[str, int] = {
-    "chat": 1,      # one conversation message or roleplay turn
-    "explain": 1,   # "📖 Why?" / "➕ Example" correction buttons
-    "quiz": 2,      # full /quiz session (7 questions)
-    "daily": 2,     # /daily challenge (3 items)
-    "pdf": 5,       # PDF upload + vocabulary extraction
-    "learn": 3,     # /learn lesson from a document
-    "summary": 1,   # /summary session analysis
+    "chat": 1,         # one conversation message or roleplay turn
+    "explain": 1,      # "📖 Why?" / "➕ Example" correction buttons
+    "quiz": 2,         # full /quiz session (7 questions)
+    "daily": 2,        # /daily challenge — fresh LLM generation
+    "daily_cached": 1, # /daily — served from the shared daily cache (no LLM call)
+    "pdf": 5,          # PDF upload + vocabulary extraction
+    "learn": 3,        # /learn lesson from a document
+    "summary": 1,      # /summary session analysis
     # /test is free — it comes out of a joining allowance so new students
     # are not penalised on day one.
 }

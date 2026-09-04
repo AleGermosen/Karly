@@ -243,6 +243,20 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     add_message(user.id, "assistant", reply, corrections=corrections or None)
     if corrections:
         add_vocab_items(user.id, corrections, source=VocabSource.conversation)
+        # One-time nudge: first correction this session — tell them about /corrections.
+        if not context.user_data.get("_corrections_nudge_sent"):
+            context.user_data["_corrections_nudge_sent"] = True
+            if en:
+                nudge = (
+                    "_(💡 You can adjust how detailed my corrections are with "
+                    "/corrections 0–5. Current level: {level}.)_"
+                ).format(level=level)
+            else:
+                nudge = (
+                    "_(💡 Du kannst den Korrektur-Level mit /corrections 0–5 anpassen. "
+                    "Aktuell: {level}.)_"
+                ).format(level=level)
+            await message.reply_text(nudge)
 
     # Record usage after a successful call.
     credit_mod.spend(

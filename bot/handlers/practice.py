@@ -92,21 +92,14 @@ def _grade_keyboard(en: bool) -> InlineKeyboardMarkup:
 
 def _deck_keyboard(counts: dict[str, int], total_due: int, en: bool) -> InlineKeyboardMarkup:
     rows = []
+    fwd_arrow = "→" if en else "DE→EN"
+    rev_arrow = "←" if en else "EN→DE"
     for key, label_de, label_es, source in _DECKS:
         label = label_es if en else label_de
         n = total_due if source is None else counts.get(source, 0)
-        btn = InlineKeyboardButton(f"{label} ({n})", callback_data=f"deck:{key}:fwd")
-        rows.append([btn])
-    # Direction toggle row
-    if en:
         rows.append([
-            InlineKeyboardButton("🇺🇸→🇪🇸 Normal (EN→ES)", callback_data="deck:all:fwd"),
-            InlineKeyboardButton("🇪🇸→🇺🇸 Invertir (ES→EN)", callback_data="deck:all:rev"),
-        ])
-    else:
-        rows.append([
-            InlineKeyboardButton("🇩🇪→🇬🇧 Normal (DE→EN)", callback_data="deck:all:fwd"),
-            InlineKeyboardButton("🇬🇧→🇩🇪 Umkehren (EN→DE)", callback_data="deck:all:rev"),
+            InlineKeyboardButton(f"{label} ({n}) {fwd_arrow}", callback_data=f"deck:{key}:fwd"),
+            InlineKeyboardButton(rev_arrow, callback_data=f"deck:{key}:rev"),
         ])
     return InlineKeyboardMarkup(rows)
 
@@ -194,14 +187,13 @@ async def practice_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if en:
         await update.effective_message.reply_text(
             "🃏 *Flashcards* — elige un mazo y dirección:\n"
-            "(Toca un mazo para empezar EN→ES, o elige la dirección inversa abajo.)",
+            "(→ = EN→ES normal · ← = ES→EN invertido · /flip cambia durante la sesión.)",
             reply_markup=kb,
         )
     else:
         await update.effective_message.reply_text(
-            "🃏 *Karteikarten* — wähle ein Deck und eine Richtung:\n"
-            "(Choose a deck to drill. Tap a deck to start DE→EN, "
-            "or pick a direction from the bottom row.)",
+            "🃏 *Karteikarten* — wähle Deck und Richtung:\n"
+            "(→ = DE→EN normal · EN→DE = ← · /flip wechselt während der Übung.)",
             reply_markup=kb,
         )
     context.user_data["practice_picker_user_id"] = user.id

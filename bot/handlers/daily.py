@@ -88,6 +88,7 @@ async def daily_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
     # T.8 — one LLM call per level per day, shared across all students.
     cached_items = context.bot_data.get(cache_key)
+    cache_hit = bool(cached_items)
     if cached_items:
         items = list(cached_items)  # copy so each student gets an independent queue
     else:
@@ -132,7 +133,8 @@ async def daily_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     context.user_data["daily_correct"] = 0
     context.user_data["daily_user_id"] = user.id
     record_practice(user.id)
-    credit_mod.spend(user.id, task="daily")
+    # Cache hits cost 1 credit (no LLM call made); fresh generation costs 2.
+    credit_mod.spend(user.id, task="daily_cached" if cache_hit else "daily")
     return await _ask(update, context)
 
 

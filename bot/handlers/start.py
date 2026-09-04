@@ -8,6 +8,7 @@ from telegram.ext import ContextTypes
 
 import config
 from bot.middleware import require_auth
+from bot import credits as credit_mod
 from db.repo import (
     count_due,
     get_bkt_state,
@@ -31,7 +32,8 @@ WELCOME_GERMAN = (
     "/roleplay — Rollenspiel-Szene auf Deutsch\n"
     "/test — Einstufungstest\n"
     "/profile — dein Lernprofil\n"
-    "/weekly — Wochenbericht\n\n"
+    "/weekly — Wochenbericht\n"
+    "🎭 /impostor — soziales Detektivspiel für die Klasse\n\n"
     "/help — alle Commands\n\n"
     "ℹ️ Dein Lehrer kann deinen Lernfortschritt sehen (Level, Aktivität, Fehler-Schwerpunkte) — aber nicht deine genauen Nachrichten."
 )
@@ -85,6 +87,7 @@ HELP_GERMAN = (
 
     "── Gesprächs-Tools ──\n"
     "/corrections strict|relaxed|off — Korrektur-Level setzen (kein Arg = Status)\n"
+    "/mybudget — verbleibende Credits heute anzeigen\n"
     "/topic THEMA — Gespräch auf ein Thema lenken (/topic clear zum Löschen)\n"
     "/english FRAGE — Meta-Frage auf Englisch stellen\n"
     "/remind HH:MM — tägliche Erinnerung setzen (/remind off zum Ausschalten)\n\n"
@@ -132,6 +135,7 @@ HELP_ENGLISH = (
 
     "── Conversation tools ──\n"
     "/corrections strict|relaxed|off — correction level (no arg = current status)\n"
+    "/mybudget — show your remaining credits today\n"
     "/topic TOPIC — steer the conversation to a topic (/topic clear to reset)\n"
     "/spanish QUESTION — ask a question in Spanish\n"
     "/remind HH:MM — set a daily reminder (/remind off to disable)\n\n"
@@ -331,8 +335,12 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     verdict = latest_assessment(user.id)
     count = vocab_count(user.id)
 
+    _LEVEL_NAMES = {0: "off", 1: "gentle", 2: "light", 3: "balanced", 4: "thorough", 5: "exam"}
+    corr_label = _LEVEL_NAMES.get(user.correction_level, str(user.correction_level))
+
     if en:
         lines = ["📋 *Your Profile*\n"]
+        lines.append(f"Corrections: *{corr_label}* ({user.correction_level}/5) — /corrections to change")
         if verdict:
             lines.append(f"Level (overall): *{verdict.get('overall', '?')}*")
             skills = verdict.get("skills") or {}
@@ -364,6 +372,7 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 lines.append(f"  {label}: {bar}{star}")
     else:
         lines = ["📋 *Dein Profil*\n"]
+        lines.append(f"Korrekturen: *{corr_label}* ({user.correction_level}/5) — /corrections zum Ändern")
         if verdict:
             lines.append(f"Level (overall): *{verdict.get('overall', '?')}*")
             skills = verdict.get("skills") or {}
@@ -394,4 +403,45 @@ async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 star = " ✅" if bkt_mod.mastered(p) else ""
                 lines.append(f"  {label}: {bar}{star}")
 
+    await update.effective_message.reply_text("\n".join(lines))
+
+
+@require_auth
+async def mybudget(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/mybudget — show the student their remaining credits for today."""
+    user = get_user_by_telegram_id(update.effective_user.id)
+    if user is None:
+        return
+    en = getattr(user, "learning_mode", "german") == "english"
+    remaining = credit_mod.credits_remaining(user.id)
+    limit = credit_mod._effective_user_limit(user.id)
+
+    from db.repo import practice_streak
+    streak = practice_streak(user.id)
+    bonus = min(streak, 5)
+
+    if en:
+        lines = [f"⚡ *Your credits today*\n"]
+        lines.append(f"Remaining: *{remaining} / {limit}*")
+        if bonus:
+            lines.append(f"_(includes +{bonus} streak bonus 🔥)_")
+        lines.append("\nCredit costs:")
+        lines.append("  • Chat message / roleplay turn: 1")
+        lines.append("  • Quiz session: 2")
+        lines.append("  • Daily challenge: 1–2")
+        lines.append("  • Summary: 1")
+        lines.append("  • Lesson from PDF: 3")
+        lines.append("\nFlashcards, games, and /test are always free. 🃏")
+    else:
+        lines = [f"⚡ *Deine Credits heute*\n"]
+        lines.append(f"Verbleibend: *{remaining} / {limit}*")
+        if bonus:
+            lines.append(f"_(inkl. +{bonus} Streak-Bonus 🔥)_")
+        lines.append("\nCredit-Kosten:")
+        lines.append("  • Chat-Nachricht / Roleplay-Runde: 1")
+        lines.append("  • Quiz-Session: 2")
+        lines.append("  • Tägliche Challenge: 1–2")
+        lines.append("  • Auswertung (/summary): 1")
+        lines.append("  • Lektion aus PDF: 3")
+        lines.append("\nKarteikarten, Spiel und /test sind immer kostenlos. 🃏")
     await update.effective_message.reply_text("\n".join(lines))
