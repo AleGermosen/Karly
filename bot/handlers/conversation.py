@@ -46,25 +46,40 @@ ERROR_MSG = "Entschuldigung, da ging etwas schief. Versuch es nochmal."
 ERROR_MSG_EN = "Sorry, something went wrong. Please try again."
 
 # Backend-transition notices (bilingual, matching Karly's style).
-_BACKEND_NOTICES: dict[str, str] = {
-    "⚡ Groq": (
-        "⚡ Läuft auf Groq — schnell. (Talking to Groq's fast model.)"
-    ),
+_BACKEND_NOTICES_DE: dict[str, str] = {
+    "⚡ Groq": "⚡ Läuft auf Groq — schnell.",
     "⚡ Groq Mini": (
         "⚡ Groqs Hauptmodell hat sein Limit erreicht — ich wechsle zum kleineren Modell. "
-        "Immer noch schnell. Reset um Mitternacht (UTC). (Switched to Groq Mini.)"
+        "Immer noch schnell. Reset um Mitternacht (UTC)."
     ),
     "🤖 Gemini": (
         "🐢 Groqs Gratis-Limit ist heute aufgebraucht — ich wechsle zu Gemini. "
-        "Etwas langsamer (~20s). (Switched to Gemini; slower.)"
+        "Etwas langsamer (~20s)."
     ),
     "🐌 Ollama": (
         "🐌 Alle Cloud-Gratis-Limits sind heute erschöpft — ich laufe jetzt lokal (Ollama). "
-        "Langsam (~1 Min/Antwort), aber es geht. (Running locally now; slow.)"
+        "Langsam (~1 Min/Antwort), aber es geht."
     ),
 }
 
-_RECOVERED_NOTICE = "⚡ Zurück auf Groqs schnellem Modell! (Back on Groq's fast model.)"
+_BACKEND_NOTICES_EN: dict[str, str] = {
+    "⚡ Groq": "⚡ Running on Groq — fast.",
+    "⚡ Groq Mini": (
+        "⚡ Groq's main model hit its limit — switching to the smaller model. "
+        "Still fast. Resets at midnight UTC."
+    ),
+    "🤖 Gemini": (
+        "🐢 Groq's free quota is used up — switching to Gemini. "
+        "A bit slower (~20s)."
+    ),
+    "🐌 Ollama": (
+        "🐌 All cloud quotas are exhausted — running locally (Ollama) now. "
+        "Slow (~1 min/reply), but it works."
+    ),
+}
+
+_RECOVERED_NOTICE_DE = "⚡ Zurück auf Groqs schnellem Modell!"
+_RECOVERED_NOTICE_EN = "⚡ Back on Groq's fast model!"
 
 # Matches:  ❌ wrong → ✅ right — reason
 _CORRECTION_RE = re.compile(
@@ -107,14 +122,14 @@ async def _route_with_typing(context, chat_id: int, task: Task, prompt: str, **k
         typing.cancel()
 
 
-def _backend_notice(prev_label: str | None, new_label: str) -> str | None:
+def _backend_notice(prev_label: str | None, new_label: str, en: bool = False) -> str | None:
     """Return a transition notice to send the user, or None if nothing to say."""
     if prev_label == new_label:
         return None
-    # Recovering back to the primary Groq 70B rung.
     if prev_label is not None and new_label == "⚡ Groq":
-        return _RECOVERED_NOTICE
-    return _BACKEND_NOTICES.get(new_label)
+        return _RECOVERED_NOTICE_EN if en else _RECOVERED_NOTICE_DE
+    notices = _BACKEND_NOTICES_EN if en else _BACKEND_NOTICES_DE
+    return notices.get(new_label)
 
 
 _CORR_CACHE_MAX = 30  # keep the last N corrected replies actionable
@@ -279,7 +294,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Backend-change notification (send before the reply so it reads naturally).
     prev_label = context.user_data.get("last_backend_label")
     new_label = result.rung.label
-    notice = _backend_notice(prev_label, new_label)
+    notice = _backend_notice(prev_label, new_label, en=en)
     if notice:
         await message.reply_text(notice)
     context.user_data["last_backend_label"] = new_label
@@ -308,9 +323,14 @@ async def on_correction_action(
     _, action, raw_mid = query.data.split(":")
     corrections = (context.user_data.get("corr_cache") or {}).get(int(raw_mid))
     if not corrections:
-        await query.message.reply_text(
-            "Diese Korrektur ist zu alt. (That correction is no longer active.)"
+        user = get_user_by_telegram_id(update.effective_user.id)
+        en = getattr(user, "learning_mode", "german") == "english" if user else False
+        msg = (
+            "Esta corrección ya no está disponible. Intenta con un mensaje reciente."
+            if en else
+            "Diese Korrektur ist zu alt. Probiere es mit einer neueren Nachricht."
         )
+        await query.message.reply_text(msg)
         return
 
     user = get_user_by_telegram_id(update.effective_user.id)
@@ -414,9 +434,18 @@ async def topic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = get_user_by_telegram_id(update.effective_user.id)
     if user and getattr(user, "learning_mode", "german") == "english":
-        await update.effective_message.reply_text(
-            "En modo inglés, usa /spanish para hacer preguntas en español."
-        )
+        # In English mode /english doesn't apply — redirect to /spanish.
+        if context.args:
+            context.args  # forward the args
+            await update.effective_message.reply_text(
+                "_(En modo inglés, tus preguntas van con /spanish — te reenvío ahora.)_"
+            )
+            await spanish(update, context)
+        else:
+            await update.effective_message.reply_text(
+                "En modo inglés usa /spanish para hacer preguntas en español.\n"
+                "Ejemplo: /spanish ¿cuándo uso 'the'?"
+            )
         return
 
     question = " ".join(context.args).strip() if context.args else ""
@@ -452,7 +481,7 @@ async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         credit_mod.spend(_uid, task="chat", model=result.rung.model_id)
     prev_label = context.user_data.get("last_backend_label")
     new_label = result.rung.label
-    notice = _backend_notice(prev_label, new_label)
+    notice = _backend_notice(prev_label, new_label, en=en)
     if notice:
         await update.effective_message.reply_text(notice)
     context.user_data["last_backend_label"] = new_label
@@ -497,7 +526,7 @@ async def spanish(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         credit_mod.spend(_uid, task="chat", model=result.rung.model_id)
     prev_label = context.user_data.get("last_backend_label")
     new_label = result.rung.label
-    notice = _backend_notice(prev_label, new_label)
+    notice = _backend_notice(prev_label, new_label, en=True)
     if notice:
         await update.effective_message.reply_text(notice)
     context.user_data["last_backend_label"] = new_label

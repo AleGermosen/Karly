@@ -74,6 +74,7 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("newclass", classroom.newclass))
     app.add_handler(CommandHandler("classes", classroom.classes))
     app.add_handler(CommandHandler("moveclass", classroom.moveclass))
+    app.add_handler(CommandHandler("classsetcorr", classroom.classsetcorr))
     # Superuser-only teacher management.
     app.add_handler(CommandHandler("addteacher", classroom.addteacher))
     app.add_handler(CommandHandler("removeteacher", classroom.removeteacher))

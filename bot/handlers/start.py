@@ -271,7 +271,8 @@ HELP_TEACHER = (
     "── Classes ──\n"
     "/newclass NAME — create a class (/newclass Beginners english)\n"
     "/classes — list your classes with student count and topics\n"
-    "/moveclass STUDENT CLASS — move a student to another class\n\n"
+    "/moveclass STUDENT CLASS — move a student to another class\n"
+    "/classsetcorr CLASS LEVEL — set default correction level for a class (0–5)\n\n"
 
     "── Topic & Drills ──\n"
     "/assign — show current topics for your classes\n"

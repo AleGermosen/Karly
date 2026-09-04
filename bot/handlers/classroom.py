@@ -50,6 +50,7 @@ from db.repo import (
     practice_streak,
     set_class_setting,
     set_class_topic,
+    set_correction_level,
     set_user_role,
     set_user_status,
     student_last_active,
@@ -588,6 +589,66 @@ async def classtopic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         f"📌 Aktuelles Thema: *{cls.topic}*\n\nNutze /drill zum Üben."
     )
     await update.effective_message.reply_text(msg)
+
+
+# ---------------------------------------------------------------------------
+# /classsetcorr <class> <0-5>  — set default correction level for a class
+# ---------------------------------------------------------------------------
+
+_LEVEL_NAMES = {0: "off", 1: "gentle", 2: "light", 3: "balanced", 4: "thorough", 5: "exam"}
+
+
+@require_auth
+async def classsetcorr(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/classsetcorr CLASS LEVEL — set default correction level for a class (teacher+).
+
+    Applies to all students currently in that class. Students can still override
+    their own level with /corrections at any time.
+    """
+    caller = _caller(update)
+    if not _is_teacher_or_above(caller):
+        await update.effective_message.reply_text("🚫 Teacher only.")
+        return
+    if not context.args or len(context.args) < 2:
+        await update.effective_message.reply_text(
+            "Usage: /classsetcorr CLASS LEVEL\n"
+            "Example: /classsetcorr Beginners 2\n\n"
+            "Levels: 0=off  1=gentle  2=light  3=balanced  4=thorough  5=exam\n"
+            "Students can always override with /corrections."
+        )
+        return
+
+    raw_level = context.args[-1]
+    if not raw_level.isdigit() or not (0 <= int(raw_level) <= 5):
+        await update.effective_message.reply_text("Level must be 0–5.")
+        return
+    level = int(raw_level)
+    class_query = " ".join(context.args[:-1]).lower()
+
+    my_classes = list_classes(caller.id)
+    matches = [c for c in my_classes if class_query in c.name.lower()]
+    if not matches:
+        await update.effective_message.reply_text(f"No class matching '{class_query}'. Use /classes to see yours.")
+        return
+    if len(matches) > 1:
+        await update.effective_message.reply_text(
+            "Multiple matches: " + ", ".join(c.name for c in matches) + ". Be more specific."
+        )
+        return
+
+    target_class = matches[0]
+    students = list_students_in_class(target_class.id)
+    updated = 0
+    for s in students:
+        set_correction_level(s.id, level)
+        updated += 1
+
+    label = _LEVEL_NAMES.get(level, str(level))
+    await update.effective_message.reply_text(
+        f"✅ Correction level set to *{level} — {label}* for class *{target_class.name}* "
+        f"({updated} student(s) updated).\n"
+        "_Students can override this with /corrections at any time._"
+    )
 
 
 # ---------------------------------------------------------------------------
