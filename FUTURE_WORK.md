@@ -72,18 +72,18 @@ These three are one coherent system and must land in this order: limits first, t
 
 ### Phase 2 — Classroom & student experience *(independent items, any order)*
 
-- [ ] **F-17** — `/addword <word>` personal vocabulary command (LLM lookup → card preview → HLR deck insert)
-- [ ] **F-18** — `/broadcast` teacher messages (confirmation step, flood-limit pacing, `broadcasts` log table)
-- [ ] **F-19** — placement assessment on first join (Start now / Later / Skip buttons, `placement_status` column)
-- [ ] **F-22** — media comprehension grading (`/setmedia`, `/task`, `/results`, `/clearmedia`; rubric-scored LLM grading; `media_tasks` + `media_submissions` tables)
-- [ ] **F-20** — Impostor inline keyboard hub (do last in this phase — pure UX polish, no new capability)
+- [x] **F-17** — `/addword <word>` personal vocabulary command (LLM lookup → card preview → HLR deck insert)
+- [x] **F-18** — `/broadcast` teacher messages (confirmation step, flood-limit pacing, `broadcasts` log table)
+- [x] **F-19** — placement assessment on first join (Start now / Later / Skip buttons, `placement_status` column)
+- [x] **F-22** — media comprehension grading (`/setmedia`, `/task`, `/results`, `/clearmedia`; rubric-scored LLM grading; `media_tasks` + `media_submissions` tables)
+- [x] **F-20** — Impostor inline keyboard hub
 
 ### Phase 3 — Engineering quality *(hardening before scale)*
 
-- [ ] Centralize credit metering in a single decorator (prevents future B-1-style leaks — do this first, it protects everything from Phases 1–2)
-- [ ] Smoke-test script `scripts/smoke.py` — drive every handler with a fake LLM backend
-- [ ] `TypedDict` for history message dicts
-- [ ] Ladder health check in `/status`
+- [x] Centralize credit metering — `metered()` decorator in `bot/credits.py`
+- [x] Smoke-test script `scripts/smoke.py` — 13 checks, zero LLM calls
+- [x] `TypedDict` for history/correction dicts — `bot/types.py`
+- [x] Ladder health check in `/status` — poisoned rungs listed with reason
 
 ### Phase 4 — Curriculum phase 📚 *(⚠️ blocked on YOU — content work)*
 
