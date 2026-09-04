@@ -21,6 +21,7 @@ from bot.handlers import (
     conversation,
     daily,
     documents,
+    drill,
     game,
     practice,
     quiz,
@@ -67,9 +68,24 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("class", classroom.class_summary))
     app.add_handler(CommandHandler("budget", classroom.budget))
     app.add_handler(CommandHandler("grant", classroom.grant))
-    # Approval flow callbacks (DM buttons sent to teacher).
+    app.add_handler(CommandHandler("assign", classroom.assign))
+    app.add_handler(CommandHandler("classtopic", classroom.classtopic))
+    app.add_handler(CommandHandler("newclass", classroom.newclass))
+    app.add_handler(CommandHandler("classes", classroom.classes))
+    app.add_handler(CommandHandler("moveclass", classroom.moveclass))
+    # Superuser-only teacher management.
+    app.add_handler(CommandHandler("addteacher", classroom.addteacher))
+    app.add_handler(CommandHandler("removeteacher", classroom.removeteacher))
+    app.add_handler(CommandHandler("teachers", classroom.teachers_list))
+    # Approval flow callbacks (multi-step DM to superuser).
     app.add_handler(
-        CallbackQueryHandler(classroom.on_approve_student, pattern=r"^approve_student:")
+        CallbackQueryHandler(classroom.on_approve_student, pattern=r"^approve_s:")
+    )
+    app.add_handler(
+        CallbackQueryHandler(classroom.on_set_teacher, pattern=r"^set_teacher_s:")
+    )
+    app.add_handler(
+        CallbackQueryHandler(classroom.on_set_class, pattern=r"^set_class_s:")
     )
     app.add_handler(
         CallbackQueryHandler(classroom.on_decline_student, pattern=r"^decline_student:")
@@ -80,6 +96,7 @@ def build_application() -> Application:
     app.add_handler(practice.build_handler())
     app.add_handler(daily.build_handler())
     app.add_handler(quiz.build_handler())
+    app.add_handler(drill.build_handler())
     app.add_handler(roleplay.build_handler())
 
     # Global /cancel — only fires when no conversation is active (the assessment
@@ -137,6 +154,8 @@ MENU_COMMANDS = [
     BotCommand("flashcards", "Karteikarten üben (wie /practice)"),
     BotCommand("daily", "Tägliche Mini-Challenge (3 Aufgaben)"),
     BotCommand("quiz", "Schnell-Quiz auf schwache Skills"),
+    BotCommand("drill", "Gezieltes Themen-Drill (10 Übungen)"),
+    BotCommand("classtopic", "Aktuelles Klassen-Thema anzeigen"),
     BotCommand("roleplay", "Roleplay-Szene auf Deutsch"),
     BotCommand("weekly", "Wöchentlicher Lernbericht"),
     BotCommand("test", "Einstufungstest starten"),

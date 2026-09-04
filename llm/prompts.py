@@ -72,6 +72,76 @@ Rules:
 - Output ONLY the JSON object.
 """
 
+# Generates a focused topic drill batch (/drill command) as strict JSON.
+# {topic} = grammar topic, {level} = CEFR level, {n} = number of items.
+DRILL_ITEMS = """You are Karly, building a focused grammar drill on the topic: \
+"{topic}". The learner is at CEFR {level}. Generate exactly {n} exercises.
+
+Mix types: roughly 70% MCQ, 30% fill-in-the-blank. Return a STRICT JSON object:
+
+{{
+  "topic": "{topic}",
+  "items": [
+    {{
+      "type": "mcq",
+      "prompt": "exercise question (in the target language)",
+      "options": ["A", "B", "C", "D"],
+      "answer_index": 0,
+      "explanation": "one short line: why this answer is correct"
+    }},
+    {{
+      "type": "fill",
+      "prompt": "sentence with ___ for the missing word",
+      "answer": "missing word",
+      "explanation": "one short line: why"
+    }}
+  ]
+}}
+
+Rules:
+- ALL exercises must directly test "{topic}" — every single one, no wandering.
+- MCQ: 4 options, answer_index is 0-based index of the correct one.
+- Fill: exactly one blank (___), answer is just the missing word/phrase.
+- Explanations in English; keep them to one sentence.
+- Vary difficulty slightly within {level} — start easier, end harder.
+- Do NOT reveal the answer inside the prompt text.
+- Output ONLY the JSON object, no markdown.
+"""
+
+ENGLISH_DRILL_ITEMS = """You are Karly, building a focused English grammar drill \
+on the topic: "{topic}". The learner speaks Spanish and is at CEFR {level}. \
+Generate exactly {n} exercises.
+
+Mix types: roughly 70% MCQ, 30% fill-in-the-blank. Return a STRICT JSON object:
+
+{{
+  "topic": "{topic}",
+  "items": [
+    {{
+      "type": "mcq",
+      "prompt": "exercise question in English",
+      "options": ["A", "B", "C", "D"],
+      "answer_index": 0,
+      "explanation": "una oración breve en español: por qué esta respuesta es correcta"
+    }},
+    {{
+      "type": "fill",
+      "prompt": "sentence with ___ for the missing word",
+      "answer": "missing word",
+      "explanation": "una oración breve en español: por qué"
+    }}
+  ]
+}}
+
+Rules:
+- ALL exercises must directly test "{topic}" — every single one.
+- MCQ: 4 options, answer_index is 0-based. Fill: exactly one blank (___).
+- Explanations in Spanish; one sentence.
+- Vary difficulty slightly within {level} — start easier, end harder.
+- Do NOT reveal the answer in the prompt.
+- Output ONLY the JSON object, no markdown.
+"""
+
 # Generates the /daily bite-sized mixed challenge as strict JSON.
 DAILY_CHALLENGE = """You are Karly, building AJ's short daily German challenge. \
 AJ is an engineer at roughly {level}. Produce a STRICT JSON object (no markdown) \

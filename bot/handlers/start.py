@@ -194,7 +194,7 @@ async def language_pick(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         config.ACCESS_MODE == "approval"
         and getattr(user, "status", "active") == "pending"
         and was_new
-        and config.TEACHER_TELEGRAM_ID
+        and config.SUPERUSER_TELEGRAM_ID
     ):
         lang_label = "🇩🇪 German" if mode == "german" else "🇺🇸 English"
         student_name = user.name or str(update.effective_user.id)
@@ -205,13 +205,12 @@ async def language_pick(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         )
         from telegram import InlineKeyboardButton as IKB, InlineKeyboardMarkup as IKM
         kb = IKM([[
-            IKB("✅ German mode", callback_data=f"approve_student:{user.id}:german"),
-            IKB("✅ English mode", callback_data=f"approve_student:{user.id}:english"),
+            IKB("✅ Approve", callback_data=f"approve_s:{user.id}:{mode}"),
             IKB("❌ Decline", callback_data=f"decline_student:{user.id}"),
         ]])
         try:
             await context.bot.send_message(
-                chat_id=config.TEACHER_TELEGRAM_ID,
+                chat_id=config.SUPERUSER_TELEGRAM_ID,
                 text=(
                     f"👤 *{student_name}* ({tg_handle}) wants to join Karly!\n"
                     f"They chose: {lang_label}\n\n"
@@ -255,10 +254,55 @@ async def language_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.effective_message.reply_text(LANGUAGE_PICKER, reply_markup=_PICKER_KB)
 
 
+HELP_TEACHER = (
+    "👩‍🏫 *Teacher commands*\n\n"
+
+    "── Roster ──\n"
+    "/students — your roster: status, level, streak, last active\n"
+    "/student <name> — full profile (CEFR, skills, gaps, activity)\n"
+    "/class — weekly snapshot + skill error rates + class topics\n\n"
+
+    "── Classes ──\n"
+    "/newclass <name> — create a new class\n"
+    "/classes — list your classes with student count and topics\n"
+    "/moveclass <student> <class> — move a student to another class\n\n"
+
+    "── Topic & Drills ──\n"
+    "/assign — show current topics for your classes\n"
+    "/assign <topic> — set topic for all your classes (e.g. /assign present perfect)\n"
+    "/assign <class>: <topic> — set topic for one class\n"
+    "/assign clear — remove all topics\n"
+    "/classtopic — show the current topic (same command students use)\n\n"
+
+    "── Credits & Budget ──\n"
+    "/budget — global credit usage, reserve status, top consumers\n"
+    "/grant <name> <n> — give a student N extra credits today\n\n"
+
+    "── Superuser only ──\n"
+    "/addteacher <name> — promote a student to teacher\n"
+    "/removeteacher <name> — demote a teacher to student\n"
+    "/teachers — list all teachers with class and student counts\n\n"
+
+    "── Your learning ──\n"
+    "All student commands work for you too: /test, /practice, /drill, /quiz,\n"
+    "/daily, /roleplay, /weekly, /profile, /corrections, /summary, /docs\n\n"
+
+    "── Setup ──\n"
+    "ACCESS_MODE=approval in .env → new users wait for your approval\n"
+    "SUPERUSER_TELEGRAM_ID=<your id> → grants superuser role"
+)
+
+
 @require_auth
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = get_user_by_telegram_id(update.effective_user.id)
-    if user and user.learning_mode == "english":
+    is_teacher = user is not None and getattr(user, "role", "student") in ("teacher", "superuser")
+    if is_teacher:
+        await update.effective_message.reply_text(HELP_TEACHER)
+        # Also send the student help so teacher sees all commands.
+        base = HELP_ENGLISH if (user and user.learning_mode == "english") else HELP_GERMAN
+        await update.effective_message.reply_text(base)
+    elif user and user.learning_mode == "english":
         await update.effective_message.reply_text(HELP_ENGLISH)
     else:
         await update.effective_message.reply_text(HELP_GERMAN)

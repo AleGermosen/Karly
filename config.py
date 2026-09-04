@@ -63,10 +63,15 @@ CONTEXT_WINDOW_MESSAGES: int = 8
 DAILY_CREDIT_LIMIT: int = int(os.getenv("DAILY_CREDIT_LIMIT", "20"))
 
 # --- Classroom ---
-# Telegram user-id of the teacher. Set this to enable /students, /student,
-# and /class commands and (when ACCESS_MODE="approval") the approval flow.
-_teacher = os.getenv("TEACHER_TELEGRAM_ID", "").strip()
-TEACHER_TELEGRAM_ID: int | None = int(_teacher) if _teacher else None
+# Telegram user-id of the superuser (school admin). Reads SUPERUSER_TELEGRAM_ID
+# first; falls back to TEACHER_TELEGRAM_ID for backward compatibility.
+_su = (
+    os.getenv("SUPERUSER_TELEGRAM_ID", "").strip()
+    or os.getenv("TEACHER_TELEGRAM_ID", "").strip()
+)
+SUPERUSER_TELEGRAM_ID: int | None = int(_su) if _su else None
+# Kept as an alias so any code still referencing TEACHER_TELEGRAM_ID still works.
+TEACHER_TELEGRAM_ID: int | None = SUPERUSER_TELEGRAM_ID
 
 # "open"     — anyone who can reach the bot is let straight in (default).
 # "approval" — new students are held as "pending" until the teacher approves.

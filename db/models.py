@@ -57,11 +57,16 @@ class User(Base):
     # status: "active" (default) | "pending" (awaiting teacher approval) | "removed"
     # joined_at: set when a pending student is approved.
     # approved_by: telegram_id of the teacher who approved this student.
+    # role: "student" | "teacher" | "superuser"
     role: Mapped[str] = mapped_column(String, default="student")
     class_name: Mapped[str | None] = mapped_column(String, nullable=True)
     status: Mapped[str] = mapped_column(String, default="active")
     joined_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     approved_by: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Which teacher (users.id) manages this student. Only superuser can change.
+    teacher_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Which class (classes.id) this student is in. Teacher can change.
+    class_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     @property
     def corrections_on(self) -> bool:
@@ -199,6 +204,29 @@ class CreditGrant(Base):
     granted_by: Mapped[int] = mapped_column(Integer)  # telegram_id of the teacher
     amount: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class Class(Base):
+    """A class managed by a teacher. Students belong to one class."""
+
+    __tablename__ = "classes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String)
+    teacher_id: Mapped[int] = mapped_column(Integer, index=True)  # users.id of the teacher
+    learning_mode: Mapped[str] = mapped_column(String, default="german")
+    topic: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class ClassSetting(Base):
+    """Key-value store for class-wide teacher settings (e.g. assigned topic)."""
+
+    __tablename__ = "class_settings"
+
+    key: Mapped[str] = mapped_column(String, primary_key=True)
+    value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
 
 class LLMUsage(Base):

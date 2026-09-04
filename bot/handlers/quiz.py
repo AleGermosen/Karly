@@ -22,6 +22,7 @@ from bot import credits as credit_mod
 from bot.middleware import require_auth
 from db.repo import (
     get_bkt_state,
+    get_student_topic,
     get_user_by_telegram_id,
     latest_assessment,
     record_practice,
@@ -111,14 +112,20 @@ async def quiz_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     skills_focus = ", ".join(s for s, _ in weak) if weak else "grammar, vocab"
     skill_labels = [s.capitalize() for s, _ in weak]
 
+    # If a class topic is assigned, bias the quiz toward it.
+    class_topic = get_student_topic(user.id)
+    topic_note = f" Topic focus: {class_topic}." if class_topic else ""
+
     if en:
+        topic_line = f" Tema: *{class_topic}*." if class_topic else ""
         intro = (
-            f"⚡ Quiz — {QUIZ_SIZE} preguntas, enfocadas en: {', '.join(skill_labels)}.\n"
+            f"⚡ Quiz — {QUIZ_SIZE} preguntas, enfocadas en: {', '.join(skill_labels)}.{topic_line}\n"
             f"Toca un número para responder. /stop para cancelar."
         )
     else:
+        topic_line = f" Thema: *{class_topic}*." if class_topic else ""
         intro = (
-            f"⚡ Quiz — {QUIZ_SIZE} Fragen, fokussiert auf: {', '.join(skill_labels)}.\n"
+            f"⚡ Quiz — {QUIZ_SIZE} Fragen, fokussiert auf: {', '.join(skill_labels)}.{topic_line}\n"
             f"Tippe auf eine Zahl zum Antworten. /stop zum Abbrechen."
         )
     await update.effective_message.reply_text(intro)
@@ -132,7 +139,7 @@ async def quiz_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     try:
         parsed, _ = await generate_json(
             Task.generate,
-            f"Focus skills: {skills_focus}. Level: {target_level}.",
+            f"Focus skills: {skills_focus}. Level: {target_level}.{topic_note}",
             system=system_prompt,
         )
     except QuotaExceeded:

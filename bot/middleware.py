@@ -68,8 +68,8 @@ def require_auth(handler: Handler) -> Handler:
         default_status = "active"
         if (
             config.ACCESS_MODE == "approval"
-            and config.TEACHER_TELEGRAM_ID
-            and user.id != config.TEACHER_TELEGRAM_ID
+            and config.SUPERUSER_TELEGRAM_ID
+            and user.id != config.SUPERUSER_TELEGRAM_ID
         ):
             default_status = "pending"
 

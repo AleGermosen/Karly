@@ -8,6 +8,8 @@ from sqlalchemy import func
 
 from db.models import (
     Assessment,
+    Class,
+    ClassSetting,
     ConceptMastery,
     CreditGrant,
     Document,
@@ -47,19 +49,19 @@ def get_or_create_user(
             .one_or_none()
         )
         if user is None:
-            is_teacher = bool(
-                _config.TEACHER_TELEGRAM_ID
-                and telegram_id == _config.TEACHER_TELEGRAM_ID
+            is_superuser = bool(
+                _config.SUPERUSER_TELEGRAM_ID
+                and telegram_id == _config.SUPERUSER_TELEGRAM_ID
             )
             user = User(
                 telegram_id=telegram_id,
                 name=name,
-                role="teacher" if is_teacher else "student",
-                status="active" if is_teacher else default_status,
+                role="superuser" if is_superuser else "student",
+                status="active" if is_superuser else default_status,
             )
             session.add(user)
             session.flush()
-        elif name and not user.name:
+        elif name and (not user.name or user.name != name):
             user.name = name
         session.refresh(user)
         return user
@@ -757,6 +759,180 @@ def random_terms(user_id: int, exclude_id: int, limit: int = 3) -> list[str]:
         if len(seen) >= limit:
             break
     return seen
+
+
+# ---------------------------------------------------------------------------
+# Class settings (teacher-controlled key-value store)
+# ---------------------------------------------------------------------------
+
+def get_class_setting(key: str) -> str | None:
+    with get_session() as session:
+        row = session.query(ClassSetting).filter(ClassSetting.key == key).one_or_none()
+        return row.value if row else None
+
+
+def set_class_setting(key: str, value: str | None) -> None:
+    with get_session() as session:
+        row = session.query(ClassSetting).filter(ClassSetting.key == key).one_or_none()
+        if row is None:
+            row = ClassSetting(key=key, value=value)
+            session.add(row)
+        else:
+            row.value = value
+            row.updated_at = datetime.utcnow()
+
+
+# ---------------------------------------------------------------------------
+# Class-wide skill error rates (for teacher dashboard)
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Teacher management (superuser only)
+# ---------------------------------------------------------------------------
+
+def list_teachers() -> list[User]:
+    with get_session() as session:
+        return (
+            session.query(User)
+            .filter(User.role.in_(["teacher", "superuser"]))
+            .order_by(User.name)
+            .all()
+        )
+
+
+def set_user_role(user_id: int, role: str) -> None:
+    with get_session() as session:
+        user = session.query(User).filter(User.id == user_id).one_or_none()
+        if user:
+            user.role = role
+
+
+def assign_student_teacher(student_id: int, teacher_id: int | None) -> None:
+    """Set which teacher manages a student. Superuser only."""
+    with get_session() as session:
+        student = session.query(User).filter(User.id == student_id).one_or_none()
+        if student:
+            student.teacher_id = teacher_id
+            student.class_id = None  # reset class when teacher changes
+
+
+# ---------------------------------------------------------------------------
+# Class management
+# ---------------------------------------------------------------------------
+
+def create_class(name: str, teacher_id: int, learning_mode: str = "german") -> "Class":
+    with get_session() as session:
+        cls = Class(name=name, teacher_id=teacher_id, learning_mode=learning_mode)
+        session.add(cls)
+        session.flush()
+        session.refresh(cls)
+        return cls
+
+
+def get_class_by_id(class_id: int) -> "Class | None":
+    with get_session() as session:
+        return session.query(Class).filter(Class.id == class_id).one_or_none()
+
+
+def list_classes(teacher_id: int) -> list["Class"]:
+    with get_session() as session:
+        return (
+            session.query(Class)
+            .filter(Class.teacher_id == teacher_id)
+            .order_by(Class.name)
+            .all()
+        )
+
+
+def set_class_topic(class_id: int, topic: str | None) -> None:
+    with get_session() as session:
+        cls = session.query(Class).filter(Class.id == class_id).one_or_none()
+        if cls:
+            cls.topic = topic
+
+
+def get_student_topic(user_id: int) -> str | None:
+    """Return the topic for a student's class, or None if unset."""
+    with get_session() as session:
+        student = session.query(User).filter(User.id == user_id).one_or_none()
+        if not student or not student.class_id:
+            return None
+        cls = session.query(Class).filter(Class.id == student.class_id).one_or_none()
+        return cls.topic if cls else None
+
+
+def assign_student_class(student_id: int, class_id: int | None) -> None:
+    with get_session() as session:
+        student = session.query(User).filter(User.id == student_id).one_or_none()
+        if student:
+            student.class_id = class_id
+
+
+def list_students_in_class(class_id: int) -> list[User]:
+    with get_session() as session:
+        return (
+            session.query(User)
+            .filter(User.class_id == class_id, User.role == "student")
+            .order_by(User.name)
+            .all()
+        )
+
+
+def list_students_for_teacher(teacher_id: int, include_pending: bool = True) -> list[User]:
+    """Students assigned to this teacher."""
+    statuses = ["active", "pending"] if include_pending else ["active"]
+    with get_session() as session:
+        return (
+            session.query(User)
+            .filter(
+                User.teacher_id == teacher_id,
+                User.role == "student",
+                User.status.in_(statuses),
+            )
+            .order_by(User.name)
+            .all()
+        )
+
+
+def class_student_count(class_id: int) -> int:
+    with get_session() as session:
+        return (
+            session.query(func.count(User.id))
+            .filter(User.class_id == class_id)
+            .scalar()
+            or 0
+        )
+
+
+def class_skill_error_rates() -> dict[str, dict]:
+    """Return per-skill stats across all active students.
+
+    Returns {skill: {"mastery_avg": float, "struggling_pct": float, "n": int}}
+    where struggling_pct is the % of students below 50% mastery on that skill.
+    """
+    from srs import bkt as _bkt
+    students = list_students(include_pending=False)
+    if not students:
+        return {}
+
+    skill_data: dict[str, list[float]] = {}
+    for student in students:
+        state = get_bkt_state(student.id)
+        for skill, entry in state.items():
+            p = entry.get("p", _bkt.P_L0)
+            skill_data.setdefault(skill, []).append(p)
+
+    result: dict[str, dict] = {}
+    for skill, values in skill_data.items():
+        n = len(values)
+        avg = sum(values) / n
+        struggling = sum(1 for p in values if p < 0.5)
+        result[skill] = {
+            "mastery_avg": round(avg * 100),
+            "struggling_pct": round(struggling / n * 100),
+            "n": n,
+        }
+    return result
 
 
 def mark_due_by_terms(

@@ -1,15 +1,21 @@
-"""Teacher-facing classroom commands and approval callbacks.
+"""Teacher and superuser classroom commands.
 
-Commands (teacher only):
-  /students          — roster of all students (active + pending)
-  /student <name>    — one student's learning profile
-  /class             — class-wide weekly summary
-  /budget            — today's global credit usage + top consumers
-  /grant <name> <n>  — give a student N extra credits today
+Role hierarchy:
+  superuser — approves students, assigns teachers, manages all
+  teacher   — manages their own students/classes, sets topics, grants credits
+  student   — regular learner
 
-Callback patterns (sent to teacher via DM, initiated from approval flow):
-  approve_student:<user_db_id>:<mode>  — approve a pending student
-  decline_student:<user_db_id>         — decline a pending student
+Commands by role:
+  superuser only:   /addteacher, /removeteacher, /teachers
+  teacher+super:    /students, /student, /class, /budget, /grant,
+                    /newclass, /classes, /assign, /moveclass, /classtopic
+  all:              /classtopic (read-only for students)
+
+Approval callbacks (multi-step, DM to superuser):
+  approve_s:<uid>:<mode>            — step 1: show teacher picker
+  set_teacher_s:<uid>:<mode>:<tid>  — step 2: show class picker
+  set_class_s:<uid>:<mode>:<tid>:<cid> — step 3: finalize
+  decline_student:<uid>             — decline
 """
 from __future__ import annotations
 
@@ -17,7 +23,7 @@ import json
 import logging
 from datetime import datetime
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
 import config
@@ -25,13 +31,26 @@ from bot.middleware import require_auth
 from bot import credits as credit_mod
 from db.repo import (
     approve_student,
+    assign_student_class,
+    assign_student_teacher,
+    class_skill_error_rates,
+    class_student_count,
+    create_class,
+    get_class_by_id,
     get_user_by_id,
     get_user_by_telegram_id,
     global_credits_used,
     grant_credits,
     latest_assessment,
+    list_classes,
     list_students,
+    list_students_for_teacher,
+    list_students_in_class,
+    list_teachers,
     practice_streak,
+    set_class_setting,
+    set_class_topic,
+    set_user_role,
     set_user_status,
     student_last_active,
     top_credit_consumers,
@@ -42,13 +61,29 @@ from db.repo import (
 logger = logging.getLogger(__name__)
 
 
-def _is_teacher(user) -> bool:
+# ---------------------------------------------------------------------------
+# Role helpers
+# ---------------------------------------------------------------------------
+
+def _is_superuser(user) -> bool:
     return (
-        config.TEACHER_TELEGRAM_ID is not None
+        config.SUPERUSER_TELEGRAM_ID is not None
         and user is not None
-        and user.telegram_id == config.TEACHER_TELEGRAM_ID
+        and user.telegram_id == config.SUPERUSER_TELEGRAM_ID
     )
 
+
+def _is_teacher_or_above(user) -> bool:
+    return user is not None and getattr(user, "role", "student") in ("teacher", "superuser")
+
+
+def _caller(update: Update):
+    return get_user_by_telegram_id(update.effective_user.id)
+
+
+# ---------------------------------------------------------------------------
+# Display helpers
+# ---------------------------------------------------------------------------
 
 def _time_ago(dt: datetime | None) -> str:
     if dt is None:
@@ -89,24 +124,32 @@ def _cefr_level(user) -> str:
     return "—"
 
 
+# ---------------------------------------------------------------------------
+# /students
+# ---------------------------------------------------------------------------
+
 @require_auth
 async def students(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    caller = get_user_by_telegram_id(update.effective_user.id)
-    if not _is_teacher(caller):
-        await update.effective_message.reply_text(
-            "🚫 This command is only available to teachers."
-        )
+    caller = _caller(update)
+    if not _is_teacher_or_above(caller):
+        await update.effective_message.reply_text("🚫 Teacher only.")
         return
 
-    roster = list_students(include_pending=True)
+    if _is_superuser(caller):
+        roster = list_students(include_pending=True)
+        header = "👥 *All students*"
+    else:
+        roster = list_students_for_teacher(caller.id, include_pending=True)
+        header = "👥 *Your students*"
+
     if not roster:
         await update.effective_message.reply_text("No students yet.")
         return
 
     active = [s for s in roster if s.status == "active"]
     pending = [s for s in roster if s.status == "pending"]
+    lines = [f"{header} — {len(active)} active, {len(pending)} pending\n"]
 
-    lines = [f"👥 *Students* — {len(active)} active, {len(pending)} pending\n"]
     for s in roster:
         last = student_last_active(s.id)
         icon = _status_icon(last, s.status)
@@ -118,42 +161,44 @@ async def students(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         else:
             streak = practice_streak(s.id)
             streak_txt = f" · 🔥{streak}d" if streak else ""
-            lines.append(
-                f"{icon} {name} {mode} — {level} · {_time_ago(last)}{streak_txt}"
-            )
+            class_txt = ""
+            if s.class_id:
+                cls = get_class_by_id(s.class_id)
+                if cls:
+                    class_txt = f" · {cls.name}"
+            lines.append(f"{icon} {name} {mode} — {level}{class_txt} · {_time_ago(last)}{streak_txt}")
 
     lines.append("\n/student <name> for details.")
     await update.effective_message.reply_text("\n".join(lines))
 
 
+# ---------------------------------------------------------------------------
+# /student <name>
+# ---------------------------------------------------------------------------
+
 @require_auth
 async def student(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    caller = get_user_by_telegram_id(update.effective_user.id)
-    if not _is_teacher(caller):
-        await update.effective_message.reply_text(
-            "🚫 This command is only available to teachers."
-        )
+    caller = _caller(update)
+    if not _is_teacher_or_above(caller):
+        await update.effective_message.reply_text("🚫 Teacher only.")
         return
-
     if not context.args:
-        await update.effective_message.reply_text(
-            "Usage: /student <name>\nExample: /student Ana"
-        )
+        await update.effective_message.reply_text("Usage: /student <name>")
         return
 
     query_name = " ".join(context.args).lower()
-    roster = list_students(include_pending=True)
-    matches = [
-        s for s in roster
-        if s.name and query_name in s.name.lower()
-    ]
+    if _is_superuser(caller):
+        roster = list_students(include_pending=True)
+    else:
+        roster = list_students_for_teacher(caller.id, include_pending=True)
+
+    matches = [s for s in roster if s.name and query_name in s.name.lower()]
     if not matches:
-        await update.effective_message.reply_text(f"No student found matching '{query_name}'.")
+        await update.effective_message.reply_text(f"No student matching '{query_name}'.")
         return
     if len(matches) > 1:
-        names = ", ".join(s.name or "?" for s in matches)
         await update.effective_message.reply_text(
-            f"Multiple matches: {names}\nBe more specific."
+            "Multiple matches: " + ", ".join(s.name or "?" for s in matches) + "\nBe more specific."
         )
         return
 
@@ -168,6 +213,10 @@ async def student(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     lines = [f"👤 *{s.name}*\n"]
     lines.append(f"Mode: {mode} · Status: {s.status}")
     lines.append(f"Level: {_cefr_level(s)}")
+    if s.class_id:
+        cls = get_class_by_id(s.class_id)
+        if cls:
+            lines.append(f"Class: {cls.name}")
     if verdict and isinstance(verdict, dict):
         skills = verdict.get("skills") or {}
         if skills:
@@ -185,23 +234,30 @@ async def student(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text("\n".join(lines))
 
 
+# ---------------------------------------------------------------------------
+# /class
+# ---------------------------------------------------------------------------
+
 @require_auth
 async def class_summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    caller = get_user_by_telegram_id(update.effective_user.id)
-    if not _is_teacher(caller):
-        await update.effective_message.reply_text(
-            "🚫 This command is only available to teachers."
-        )
+    caller = _caller(update)
+    if not _is_teacher_or_above(caller):
+        await update.effective_message.reply_text("🚫 Teacher only.")
         return
 
-    roster = list_students(include_pending=False)
+    if _is_superuser(caller):
+        roster = list_students(include_pending=False)
+        header = "📊 *Class — whole school*"
+    else:
+        roster = list_students_for_teacher(caller.id, include_pending=False)
+        header = "📊 *Your class — weekly snapshot*"
+
     if not roster:
         await update.effective_message.reply_text("No active students yet.")
         return
 
     now = datetime.utcnow()
-    active_week = []
-    inactive = []
+    active_week, inactive = [], []
     for s in roster:
         last = student_last_active(s.id)
         if last and (now - last).days < 7:
@@ -209,7 +265,7 @@ async def class_summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         else:
             inactive.append((s.name or f"id={s.telegram_id}", _time_ago(last)))
 
-    lines = [f"📊 *Class — weekly snapshot*\n"]
+    lines = [f"{header}\n"]
     lines.append(f"Active this week: {len(active_week)}/{len(roster)}")
     if active_week:
         lines.append("  " + ", ".join(active_week))
@@ -218,8 +274,31 @@ async def class_summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         for name, when in inactive:
             lines.append(f"  • {name} — {when}")
 
+    # Class breakdown (teacher's own classes).
+    teacher_id = caller.id
+    classes = list_classes(teacher_id)
+    if classes:
+        lines.append("\n📚 *Classes:*")
+        for cls in classes:
+            n = class_student_count(cls.id)
+            topic_txt = f" · 📌 {cls.topic}" if cls.topic else ""
+            lines.append(f"  • {cls.name} ({n} students){topic_txt}")
+
+    # Skill error rates.
+    rates = class_skill_error_rates()
+    if rates:
+        lines.append("\n📊 *Skill mastery (class average):*")
+        for skill, data in sorted(rates.items(), key=lambda kv: kv[1]["mastery_avg"]):
+            avg = data["mastery_avg"]
+            struggling = data["struggling_pct"]
+            bar = "█" * (avg // 10) + "░" * (10 - avg // 10)
+            flag = " ⚠️" if struggling >= 50 else ""
+            lines.append(
+                f"  {skill.capitalize()}: {bar} {avg}% avg · {struggling}% struggling{flag}"
+            )
+
     pending = [s for s in list_students(include_pending=True) if s.status == "pending"]
-    if pending:
+    if pending and _is_superuser(caller):
         lines.append(f"\n⏳ Pending approval: {len(pending)}")
         for s in pending:
             lines.append(f"  • {s.name or str(s.telegram_id)}")
@@ -227,14 +306,15 @@ async def class_summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     await update.effective_message.reply_text("\n".join(lines))
 
 
+# ---------------------------------------------------------------------------
+# /budget
+# ---------------------------------------------------------------------------
+
 @require_auth
 async def budget(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """T.9 — /budget: today's global credit usage, top consumers, reserve status."""
-    caller = get_user_by_telegram_id(update.effective_user.id)
-    if not _is_teacher(caller):
-        await update.effective_message.reply_text(
-            "🚫 This command is only available to teachers."
-        )
+    caller = _caller(update)
+    if not _is_teacher_or_above(caller):
+        await update.effective_message.reply_text("🚫 Teacher only.")
         return
 
     used = global_credits_used()
@@ -248,18 +328,14 @@ async def budget(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
     lines = ["📊 *Budget — today*\n"]
-    lines.append(
-        f"Global: *{used} / {effective_limit}* credits ({pct}%){alert}{reserve_note}"
-    )
+    lines.append(f"Global: *{used} / {effective_limit}* credits ({pct}%){alert}{reserve_note}")
 
     now = datetime.utcnow()
-    hour = now.hour
-    if used > 0 and hour > 0:
-        rate = used / hour
+    if used > 0 and now.hour > 0:
+        rate = used / now.hour
         remaining = effective_limit - used
         if rate > 0 and remaining > 0:
-            hours_left = remaining / rate
-            lines.append(f"Projected: ~{hours_left:.1f}h until limit at current rate")
+            lines.append(f"Projected: ~{remaining / rate:.1f}h until limit at current rate")
 
     lines.append(f"Per-student limit: {config.DAILY_CREDIT_LIMIT} credits/day (+streak bonus up to +5)")
 
@@ -275,74 +351,419 @@ async def budget(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text("\n".join(lines))
 
 
+# ---------------------------------------------------------------------------
+# /grant
+# ---------------------------------------------------------------------------
+
 @require_auth
 async def grant(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """T.10 — /grant <name> <credits>: teacher gives a student extra daily credits."""
-    caller = get_user_by_telegram_id(update.effective_user.id)
-    if not _is_teacher(caller):
-        await update.effective_message.reply_text(
-            "🚫 This command is only available to teachers."
-        )
+    caller = _caller(update)
+    if not _is_teacher_or_above(caller):
+        await update.effective_message.reply_text("🚫 Teacher only.")
         return
-
     if not context.args or len(context.args) < 2:
-        await update.effective_message.reply_text(
-            "Usage: /grant <student name> <credits>\nExample: /grant Ana 10"
-        )
+        await update.effective_message.reply_text("Usage: /grant <student name> <credits>")
         return
 
-    amount_str = context.args[-1]
     try:
-        amount = int(amount_str)
+        amount = int(context.args[-1])
         if amount <= 0:
             raise ValueError
     except ValueError:
-        await update.effective_message.reply_text(
-            "Credits must be a positive whole number."
-        )
+        await update.effective_message.reply_text("Credits must be a positive whole number.")
         return
 
     name_query = " ".join(context.args[:-1]).lower()
-    roster = list_students(include_pending=False)
+    if _is_superuser(caller):
+        roster = list_students(include_pending=False)
+    else:
+        roster = list_students_for_teacher(caller.id, include_pending=False)
+
     matches = [s for s in roster if s.name and name_query in s.name.lower()]
     if not matches:
-        await update.effective_message.reply_text(
-            f"No active student found matching '{name_query}'."
-        )
+        await update.effective_message.reply_text(f"No active student matching '{name_query}'.")
         return
     if len(matches) > 1:
-        names = ", ".join(s.name or "?" for s in matches)
         await update.effective_message.reply_text(
-            f"Multiple matches: {names}\nBe more specific."
+            "Multiple matches: " + ", ".join(s.name or "?" for s in matches)
         )
         return
 
-    student = matches[0]
-    grant_credits(student.id, granted_by=update.effective_user.id, amount=amount)
-
-    # Notify the student so they know.
+    target = matches[0]
+    grant_credits(target.id, granted_by=update.effective_user.id, amount=amount)
     try:
         await context.bot.send_message(
-            chat_id=student.telegram_id,
+            chat_id=target.telegram_id,
             text=f"🎁 Your teacher gave you {amount} extra credits today. Keep going!",
         )
     except Exception:
-        logger.exception("Could not notify student %s of grant", student.telegram_id)
+        logger.exception("Could not notify student %s of grant", target.telegram_id)
 
     await update.effective_message.reply_text(
-        f"✅ Granted *{amount}* extra credits to *{student.name}* today."
+        f"✅ Granted *{amount}* extra credits to *{target.name}*."
     )
 
 
+# ---------------------------------------------------------------------------
+# /newclass <name>
+# ---------------------------------------------------------------------------
+
+@require_auth
+async def newclass(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    caller = _caller(update)
+    if not _is_teacher_or_above(caller):
+        await update.effective_message.reply_text("🚫 Teacher only.")
+        return
+    if not context.args:
+        await update.effective_message.reply_text("Usage: /newclass <class name>\nExample: /newclass A1 Beginners")
+        return
+
+    name = " ".join(context.args)
+    mode = getattr(caller, "learning_mode", "german") or "german"
+    cls = create_class(name=name, teacher_id=caller.id, learning_mode=mode)
+    await update.effective_message.reply_text(
+        f"✅ Class *{cls.name}* created (id={cls.id}).\n"
+        "Use /moveclass <student> <class> to assign students."
+    )
+
+
+# ---------------------------------------------------------------------------
+# /classes
+# ---------------------------------------------------------------------------
+
+@require_auth
+async def classes(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    caller = _caller(update)
+    if not _is_teacher_or_above(caller):
+        await update.effective_message.reply_text("🚫 Teacher only.")
+        return
+
+    my_classes = list_classes(caller.id)
+    if not my_classes:
+        await update.effective_message.reply_text(
+            "You have no classes yet. Use /newclass <name> to create one."
+        )
+        return
+
+    lines = ["📚 *Your classes:*\n"]
+    for cls in my_classes:
+        n = class_student_count(cls.id)
+        topic_txt = f"\n    📌 Topic: {cls.topic}" if cls.topic else ""
+        lines.append(f"*{cls.name}* — {n} student(s){topic_txt}")
+
+    lines.append("\n/assign <class> <topic> · /moveclass <student> <class>")
+    await update.effective_message.reply_text("\n".join(lines))
+
+
+# ---------------------------------------------------------------------------
+# /assign <class name> <topic>  — or  /assign <topic> (all classes)
+# ---------------------------------------------------------------------------
+
+@require_auth
+async def assign(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    caller = _caller(update)
+    if not _is_teacher_or_above(caller):
+        await update.effective_message.reply_text("🚫 Teacher only.")
+        return
+    if not context.args:
+        # Show current topics.
+        my_classes = list_classes(caller.id)
+        if not my_classes:
+            await update.effective_message.reply_text(
+                "You have no classes. Create one with /newclass first."
+            )
+            return
+        lines = ["📌 *Current topics:*\n"]
+        for cls in my_classes:
+            lines.append(f"*{cls.name}*: {cls.topic or '(none)'}")
+        lines.append("\n/assign <topic> — set for all classes")
+        lines.append("/assign <class name>: <topic> — set for one class")
+        lines.append("/assign clear — remove all topics")
+        await update.effective_message.reply_text("\n".join(lines))
+        return
+
+    full = " ".join(context.args)
+
+    if full.strip().lower() == "clear":
+        for cls in list_classes(caller.id):
+            set_class_topic(cls.id, None)
+        await update.effective_message.reply_text("✅ All topics cleared.")
+        return
+
+    # Check for "ClassName: topic" syntax.
+    my_classes = list_classes(caller.id)
+    target_class = None
+    topic = full
+    if ":" in full:
+        parts = full.split(":", 1)
+        class_query = parts[0].strip().lower()
+        topic = parts[1].strip()
+        matches = [c for c in my_classes if class_query in c.name.lower()]
+        if len(matches) == 1:
+            target_class = matches[0]
+        elif len(matches) > 1:
+            await update.effective_message.reply_text(
+                "Multiple class matches. Be more specific."
+            )
+            return
+
+    if target_class:
+        set_class_topic(target_class.id, topic)
+        await update.effective_message.reply_text(
+            f"✅ Topic set for *{target_class.name}*: *{topic}*\n"
+            "Students in this class will drill this on /drill."
+        )
+    else:
+        if not my_classes:
+            await update.effective_message.reply_text(
+                "You have no classes. Create one with /newclass first."
+            )
+            return
+        for cls in my_classes:
+            set_class_topic(cls.id, topic)
+        await update.effective_message.reply_text(
+            f"✅ Topic set for all your classes: *{topic}*\n"
+            "Students will drill this on /drill."
+        )
+
+
+# ---------------------------------------------------------------------------
+# /classtopic  — students (and teachers) check their current topic
+# ---------------------------------------------------------------------------
+
+@require_auth
+async def classtopic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = get_user_by_telegram_id(update.effective_user.id)
+    en = user and getattr(user, "learning_mode", "german") == "english"
+
+    if _is_teacher_or_above(user):
+        # Teachers see all their class topics.
+        my_classes = list_classes(user.id)
+        if not my_classes:
+            await update.effective_message.reply_text("No classes yet. /newclass to create one.")
+            return
+        lines = ["📌 *Your class topics:*\n"]
+        for cls in my_classes:
+            lines.append(f"*{cls.name}*: {cls.topic or '(none)'}")
+        await update.effective_message.reply_text("\n".join(lines))
+        return
+
+    # Student: show their class topic.
+    if not user or not user.class_id:
+        msg = (
+            "No estás asignado a ninguna clase todavía."
+            if en else
+            "Du bist noch keiner Klasse zugewiesen."
+        )
+        await update.effective_message.reply_text(msg)
+        return
+
+    cls = get_class_by_id(user.class_id)
+    if not cls or not cls.topic:
+        msg = (
+            "Tu clase no tiene tema asignado actualmente."
+            if en else
+            "Deine Klasse hat noch kein Thema."
+        )
+        await update.effective_message.reply_text(msg)
+        return
+
+    msg = (
+        f"📌 Tema de esta semana: *{cls.topic}*\n\nUsa /drill para practicarlo."
+        if en else
+        f"📌 Aktuelles Thema: *{cls.topic}*\n\nNutze /drill zum Üben."
+    )
+    await update.effective_message.reply_text(msg)
+
+
+# ---------------------------------------------------------------------------
+# /moveclass <student> <class>
+# ---------------------------------------------------------------------------
+
+@require_auth
+async def moveclass(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    caller = _caller(update)
+    if not _is_teacher_or_above(caller):
+        await update.effective_message.reply_text("🚫 Teacher only.")
+        return
+    if not context.args or len(context.args) < 2:
+        await update.effective_message.reply_text(
+            "Usage: /moveclass <student name> <class name>\n"
+            "Example: /moveclass Ana A1 Beginners"
+        )
+        return
+
+    # Last word(s) matched against class names, first word(s) against student name.
+    # Try splitting at each position.
+    my_classes = list_classes(caller.id)
+    if not my_classes:
+        await update.effective_message.reply_text("You have no classes. Create one with /newclass first.")
+        return
+
+    args = context.args
+    target_class = None
+    student_name_query = None
+
+    for split in range(1, len(args)):
+        class_query = " ".join(args[split:]).lower()
+        cls_matches = [c for c in my_classes if class_query in c.name.lower()]
+        if len(cls_matches) == 1:
+            target_class = cls_matches[0]
+            student_name_query = " ".join(args[:split]).lower()
+            break
+
+    if not target_class or not student_name_query:
+        class_names = ", ".join(c.name for c in my_classes)
+        await update.effective_message.reply_text(
+            f"Couldn't parse. Your classes: {class_names}\n"
+            "Usage: /moveclass <student> <class>"
+        )
+        return
+
+    if _is_superuser(caller):
+        roster = list_students(include_pending=False)
+    else:
+        roster = list_students_for_teacher(caller.id, include_pending=False)
+
+    matches = [s for s in roster if s.name and student_name_query in s.name.lower()]
+    if not matches:
+        await update.effective_message.reply_text(f"No student matching '{student_name_query}'.")
+        return
+    if len(matches) > 1:
+        await update.effective_message.reply_text(
+            "Multiple matches: " + ", ".join(s.name or "?" for s in matches)
+        )
+        return
+
+    target_student = matches[0]
+    assign_student_class(target_student.id, target_class.id)
+    await update.effective_message.reply_text(
+        f"✅ *{target_student.name}* moved to class *{target_class.name}*."
+    )
+
+
+# ---------------------------------------------------------------------------
+# /addteacher <name>  (superuser only)
+# ---------------------------------------------------------------------------
+
+@require_auth
+async def addteacher(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    caller = _caller(update)
+    if not _is_superuser(caller):
+        await update.effective_message.reply_text("🚫 Superuser only.")
+        return
+    if not context.args:
+        await update.effective_message.reply_text("Usage: /addteacher <student name>")
+        return
+
+    query = " ".join(context.args).lower()
+    roster = list_students(include_pending=False)
+    matches = [s for s in roster if s.name and query in s.name.lower()]
+    if not matches:
+        await update.effective_message.reply_text(
+            f"No active student matching '{query}'.\n"
+            "The person must have already started the bot."
+        )
+        return
+    if len(matches) > 1:
+        await update.effective_message.reply_text(
+            "Multiple matches: " + ", ".join(s.name or "?" for s in matches)
+        )
+        return
+
+    target = matches[0]
+    set_user_role(target.id, "teacher")
+    try:
+        await context.bot.send_message(
+            chat_id=target.telegram_id,
+            text=(
+                "👩‍🏫 You've been added as a teacher on Karly!\n"
+                "Use /help to see your teacher commands.\n"
+                "Create your first class with /newclass."
+            ),
+        )
+    except Exception:
+        logger.exception("Could not notify new teacher %s", target.telegram_id)
+
+    await update.effective_message.reply_text(f"✅ *{target.name}* is now a teacher.")
+
+
+# ---------------------------------------------------------------------------
+# /removeteacher <name>  (superuser only)
+# ---------------------------------------------------------------------------
+
+@require_auth
+async def removeteacher(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    caller = _caller(update)
+    if not _is_superuser(caller):
+        await update.effective_message.reply_text("🚫 Superuser only.")
+        return
+    if not context.args:
+        await update.effective_message.reply_text("Usage: /removeteacher <name>")
+        return
+
+    query = " ".join(context.args).lower()
+    teachers = list_teachers()
+    # Exclude the superuser themselves.
+    teachers = [t for t in teachers if not _is_superuser(t)]
+    matches = [t for t in teachers if t.name and query in t.name.lower()]
+    if not matches:
+        await update.effective_message.reply_text(f"No teacher matching '{query}'.")
+        return
+    if len(matches) > 1:
+        await update.effective_message.reply_text(
+            "Multiple matches: " + ", ".join(t.name or "?" for t in matches)
+        )
+        return
+
+    target = matches[0]
+    set_user_role(target.id, "student")
+    await update.effective_message.reply_text(f"✅ *{target.name}* demoted to student.")
+
+
+# ---------------------------------------------------------------------------
+# /teachers  (superuser only)
+# ---------------------------------------------------------------------------
+
+@require_auth
+async def teachers_list(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    caller = _caller(update)
+    if not _is_superuser(caller):
+        await update.effective_message.reply_text("🚫 Superuser only.")
+        return
+
+    all_teachers = list_teachers()
+    if not all_teachers:
+        await update.effective_message.reply_text("No teachers yet. /addteacher <name> to promote one.")
+        return
+
+    lines = ["👩‍🏫 *Teachers:*\n"]
+    for t in all_teachers:
+        role_label = "👑 superuser" if _is_superuser(t) else "teacher"
+        my_classes = list_classes(t.id)
+        student_count = sum(class_student_count(c.id) for c in my_classes)
+        lines.append(
+            f"*{t.name or str(t.telegram_id)}* ({role_label}) — "
+            f"{len(my_classes)} class(es), {student_count} student(s)"
+        )
+
+    lines.append("\n/addteacher <name> · /removeteacher <name>")
+    await update.effective_message.reply_text("\n".join(lines))
+
+
+# ---------------------------------------------------------------------------
+# Approval callbacks (multi-step)
+# ---------------------------------------------------------------------------
+
 async def on_approve_student(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Teacher taps [✅ German mode] or [✅ English mode]."""
+    """Step 1 — superuser taps [✅ Approve]. Shows teacher picker."""
     query = update.callback_query
     await query.answer()
-    _, raw_id, mode = query.data.split(":")
+    parts = query.data.split(":")
+    _, raw_id, mode = parts[0], parts[1], parts[2]
     user_db_id = int(raw_id)
 
-    teacher = update.effective_user
-    if not config.TEACHER_TELEGRAM_ID or teacher.id != config.TEACHER_TELEGRAM_ID:
+    if not config.SUPERUSER_TELEGRAM_ID or update.effective_user.id != config.SUPERUSER_TELEGRAM_ID:
         await query.answer("Not authorized.", show_alert=True)
         return
 
@@ -350,43 +771,134 @@ async def on_approve_student(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if student_user is None:
         await query.edit_message_text("⚠️ Student not found.")
         return
-
     if student_user.status == "active":
-        await query.edit_message_text(
-            f"ℹ️ {student_user.name or 'Student'} is already active."
-        )
+        await query.edit_message_text(f"ℹ️ {student_user.name or 'Student'} is already active.")
         return
 
-    approve_student(user_db_id, approved_by=teacher.id, mode=mode)
+    # Build teacher picker.
+    all_teachers = list_teachers()
+    buttons = []
+    for t in all_teachers:
+        label = f"👑 Me ({t.name})" if _is_superuser(t) else f"👩‍🏫 {t.name or str(t.telegram_id)}"
+        buttons.append([InlineKeyboardButton(
+            label, callback_data=f"set_teacher_s:{user_db_id}:{mode}:{t.id}"
+        )])
 
-    lang_label = "German" if mode == "german" else "English"
     student_name = student_user.name or str(student_user.telegram_id)
+    if len(all_teachers) == 1:
+        # Only the superuser — skip teacher picker, go to class picker.
+        superuser_user = all_teachers[0]
+        await _show_class_picker(query, user_db_id, mode, superuser_user.id, student_name)
+    else:
+        await query.edit_message_text(
+            f"✅ Approving *{student_name}* — assign to which teacher?",
+            reply_markup=InlineKeyboardMarkup(buttons),
+        )
 
+
+async def _show_class_picker(query, user_db_id: int, mode: str, teacher_db_id: int, student_name: str) -> None:
+    my_classes = list_classes(teacher_db_id)
+    buttons = []
+    for cls in my_classes:
+        n = class_student_count(cls.id)
+        buttons.append([InlineKeyboardButton(
+            f"{cls.name} ({n})",
+            callback_data=f"set_class_s:{user_db_id}:{mode}:{teacher_db_id}:{cls.id}"
+        )])
+    # "No class" option.
+    buttons.append([InlineKeyboardButton(
+        "No class yet",
+        callback_data=f"set_class_s:{user_db_id}:{mode}:{teacher_db_id}:0"
+    )])
+
+    teacher = get_user_by_id(teacher_db_id)
+    teacher_name = teacher.name if teacher else "?"
+    await query.edit_message_text(
+        f"Assign *{student_name}* to which class? (Teacher: {teacher_name})",
+        reply_markup=InlineKeyboardMarkup(buttons),
+    )
+
+
+async def on_set_teacher(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Step 2 — superuser picks a teacher. Shows class picker."""
+    query = update.callback_query
+    await query.answer()
+    _, raw_id, mode, raw_tid = query.data.split(":")
+    user_db_id, teacher_db_id = int(raw_id), int(raw_tid)
+
+    if not config.SUPERUSER_TELEGRAM_ID or update.effective_user.id != config.SUPERUSER_TELEGRAM_ID:
+        return
+
+    student_user = get_user_by_id(user_db_id)
+    student_name = student_user.name if student_user else "?"
+    await _show_class_picker(query, user_db_id, mode, teacher_db_id, student_name)
+
+
+async def on_set_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Step 3 — superuser picks a class. Finalizes approval."""
+    query = update.callback_query
+    await query.answer()
+    parts = query.data.split(":")
+    _, raw_id, mode, raw_tid, raw_cid = parts
+    user_db_id, teacher_db_id, class_id_raw = int(raw_id), int(raw_tid), int(raw_cid)
+    class_id = class_id_raw if class_id_raw != 0 else None
+
+    if not config.SUPERUSER_TELEGRAM_ID or update.effective_user.id != config.SUPERUSER_TELEGRAM_ID:
+        return
+
+    student_user = get_user_by_id(user_db_id)
+    if student_user is None:
+        await query.edit_message_text("⚠️ Student not found.")
+        return
+
+    approve_student(user_db_id, approved_by=update.effective_user.id, mode=mode)
+    assign_student_teacher(user_db_id, teacher_db_id)
+    if class_id:
+        assign_student_class(user_db_id, class_id)
+
+    teacher = get_user_by_id(teacher_db_id)
+    cls = get_class_by_id(class_id) if class_id else None
+    student_name = student_user.name or str(student_user.telegram_id)
+    lang_label = "German" if mode == "german" else "English"
+    class_label = f" → {cls.name}" if cls else ""
+
+    # Welcome the student.
     from bot.handlers.start import WELCOME_GERMAN, WELCOME_ENGLISH
     welcome = (WELCOME_GERMAN if mode == "german" else WELCOME_ENGLISH) + (
-        "\n\n✅ Your teacher approved you — welcome! "
-        "Start with /test to find your level."
+        "\n\n✅ Your teacher approved you — welcome! Start with /test to find your level."
     )
     try:
         await context.bot.send_message(chat_id=student_user.telegram_id, text=welcome)
     except Exception:
         logger.exception("Could not notify student %s of approval", student_user.telegram_id)
 
+    # Notify the assigned teacher (if not the superuser).
+    if teacher and not _is_superuser(teacher):
+        try:
+            await context.bot.send_message(
+                chat_id=teacher.telegram_id,
+                text=(
+                    f"👤 *{student_name}* has been assigned to you{class_label}.\n"
+                    f"Mode: {lang_label}. Use /students to see your roster."
+                ),
+            )
+        except Exception:
+            logger.exception("Could not notify teacher %s", teacher.telegram_id)
+
+    teacher_name = teacher.name if teacher else "?"
     await query.edit_message_text(
-        f"✅ Approved: *{student_name}* ({lang_label} mode)"
+        f"✅ *{student_name}* approved ({lang_label})"
+        f" → {teacher_name}{class_label}"
     )
 
 
 async def on_decline_student(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Teacher taps [❌ Decline]."""
     query = update.callback_query
     await query.answer()
     _, raw_id = query.data.split(":")
     user_db_id = int(raw_id)
 
-    teacher = update.effective_user
-    if not config.TEACHER_TELEGRAM_ID or teacher.id != config.TEACHER_TELEGRAM_ID:
-        await query.answer("Not authorized.", show_alert=True)
+    if not config.SUPERUSER_TELEGRAM_ID or update.effective_user.id != config.SUPERUSER_TELEGRAM_ID:
         return
 
     student_user = get_user_by_id(user_db_id)

@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import Session, sessionmaker
 
 import config
-from db.models import Base
+from db.models import Base, Class, ClassSetting  # noqa: F401 — registers tables with metadata
 
 engine = create_engine(config.DATABASE_URL, future=True)
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False, future=True)
@@ -26,6 +26,8 @@ _MIGRATIONS: dict[str, dict[str, str]] = {
         "status": "TEXT NOT NULL DEFAULT 'active'",
         "joined_at": "DATETIME",
         "approved_by": "INTEGER",
+        "teacher_id": "INTEGER",
+        "class_id": "INTEGER",
     },
     "vocab_items": {
         "hlr_half_life": "REAL NOT NULL DEFAULT 0.0",
@@ -87,16 +89,16 @@ def _migrate_language_chosen() -> None:
 
 
 def _migrate_teacher_role() -> None:
-    """Set role='teacher' and status='active' for the configured teacher user."""
-    if not config.TEACHER_TELEGRAM_ID:
+    """Set role='superuser' and status='active' for the configured superuser."""
+    if not config.SUPERUSER_TELEGRAM_ID:
         return
     with engine.begin() as conn:
         conn.execute(
             text(
-                "UPDATE users SET role='teacher', status='active' "
+                "UPDATE users SET role='superuser', status='active' "
                 "WHERE telegram_id=:tid"
             ),
-            {"tid": config.TEACHER_TELEGRAM_ID},
+            {"tid": config.SUPERUSER_TELEGRAM_ID},
         )
 
 
