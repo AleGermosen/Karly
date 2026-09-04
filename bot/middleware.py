@@ -119,6 +119,6 @@ def require_auth(handler: Handler) -> Handler:
                     )
                 return
 
-        await handler(update, context)
+        return await handler(update, context)
 
     return wrapper
