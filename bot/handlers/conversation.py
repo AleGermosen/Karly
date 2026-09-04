@@ -141,12 +141,14 @@ def _correction_keyboard(message_id: int, en: bool = False) -> InlineKeyboardMar
             InlineKeyboardButton("📖 ¿Por qué?", callback_data=f"corr:why:{message_id}"),
             InlineKeyboardButton("➕ Ejemplo", callback_data=f"corr:example:{message_id}"),
             InlineKeyboardButton("🎯 Practicar", callback_data=f"corr:drill:{message_id}"),
+            InlineKeyboardButton("🔊", callback_data=f"corr:say:{message_id}"),
         ]
     else:
         row = [
             InlineKeyboardButton("📖 Warum?", callback_data=f"corr:why:{message_id}"),
             InlineKeyboardButton("➕ Beispiel", callback_data=f"corr:example:{message_id}"),
             InlineKeyboardButton("🎯 Üben", callback_data=f"corr:drill:{message_id}"),
+            InlineKeyboardButton("🔊", callback_data=f"corr:say:{message_id}"),
         ]
     return InlineKeyboardMarkup([row])
 
@@ -350,6 +352,15 @@ async def on_correction_action(
                 f"🎯 {n} Wort/Wörter zur Übung markiert — /flashcards. "
                 "(Marked for practice.)"
             )
+        return
+
+    if action == "say":
+        from bot.handlers.pronounce import pronounce_word, _LANG
+        lang = _LANG["english" if en else "german"]
+        # Pronounce the first corrected term.
+        term = corrections[0].get("term", "") if corrections else ""
+        if term:
+            await pronounce_word(update, context, term, lang)
         return
 
     if en:

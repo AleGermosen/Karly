@@ -22,8 +22,10 @@ from bot.handlers import (
     daily,
     documents,
     drill,
+    export,
     game,
     practice,
+    pronounce,
     quiz,
     reminders,
     report,
@@ -58,6 +60,7 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("language", start.language_cmd))
     app.add_handler(CommandHandler("profile", start.profile))
     app.add_handler(CommandHandler("mybudget", start.mybudget))
+    app.add_handler(CommandHandler("pronounce", pronounce.pronounce))
     # Language picker callback (from /start and /language inline buttons).
     app.add_handler(
         CallbackQueryHandler(start.language_pick, pattern=r"^lang:")
@@ -75,6 +78,7 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("classes", classroom.classes))
     app.add_handler(CommandHandler("moveclass", classroom.moveclass))
     app.add_handler(CommandHandler("classsetcorr", classroom.classsetcorr))
+    app.add_handler(CommandHandler("export", export.export_csv))
     # Superuser-only teacher management.
     app.add_handler(CommandHandler("addteacher", classroom.addteacher))
     app.add_handler(CommandHandler("removeteacher", classroom.removeteacher))
@@ -163,6 +167,7 @@ MENU_COMMANDS = [
     BotCommand("test", "Einstufungstest starten"),
     BotCommand("profile", "Dein Lernprofil ansehen"),
     BotCommand("mybudget", "Verbleibende Credits heute"),
+    BotCommand("pronounce", "Aussprache als Sprachnachricht"),
     BotCommand("review", "Übungs-Statistik & Streak"),
     BotCommand("topic", "Gespräch auf ein Thema lenken"),
     BotCommand("summary", "Deine Fehler auswerten"),
