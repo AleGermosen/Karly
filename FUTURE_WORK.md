@@ -738,14 +738,6 @@ Every user gets a `role` and a `status`.
 | ✅ `/student <name>` | Done — CEFR level + skills + gaps + last active + streak + cards + sessions + joined date |
 | ✅ `/class` | Done — weekly snapshot: active count, inactive list, pending count |
 
-**Alerts (not yet built):**
-
-| Trigger | Message |
-|---|---|
-| A student hasn't used the bot in N days (default 7) | `😴 Ana hasn't practised since Tuesday.` |
-| A student fails the same unit 3 times | `⚠️ Marco has failed "Present perfect" 3 times — worth covering in class.` |
-| A student finishes a level | `🎉 Sofía cleared A2.` |
-
 Weekly digest on a schedule — pending (would reuse the reminder job queue).
 
 ### Step 4 — What you deliberately don't see
@@ -796,8 +788,7 @@ Only worth building after the curriculum phase ([`CURRICULUM_PLAN.md`](CURRICULU
 3. ✅ Usage tracking (Step 5 / T.1) — collecting from day one
 4. ✅ `/students` and `/student` (Step 3) — the day-to-day view
 5. ✅ `/class` digest (Step 3) — the weekly snapshot
-6. Alerts, pushed to teacher (Step 3) — pending
-7. Assignments and export (Step 6) — after the course exists
+6. Assignments and export (Step 6) — after the course exists
 
 Steps 0–3 are the minimum to put the bot in front of a class. **All of them are done.**
 
@@ -937,16 +928,16 @@ first — they raise the ceiling for everyone instead of dividing a fixed pie.
 |---|---|---|
 | ✅ **T.1** | Usage tracking — `LLMUsage` table, one row per LLM call | Done — `record_llm_usage` in `db/repo.py`; `spend()` wired into all metered handlers |
 | ✅ **T.2** | B.1 — shorten conversation history | Done — `CONTEXT_WINDOW_MESSAGES = 8` (was 20); ~40% input token reduction |
-| **T.3** | B.3 + B.4 — output cap and prompt trim | Pending — explicit `max_tokens` per task, trim system prompt length |
+| ✅ **T.3** | B.3 + B.4 — output cap per task | Done — `_TASK_MAX_TOKENS` dict in `router.py`; caps threaded through Groq and Gemini backends. Prompt trim (B.4) is ongoing as prompts are edited. |
 | ✅ **T.4** | Free vs metered classification | Done — `COSTS` dict in `bot/credits.py`; free features always 0 |
 | ✅ **T.5** | Per-student daily allowance + the redirect message | Done — `check_credits` / `spend` / `daily_credits_used`; exhaustion message points to free features |
 | ✅ **T.6** | Global ceiling + reserve pool | Done — `GLOBAL_DAILY_CREDIT_LIMIT` (default 1000); before `RESERVE_HOUR_UTC` (default 14:00 UTC) only 75% is available; shows class-wide exhaustion message distinct from per-user message |
 | ✅ **T.7** | Rate limit + concurrency queue | Done — `check_rate_limit()` per-user cooldown in `chat()` via `context.user_data`; `asyncio.Semaphore(LLM_CONCURRENCY_LIMIT)` in `route_result()` with `LLM_QUEUE_TIMEOUT` before raising `LLMUnavailable` |
-| **T.8** | B.2 — shared daily challenge | Pending — bigger win once there are 50 students |
-| **T.9** | `/budget` and the 70% alert | Pending — needs real data first |
-| **T.10** | Streak bonus, `/grant`, low-balance nudges | Pending — polish |
+| ✅ **T.8** | B.2 — shared daily challenge | Done — `context.bot_data[f"daily:{mode}:{level}:{date}"]` cache; one LLM call per level per day, copied for each student's independent queue |
+| ✅ **T.9** | `/budget` and the 70% alert | Done — teacher-only command; shows global used/limit/%, reserve pool note, projected depletion, top 5 consumers |
+| ✅ **T.10** | Streak bonus, `/grant`, low-balance nudges | Done — streak adds up to +5 credits/day to per-student limit; `/grant <name> <n>` persisted in `CreditGrant` table; nudge shown when ≤5 credits remain |
 
-**T.1–T.7 are done. T.8–T.10 are tuning for later.**
+**T.1–T.10 are all done.**
 
 ---
 

@@ -185,6 +185,22 @@ class ConceptMastery(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
 
+class CreditGrant(Base):
+    """Extra credits given to a student by the teacher via /grant.
+
+    These add to the student's effective daily allowance on top of the
+    base DAILY_CREDIT_LIMIT and the streak bonus.
+    """
+
+    __tablename__ = "credit_grants"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    granted_by: Mapped[int] = mapped_column(Integer)  # telegram_id of the teacher
+    amount: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
 class LLMUsage(Base):
     """One row per metered LLM action — used for per-student daily credit gates.
 

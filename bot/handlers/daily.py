@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime, timezone
 
 from telegram import Update
 from telegram.ext import (
@@ -81,34 +82,51 @@ async def daily_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
             "(Your daily challenge — 3 quick tasks.)"
         )
 
-    await context.bot.send_chat_action(
-        chat_id=update.effective_chat.id, action="typing"
-    )
-    prompt = "Gaps to target: " + (", ".join(gaps) if gaps else "(none provided)")
+    level = _level(user)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    cache_key = f"daily:{mode}:{level}:{today}"
 
-    system_prompt = (
-        prompts.ENGLISH_DAILY_CHALLENGE if en else prompts.DAILY_CHALLENGE
-    ).format(level=_level(user))
-
-    try:
-        parsed, _ = await generate_json(Task.generate, prompt, system=system_prompt)
-    except QuotaExceeded:
-        await update.effective_message.reply_text(
-            credit_mod.capacity_exhausted_text(en),
-            reply_markup=credit_mod.capacity_exhausted_keyboard(en),
+    # T.8 — one LLM call per level per day, shared across all students.
+    cached_items = context.bot_data.get(cache_key)
+    if cached_items:
+        items = list(cached_items)  # copy so each student gets an independent queue
+    else:
+        await context.bot.send_chat_action(
+            chat_id=update.effective_chat.id, action="typing"
         )
-        return ConversationHandler.END
-    except LLMUnavailable:
-        msg = "No se pudo crear el reto. Inténtalo más tarde." if en else "Die tägliche Challenge ließ sich nicht erstellen. Versuch es später."
-        await update.effective_message.reply_text(msg)
-        return ConversationHandler.END
+        prompt = "Gaps to target: " + (", ".join(gaps) if gaps else "(none provided)")
+        system_prompt = (
+            prompts.ENGLISH_DAILY_CHALLENGE if en else prompts.DAILY_CHALLENGE
+        ).format(level=level)
 
-    items = parsed.get("items") if isinstance(parsed, dict) else None
-    items = [it for it in (items or []) if isinstance(it, dict) and it.get("prompt")]
-    if not items:
-        msg = "No se pudo crear el reto. Inténtalo más tarde." if en else "Die tägliche Challenge ließ sich nicht erstellen. Versuch es später."
-        await update.effective_message.reply_text(msg)
-        return ConversationHandler.END
+        try:
+            parsed, _ = await generate_json(Task.generate, prompt, system=system_prompt)
+        except QuotaExceeded:
+            await update.effective_message.reply_text(
+                credit_mod.capacity_exhausted_text(en),
+                reply_markup=credit_mod.capacity_exhausted_keyboard(en),
+            )
+            return ConversationHandler.END
+        except LLMUnavailable:
+            msg = (
+                "No se pudo crear el reto. Inténtalo más tarde."
+                if en else
+                "Die tägliche Challenge ließ sich nicht erstellen. Versuch es später."
+            )
+            await update.effective_message.reply_text(msg)
+            return ConversationHandler.END
+
+        items = (parsed or {}).get("items") if isinstance(parsed, dict) else None
+        items = [it for it in (items or []) if isinstance(it, dict) and it.get("prompt")]
+        if not items:
+            msg = (
+                "No se pudo crear el reto. Inténtalo más tarde."
+                if en else
+                "Die tägliche Challenge ließ sich nicht erstellen. Versuch es später."
+            )
+            await update.effective_message.reply_text(msg)
+            return ConversationHandler.END
+        context.bot_data[cache_key] = items
 
     context.user_data["daily_queue"] = items
     context.user_data["daily_correct"] = 0

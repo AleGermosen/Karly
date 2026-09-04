@@ -58,6 +58,8 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("students", classroom.students))
     app.add_handler(CommandHandler("student", classroom.student))
     app.add_handler(CommandHandler("class", classroom.class_summary))
+    app.add_handler(CommandHandler("budget", classroom.budget))
+    app.add_handler(CommandHandler("grant", classroom.grant))
     # Approval flow callbacks (DM buttons sent to teacher).
     app.add_handler(
         CallbackQueryHandler(classroom.on_approve_student, pattern=r"^approve_student:")
@@ -97,6 +99,11 @@ def build_application() -> Application:
     # The Impostor game.
     for handler in game.build_handlers():
         app.add_handler(handler)
+
+    # "Free features" buttons shown on credit/quota exhaustion messages.
+    app.add_handler(
+        CallbackQueryHandler(conversation.on_free_feature_tap, pattern=r"^free:")
+    )
 
     # Inline action buttons attached to corrected replies (📖/➕/🎯).
     app.add_handler(

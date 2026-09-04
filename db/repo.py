@@ -9,6 +9,7 @@ from sqlalchemy import func
 from db.models import (
     Assessment,
     ConceptMastery,
+    CreditGrant,
     Document,
     LLMUsage,
     Message,
@@ -656,6 +657,47 @@ def global_credits_used() -> int:
             .scalar()
         )
         return result or 0
+
+
+def daily_credits_granted(user_id: int) -> int:
+    """Extra credits granted to this user today via /grant."""
+    since = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    with get_session() as session:
+        result = (
+            session.query(func.sum(CreditGrant.amount))
+            .filter(CreditGrant.user_id == user_id, CreditGrant.created_at >= since)
+            .scalar()
+        )
+        return result or 0
+
+
+def grant_credits(user_id: int, granted_by: int, amount: int) -> None:
+    """Record a credit grant from a teacher to a student."""
+    with get_session() as session:
+        session.add(CreditGrant(user_id=user_id, granted_by=granted_by, amount=amount))
+
+
+def top_credit_consumers(limit: int = 5) -> list[dict]:
+    """Top N users by credits spent today, descending. Returns [{name, credits}]."""
+    since = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    with get_session() as session:
+        rows = (
+            session.query(
+                User.name,
+                User.telegram_id,
+                func.sum(LLMUsage.credits).label("total"),
+            )
+            .join(LLMUsage, LLMUsage.user_id == User.id)
+            .filter(LLMUsage.created_at >= since)
+            .group_by(User.id)
+            .order_by(func.sum(LLMUsage.credits).desc())
+            .limit(limit)
+            .all()
+        )
+        return [
+            {"name": row.name or f"id={row.telegram_id}", "credits": row.total or 0}
+            for row in rows
+        ]
 
 
 def hardest_items(user_id: int, limit: int = 5) -> list[dict]:

@@ -147,18 +147,8 @@ def _user_level(user) -> str:
     return "A2-B1"
 
 
-def _correction_block(level: str, en: bool) -> str:
-    if en:
-        if level == "strict":
-            return prompts.ENGLISH_CORRECTION_STRICT
-        if level == "relaxed":
-            return prompts.ENGLISH_CORRECTION_RELAXED
-        return prompts.ENGLISH_NO_CORRECTION_NOTE
-    if level == "strict":
-        return prompts.CORRECTION_STRICT
-    if level == "relaxed":
-        return prompts.CORRECTION_RELAXED
-    return prompts.NO_CORRECTION_NOTE
+def _correction_block(level: int, en: bool) -> str:
+    return prompts.build_correction_block(level, english=en)
 
 
 def _scene_en(context: ContextTypes.DEFAULT_TYPE) -> bool:
@@ -264,7 +254,7 @@ async def scene_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     history.append({"role": "user", "text": text})
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
 
-    llm_history = [{"role": h["role"], "content": h["text"]} for h in history[:-1]]
+    llm_history = [{"role": h["role"], "text": h["text"]} for h in history[:-1]]
     try:
         reply = await route(Task.chat, text, system=system, history=llm_history)
     except QuotaExceeded:
@@ -303,7 +293,7 @@ async def scene_done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         return ConversationHandler.END
 
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
-    llm_history = [{"role": h["role"], "content": h["text"]} for h in history]
+    llm_history = [{"role": h["role"], "text": h["text"]} for h in history]
     try:
         debrief = await route(Task.chat, "/done", system=system, history=llm_history)
     except (QuotaExceeded, LLMUnavailable):

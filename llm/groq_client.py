@@ -48,6 +48,7 @@ async def generate(
     history: list[dict] | None = None,
     json_output: bool = False,
     model: str | None = None,
+    max_tokens: int | None = None,
 ) -> Generation:
     """Call Groq chat completions and return a Generation.
 
@@ -71,7 +72,7 @@ async def generate(
         "model": resolved_model,
         "messages": messages,
         "temperature": config.GROQ_TEMPERATURE,
-        "max_tokens": config.GROQ_MAX_TOKENS,
+        "max_tokens": max_tokens or config.GROQ_MAX_TOKENS,
         "stream": False,
     }
     if json_output:

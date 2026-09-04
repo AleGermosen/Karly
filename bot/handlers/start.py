@@ -162,11 +162,15 @@ HELP_ENGLISH = (
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = get_user_by_telegram_id(update.effective_user.id)
     if user and getattr(user, "status", "active") == "pending" and user.language_chosen:
-        # Student already picked language but is waiting for approval.
         await update.effective_message.reply_text(
             "⏳ Still waiting for your teacher to approve you. "
             "We'll send you a message as soon as you're in!"
         )
+        return
+    if user and user.language_chosen:
+        # Returning user — show the welcome/command list, not the language picker.
+        en = getattr(user, "learning_mode", "german") == "english"
+        await update.effective_message.reply_text(WELCOME_ENGLISH if en else WELCOME_GERMAN)
         return
     await update.effective_message.reply_text(LANGUAGE_PICKER, reply_markup=_PICKER_KB)
 

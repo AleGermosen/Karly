@@ -75,8 +75,17 @@ def require_auth(handler: Handler) -> Handler:
 
         db_user = get_or_create_user(user.id, name=user.full_name, default_status=default_status)
 
+        async def _dismiss_button() -> None:
+            """Silently dismiss the spinner on an intercepted callback tap."""
+            if update.callback_query:
+                try:
+                    await update.callback_query.answer()
+                except Exception:
+                    pass
+
         # Access gate — hard block for removed/declined users.
         if db_user.status == "removed":
+            await _dismiss_button()
             if update.effective_message:
                 await update.effective_message.reply_text(
                     "Sorry, you don't have access to this bot."
@@ -87,6 +96,7 @@ def require_auth(handler: Handler) -> Handler:
         if db_user.status == "pending":
             cmd = _command_name(update)
             if cmd not in _LANGUAGE_FREE_COMMANDS:
+                await _dismiss_button()
                 if update.effective_message:
                     await update.effective_message.reply_text(
                         "⏳ You're on the waiting list. "
@@ -98,6 +108,7 @@ def require_auth(handler: Handler) -> Handler:
         if not db_user.language_chosen:
             cmd = _command_name(update)
             if cmd not in _LANGUAGE_FREE_COMMANDS:
+                await _dismiss_button()
                 msg = update.effective_message
                 if msg:
                     await msg.reply_text(

@@ -142,10 +142,15 @@ async def _gemini_backend(
     history: list[dict] | None = None,
     json_output: bool = False,
     model: str | None = None,
+    max_tokens: int | None = None,
 ) -> Generation:
     try:
         text = await gemini.generate(
-            prompt, system=system, history=history, json_output=json_output
+            prompt,
+            system=system,
+            history=history,
+            json_output=json_output,
+            max_output_tokens=max_tokens,
         )
         return Generation(text=text, model=config.GEMINI_MODEL)
     except QuotaExceeded:
@@ -161,6 +166,7 @@ async def _ollama_backend(
     history: list[dict] | None = None,
     json_output: bool = False,
     model: str | None = None,
+    max_tokens: int | None = None,
 ) -> Generation:
     try:
         text = await ollama_client.generate(prompt, system=system)
@@ -176,10 +182,16 @@ async def _groq_backend(
     history: list[dict] | None = None,
     json_output: bool = False,
     model: str | None = None,
+    max_tokens: int | None = None,
 ) -> Generation:
     from llm import groq_client
     return await groq_client.generate(
-        prompt, system=system, history=history, json_output=json_output, model=model
+        prompt,
+        system=system,
+        history=history,
+        json_output=json_output,
+        model=model,
+        max_tokens=max_tokens,
     )
 
 
@@ -225,6 +237,17 @@ def _build_ladders() -> dict[Task, list[Rung]]:
 
 _LADDERS: dict[Task, list[Rung]] = _build_ladders()
 
+# Per-task output token caps (T.3). Shorter caps reduce cost and keep replies
+# conversational; structured tasks (assess/analyze) get more room for JSON.
+_TASK_MAX_TOKENS: dict[Task, int] = {
+    Task.chat: 700,
+    Task.assess: 512,
+    Task.generate: 1000,
+    Task.analyze: 900,
+    Task.lookup: 256,
+    Task.check: 350,
+}
+
 
 # ---------------------------------------------------------------------------
 # Core routing
@@ -254,6 +277,7 @@ async def route_result(
         )
 
     try:
+        effective_max_tokens = _TASK_MAX_TOKENS.get(task, 700)
         ladder = _LADDERS[task]
         for rung in ladder:
             state = await _ladder_state.get(rung)
@@ -270,6 +294,7 @@ async def route_result(
                     history=history,
                     json_output=json_output,
                     model=rung.model_id,
+                    max_tokens=effective_max_tokens,
                 )
                 return RouteResult(
                     text=gen.text,

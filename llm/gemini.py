@@ -33,6 +33,7 @@ async def generate(
     system: str | None = None,
     history: list[dict] | None = None,
     json_output: bool = False,
+    max_output_tokens: int | None = None,
     max_retries: int = 2,
 ) -> str:
     """Generate a response.
@@ -55,6 +56,8 @@ async def generate(
         cfg_kwargs["system_instruction"] = system
     if json_output:
         cfg_kwargs["response_mime_type"] = "application/json"
+    if max_output_tokens:
+        cfg_kwargs["max_output_tokens"] = max_output_tokens
     gen_config = types.GenerateContentConfig(**cfg_kwargs) if cfg_kwargs else None
 
     last_exc: Exception | None = None

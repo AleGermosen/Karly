@@ -253,6 +253,15 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         tokens_out=result.tokens_out,
     )
 
+    # Low-balance nudge — shown once when the student is close to their limit.
+    remaining = credit_mod.credits_remaining(user.id)
+    if 1 <= remaining <= 5:
+        nudge = (
+            f"_(💡 {remaining} chat credit{'s' if remaining != 1 else ''} left today — "
+            "flashcards and the game are always free.)_"
+        )
+        await message.reply_text(nudge)
+
     # Backend-change notification (send before the reply so it reads naturally).
     prev_label = context.user_data.get("last_backend_label")
     new_label = result.rung.label
@@ -703,3 +712,14 @@ async def backend(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text(
         f"Backend-Tag ist {state}. Nutze /backend on oder /backend off."
     )
+
+
+async def on_free_feature_tap(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Answer the 'free:practice' / 'free:impostor' buttons on credit-exhausted messages."""
+    query = update.callback_query
+    await query.answer()
+    feature = query.data.split(":", 1)[1]
+    if feature == "practice":
+        await query.message.reply_text("Type /practice to open flashcards. It's always free! 🃏")
+    else:
+        await query.message.reply_text("Type /impostor new to start a game. Always free! 🎮")

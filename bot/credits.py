@@ -24,7 +24,13 @@ from datetime import datetime
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import config
-from db.repo import daily_credits_used, global_credits_used, record_llm_usage
+from db.repo import (
+    daily_credits_granted,
+    daily_credits_used,
+    global_credits_used,
+    practice_streak,
+    record_llm_usage,
+)
 
 # ---------------------------------------------------------------------------
 # Cost table
@@ -49,12 +55,12 @@ COSTS: dict[str, int] = {
 def _free_features_keyboard(en: bool) -> InlineKeyboardMarkup:
     if en:
         return InlineKeyboardMarkup([
-            [InlineKeyboardButton("🃏 Flashcards", switch_inline_query_current_chat="/practice")],
-            [InlineKeyboardButton("🎮 Play The Impostor", switch_inline_query_current_chat="/impostor new")],
+            [InlineKeyboardButton("🃏 Flashcards — /practice", callback_data="free:practice")],
+            [InlineKeyboardButton("🎮 Play The Impostor — /impostor new", callback_data="free:impostor")],
         ])
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🃏 Karteikarten", switch_inline_query_current_chat="/practice")],
-        [InlineKeyboardButton("🎮 The Impostor spielen", switch_inline_query_current_chat="/impostor new")],
+        [InlineKeyboardButton("🃏 Karteikarten — /practice", callback_data="free:practice")],
+        [InlineKeyboardButton("🎮 The Impostor spielen — /impostor new", callback_data="free:impostor")],
     ])
 
 
@@ -103,8 +109,8 @@ def global_exhausted_text() -> str:
 
 def global_exhausted_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🃏 Flashcards", switch_inline_query_current_chat="/practice")],
-        [InlineKeyboardButton("🎮 The Impostor", switch_inline_query_current_chat="/impostor new")],
+        [InlineKeyboardButton("🃏 Flashcards — /practice", callback_data="free:practice")],
+        [InlineKeyboardButton("🎮 The Impostor — /impostor new", callback_data="free:impostor")],
     ])
 
 
@@ -126,17 +132,26 @@ def _global_limit_for_now() -> int:
     return full
 
 
+def _effective_user_limit(user_id: int) -> int:
+    """Base limit + teacher grants today + streak bonus (capped at 5)."""
+    granted = daily_credits_granted(user_id)
+    streak = practice_streak(user_id)
+    bonus = min(streak, 5)
+    return config.DAILY_CREDIT_LIMIT + granted + bonus
+
+
 def credits_check(user_id: int, cost: int) -> str:
     """Return 'ok', 'global_limit', or 'user_limit'.
 
-    Call this before any metered action. Shows the right message depending on
-    whether it's the class ceiling or just this student that's out.
+    Accounts for:
+    • Per-class daily ceiling (with reserve pool before RESERVE_HOUR_UTC)
+    • Per-student base limit + teacher grants + streak bonus (up to +5)
     """
     if cost <= 0:
         return "ok"
     if global_credits_used() + cost > _global_limit_for_now():
         return "global_limit"
-    if daily_credits_used(user_id) + cost > config.DAILY_CREDIT_LIMIT:
+    if daily_credits_used(user_id) + cost > _effective_user_limit(user_id):
         return "user_limit"
     return "ok"
 
@@ -144,6 +159,12 @@ def credits_check(user_id: int, cost: int) -> str:
 def check_credits(user_id: int, cost: int) -> bool:
     """Backward-compat wrapper — returns True iff the action is permitted."""
     return credits_check(user_id, cost) == "ok"
+
+
+def credits_remaining(user_id: int) -> int:
+    """Credits this student has left today (after grants and streak bonus)."""
+    used = daily_credits_used(user_id)
+    return max(0, _effective_user_limit(user_id) - used)
 
 
 def credit_error_response(

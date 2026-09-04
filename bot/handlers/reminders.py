@@ -59,10 +59,19 @@ async def _send_reminder(context: ContextTypes.DEFAULT_TYPE) -> None:
     if user is None:
         return
     due = count_due(user.id)
-    if due > 0:
-        text = f"⏰ Zeit zum Üben! {due} Vokabeln sind fällig. /practice 💪"
+    en = getattr(user, "learning_mode", "german") == "english"
+    if en:
+        text = (
+            f"⏰ Time to practice! {due} cards due. /practice 💪"
+            if due > 0 else
+            "⏰ Time for some English! Write to me or do /practice. 🇺🇸"
+        )
     else:
-        text = "⏰ Zeit für etwas Deutsch! Schreib mir was oder mach /practice. 🇩🇪"
+        text = (
+            f"⏰ Zeit zum Üben! {due} Vokabeln sind fällig. /practice 💪"
+            if due > 0 else
+            "⏰ Zeit für etwas Deutsch! Schreib mir was oder mach /practice. 🇩🇪"
+        )
     await context.bot.send_message(chat_id=telegram_id, text=text)
 
 
