@@ -9,12 +9,31 @@ Living plan for Karly's evolution. Updated 2026-09-03.
 **What's working today:** Dual-language tutor bot — German mode (native English speaker learning German, fully featured) and English mode (native Spanish speaker learning English, **now fully featured with all German-mode features**). Adaptive placement test, spaced-repetition flashcards (HLR scheduler, MCQ mode, deck picker, EN→ES/ES→EN flip), daily challenge, rapid quiz targeting weak skills, English roleplay scenes (6 scenarios), weekly progress report, PDF vocabulary extraction, social deduction game (The Impostor), open auth, BKT skill mastery, DKT LSTM (gated), systemd deploy on OptiPlex.
 
 **What to build next (solo phase):**
-1. **English-mode polish** — small remaining items listed below (help text updates, `/english` block, backend notice language)
-2. Voice notes — speak German/English, get a text correction back
-3. Assessment JSON hardening — retry/skip on bad output instead of raw dump
-4. Manual grade override buttons on typed answers
+1. **English mode should be in English** — the interface is currently Spanish; it should mirror German mode, with Spanish kept for explanations only
+2. **Correction strictness as a 0–5 dial** — replaces `strict / relaxed / off`. 0 is silent, 5 is exam-grade, and the default sits at 1: corrects only what breaks meaning, ignores everything else entirely
+3. **Games in `/help`** — The Impostor exists but is invisible
+4. **English-mode polish** — small remaining items listed below (`/english` block, backend notice language)
+5. Voice notes — speak German/English, get a text correction back
+6. Assessment JSON hardening — retry/skip on bad output instead of raw dump
+7. Manual grade override buttons on typed answers
 
-**When you're ready to open to other users:**
+**Next phase, planned:** give Karly a course — a topic list per CEFR level with a short
+lesson and a set of exercises each, the way test-english.com is organised, written once
+into the repo instead of invented live. **English runs the full ladder, A1 to C1**, built
+one level at a time. Plan and pending tasks in [`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md).
+
+**Also planned — classroom controls:** English mode is for your students, so the bot
+needs a roster, an approve-before-joining gate, and a teacher view of who's using it and
+how they're doing. See [Classroom phase](#classroom-phase--teacher-controls) below —
+starting with Step 0, the blockers to clear before the first student joins.
+
+**How many students fit for free?** Ungated: roughly **10–20**. **With the budget gates
+planned in [Token budget](#token-budget--making-50-daily-students-fit) — 50 students all
+using it daily**, which is the target. Enabling Groq's Developer tier is free and raises
+that to 100+; beyond that it's about **$27/month**. Reasoning in
+[Cost and capacity](#cost-and-capacity--how-many-students-fit-on-the-free-tier).
+
+**When you're ready to open to the public:**
 → Multi-tenant foundation → Usage metering → Entitlements → Telegram Stars payments
 
 ---
@@ -47,15 +66,78 @@ Turn Karly into a subscription SaaS: many Telegram users, **Groq as the primary 
 
 Ollama is excluded from structured tasks (`/test`, doc analysis) — the 3B model can't reliably produce JSON. Per-rung cooldowns are in-process only; they reset on restart (Redis moves this in Phase B).
 
-### Cost today
+### Cost and capacity — how many students fit on the free tier
 
-| Scenario | Volume | LLM cost | Infra |
+> ⚠️ **Verify these numbers before relying on them.** They're from public write-ups, not
+> from your own dashboards, and providers change limits often. Check
+> `console.groq.com` → Settings → Limits and `ai.google.dev` rate limits, and record what
+> you actually see here.
+
+**The free-tier limits that matter** (per organisation, not per key — extra API keys
+don't help):
+
+| Backend | Requests/day | Requests/min | Tokens/day |
 |---|---|---|---|
-| Just me (now) | ~1,500 turns/mo | $0 (free tier) | $0 |
-| Beta (hundreds) | 60k turns/mo | ~$20–100/mo | ~$10–20/mo |
-| Scale (thousands) | 600k turns/mo | ~$200–950/mo | ~$100–300/mo |
+| Groq `openai/gpt-oss-120b` (primary) | ~1,000 | ~30 | **~200K** ← the binding limit |
+| Groq `openai/gpt-oss-20b` (fallback) | higher | ~30 | higher |
+| Gemini Flash (fallback) | ~1,500 | **~10** ← the binding limit | effectively unlimited for us |
+| Ollama, local | unlimited | unlimited | unlimited (but 3B, chat only) |
 
-One tutor turn ≈ 2,000 input + 500 output tokens. Verify Groq rates at console.groq.com — they change.
+**The trap in that table:** Groq's 200K tokens/day sounds generous but a tutor turn is
+~2,500 tokens, so the primary backend alone is **~80 conversation turns per day, for
+everyone combined**. Gemini's 1,500 requests/day is the real workhorse, and its ceiling
+is **10 requests per minute across all students at once**.
+
+**Not all features cost the same** — this is the lever that decides your capacity:
+
+| What a student does | LLM calls | Notes |
+|---|---|---|
+| `/practice` flashcard review | **0** | Pure local scheduling. Free forever |
+| `/quiz`, `/course` exercises *after* the curriculum phase | **0** | Answers come from the committed bank |
+| The Impostor game | **0** | No LLM in the game at all |
+| `/course` unit, 15 questions | **2** | Only the write-your-own-sentence items |
+| `/daily` | 1 | |
+| One conversation message | 1 (~2,500 tokens) | **The expensive one** |
+| `/test` placement | ~12 | One-off per student |
+
+**So capacity depends on the activity mix, not the headcount:**
+
+| Students | Mostly chatting | Mostly drilling (flashcards, course, games) |
+|---|---|---|
+| **10** | ✅ Comfortable | ✅ Effortless |
+| **25** | ⚠️ Workable if spread through the day | ✅ Fine |
+| **50** | ❌ Over the daily ceiling | ⚠️ Workable |
+| **100** | ❌ No | ❌ No |
+
+**Two things break before daily volume does:**
+
+1. **Simultaneous use.** Thirty students opening the bot during the same lesson will hit
+   30 requests/min instantly, whatever the daily budget says. **A whole class using it at
+   once in a lesson is the hardest case, not the average day.**
+2. **Falling off the bottom of the ladder.** When Groq and Gemini are both exhausted the
+   only rung left is Ollama 3B, which can't produce reliable JSON — so `/test`, `/course`
+   and `/quiz` **break rather than slow down**.
+
+**Two moves, in order:**
+
+- **Enable Groq's Developer tier — it's free.** You add a card and get roughly 10× the
+  rate limits, still paying nothing until you actually spend. This is the single highest-
+  leverage thing on this page and it takes five minutes. It moves 50 students from "no"
+  to "comfortable".
+- **Then pay, because it's cheap.** 100 students × ~15 turns/day ≈ 45,000 turns/month
+  ≈ 90M input + 22.5M output tokens. At `gpt-oss-120b` rates ($0.15/M in, $0.60/M out)
+  that's **roughly $27/month**. Infrastructure stays $0 while it runs on the OptiPlex.
+
+**Honest summary:** *ungated*, the free tier comfortably covers **10–20 students**,
+stretches to **~50** if they mostly drill rather than chat and don't all pile in at once,
+and **will not** carry 100. The curriculum phase materially increases these numbers,
+because banked exercises cost nothing to serve. Budget about **$27/month** for 100 active
+students.
+
+**With budget gates, 50 daily students is the design target and it fits** — see
+[Token budget](#token-budget--making-50-daily-students-fit). Note that shortening the
+conversation history and sharing one daily challenge per class are each worth more than
+the gates themselves, because they raise the ceiling rather than dividing a fixed pie.
 
 ---
 
@@ -84,6 +166,12 @@ Feature parity is **complete** as of 2026-09-03 — all five blocked handlers ar
 English mode currently supports free conversation with corrections and `/spanish` meta-questions. Everything else — placement test, flashcards, daily challenge, quiz, roleplay, weekly report, PDF lessons — is either blocked or silently uses German prompts and German UI text. This section is the complete plan to reach parity.
 
 **Context:** English mode = native Spanish speaker learning English. All UI text shown to the user should be in Spanish. Corrections are always explained in Spanish. The conversation itself is in English.
+
+> **Superseded.** The Spanish-UI rule above was the wrong call — English mode should
+> mirror German mode, with the interface in the language being learned and Spanish kept
+> for explanations. The Spanish UI strings this phase produced get rewritten in English.
+> See ["English mode should be in English"](#english-mode-should-be-in-english). The
+> Spanish *teaching* content (correction reasons, debriefs, reports) built here stays.
 
 ---
 
@@ -340,6 +428,11 @@ Changes needed in `bot/middleware.py`:
 
 **Rate limiting / abuse:** the user has decided to defer caps and metering to later. This is acceptable for now — the bot runs on Groq's free tier, which self-limits via quota. Document this decision: metering is planned in the scale phase (see "Step 2 — Usage metering") and should be revisited before promoting the bot publicly.
 
+> **Superseded for classroom use.** Open auth stays right for the game, but students need
+> an approve-before-joining gate and per-student usage tracking. See
+> [Classroom phase](#classroom-phase--teacher-controls) — it adds an access *mode* rather
+> than reverting to single-user, so the game keeps working.
+
 ---
 
 #### Broadcast implementation
@@ -392,6 +485,155 @@ This flag is not part of the MVP. It is noted here so the state model and comman
 
 ---
 
+### English mode should be in English
+
+**This reverses the principle the English-mode parity work was built on.** That work
+stated: *"All UI text shown to the user should be in Spanish."* That's wrong for a
+learner — it makes English mode feel like a Spanish app that occasionally speaks English,
+when German mode feels like a German app. English mode should mirror German mode:
+**the target language everywhere, the native language only where the user genuinely
+needs it.**
+
+The rule, stated once: **conversation and interface in the language being learned;
+explanations and reports in the language they already speak.**
+
+| Surface | German mode (the model to copy) | English mode today | Should be |
+|---|---|---|---|
+| The conversation itself | German | English ✅ | English ✅ |
+| Menus, buttons, `/help`, `/profile`, `/review` | German | Spanish ❌ | **English** |
+| Prompts inside `/practice`, `/daily`, `/quiz`, `/course` | German | Spanish ❌ | **English** |
+| Error and quota messages | German | Spanish ❌ | **English** |
+| The `— why` on a correction | English | Spanish ✅ | Spanish ✅ keep |
+| Meta-questions (`/english` ↔ `/spanish`) | English | Spanish ✅ | Spanish ✅ keep |
+| Roleplay debrief after `/done` | English | Spanish ✅ | Spanish ✅ keep |
+| `/weekly`, `/summary`, document summaries | English | Spanish ✅ | Spanish ✅ keep |
+| Vocabulary translations | English | Spanish ✅ | Spanish ✅ keep |
+
+So the work is: **the Spanish UI strings written during the parity phase get rewritten in
+English.** The Spanish *teaching* content — explanations, debriefs, reports — stays exactly
+as it is. Roughly: `start.py`, `report.py`, `practice.py`, `quiz.py`, `daily.py`,
+`roleplay.py`, `documents.py` UI strings switch; `llm/prompts.py` mostly doesn't.
+
+**The A1 problem, and the fix.** An all-English interface is hostile to a true beginner —
+and the plan is now to teach from A1 ([`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md)). So make
+the amount of Spanish a setting rather than a constant:
+
+| `l1_support` | Interface | Who |
+|---|---|---|
+| `full` | Spanish interface, Spanish explanations | A1–A2 |
+| `minimal` | **English interface, Spanish explanations** ← the default | A2–B1 |
+| `off` | Everything in English, including the `— why` lines | B2+ |
+
+Default it from the placement test, let the user change it with `/language` or a similar
+command, and nudge upward when they clear a level: *"Your English is good enough — want
+me to switch the menus to English?"* That single question turns a settings toggle into a
+small reward.
+
+---
+
+### Games should appear in `/help`
+
+The Impostor exists (`bot/handlers/game.py`) but is invisible — it's in neither `/help`
+nor the welcome message, so nobody who wasn't told about it will ever find it.
+
+| Item | What to do |
+|---|---|
+| New `Games` section in `/help` | List `/impostor new`, `join`, `add`, `players`, `start`, `vote`, `skip`, `status`, `end` — grouped, not as nine flat lines |
+| Same section in `/start` welcome | One line, not the full command list: *"🎭 /impostor — social deduction game for the class"* |
+| Both language modes | German and English versions of the section |
+| Make the structure extensible | Future activities land in the same section rather than each needing its own help edit |
+| Consider `/games` | A short menu listing what's available, so `/help` doesn't grow forever. Worth it once there's a second game |
+
+Small task, real payoff: a feature nobody can find has no users. Worth doing at the same
+time as the `/help` and welcome-message updates already listed under English-mode polish
+above — same files, same edit.
+
+**Games sit outside the learning process, deliberately.** They're an add-on that makes
+students want to open the bot, not a teaching tool. So:
+
+| Rule | Why |
+|---|---|
+| **No corrections during a game** | Whatever the correction setting says. Being marked up mid-game kills it |
+| **No mastery, BKT, or vocabulary capture from game messages** | Game chat is not evidence about their English. Letting it into the skill model would quietly poison `/profile` and `/quiz` targeting |
+| **Doesn't count toward the practice streak** | The streak should mean study. Keep the reward honest |
+| **Does count as activity** in `/students` and the class digest | You still want to know a quiet student is at least showing up |
+| **Free to run** | The game makes no LLM calls, so it costs nothing against the quota — which makes it the right thing to point students at when capacity is tight (Step 0.6) |
+
+Present them that way in `/help` too: a **Games** section clearly separate from the
+learning commands, not mixed in among them.
+
+---
+
+### Correction strictness — a 0–5 scale
+
+**Replaces `strict / relaxed / off` with a dial from 0 to 5.** Three settings can't
+express what's actually wanted: today's "relaxed" still corrects conjugation and article
+gender, and there's nothing between it and full markup. A dial keeps what works — an off
+switch and an exam-grade setting — and puts a genuinely quiet mode at the bottom where
+it belongs.
+
+**Goal, unchanged: nobody should feel judged for talking.** Students go quiet if every
+message comes back marked up. Default to a patient conversation partner; become an
+examiner only when asked.
+
+---
+
+#### The scale
+
+The axis is **what threshold of error is worth mentioning**, plus a cap on how many.
+
+| Level | Name | Corrects | Cap | Slang | Typos & punctuation |
+|---|---|---|---|---|---|
+| **0** | **Off** | Nothing, ever. Pure conversation | — | ignored | ignored |
+| **1** | **Gentle** ← **default** | Only what genuinely breaks meaning — a sentence a native speaker would misread. **Most messages get nothing** | 1 | ignored | ignored |
+| **2** | **Light** | Level 1, plus mistakes they keep repeating — a pattern earns a mention even when the meaning was clear | 1 | ignored | ignored |
+| **3** | **Balanced** | Clear grammar errors even when meaning survives: wrong tense, wrong preposition, missing article | 2 | 💬 noted, not an error | ignored |
+| **4** | **Thorough** | Level 3, plus word choice and naturalness — understandable, but a native wouldn't say it — and register mismatch | 3–4 | 💬 noted | ignored |
+| **5** | **Exam** | Everything. Typos, capitals, punctuation, style, and better-phrasing suggestions. Exam-marking mode | none | flagged as register | **corrected** |
+
+**Level 1 is the one that matters, and it's the default.** It means what it says:
+*cares about the important stuff and ignores the rest — entirely.* Not "mentions it more
+gently", not "saves it for the end". Ignores it. A message with three small slips and
+clear meaning gets zero corrections and a normal reply.
+
+**Level 0 is not the same as level 1.** At 0 nothing is ever shown. At 1 the bot will
+still speak up if it genuinely can't tell what you meant — which is the difference
+between a silent partner and a patient one.
+
+---
+
+#### Tasks
+
+| # | Task | What to do |
+|---|---|---|
+| **S.1** | **Build the correction block from flags, not six prose blobs** | Six levels × two languages = twelve hand-written prompt constants that will drift apart within a month. Instead: one template, filled from a small per-level table (`cap`, `threshold`, `slang`, `typos`, `style`). Adding a level or retuning one becomes a data change |
+| **S.2** | **Say the quiet part in the prompt** | At levels 1–2 the model must be told that **returning no corrections is the expected outcome for most messages**, not a failure to find any. Without that line an LLM will always find something |
+| **S.3** | **Migrate the existing column** | `correction_level` is a string today. Map `off`→0, `relaxed`→**1**, `strict`→**4**. Level 5 is stricter than today's strict, so nobody gets silently upgraded into it |
+| **S.4** | **`/corrections` becomes a picker** | Six buttons with a one-line description each, in the user's language, and the current level marked. Typing `/corrections 3` should work too |
+| **S.5** | **Warm-up rule** | No corrections for a user's first few messages, or when returning after a break, at any level below 5. Let them settle in |
+| **S.6** | **Tone rules in the persona, at every level** | Never comment on the *quality* of their language, never praise-then-correct ("Good try, but…"), never count mistakes. Strictness changes *how much* is said, never *how* it's said |
+| **S.7** | **Sensible default by level** | Suggest, don't force: an A1 student at level 5 will drown. Default from the placement test — beginners start at 1, advanced learners can be offered 3 |
+| **S.8** | **Class default** | The teacher sets the starting level for a class; students can still change their own. Their choice always wins |
+| **S.9** | **Mention it once, early** | *"I'll mostly just chat. Want me to correct more? /corrections"* — then never bring it up again |
+
+---
+
+#### What the scale does not touch
+
+| | |
+|---|---|
+| **Course exercises** | Inside a unit an answer is right or wrong and is marked as such — that's what starting an exercise asked for. Strictness governs *conversation* only |
+| **Games** | Ignored entirely. No corrections mid-game at any level |
+| **What gets recorded** | Unchanged at every level, including 0 |
+
+**Nothing is lost by staying quiet.** Mistakes are still captured even when they aren't
+shown: they feed `/summary`, the weekly report, the BKT skill model, flashcards, and —
+once the classroom phase lands — your view of what the class is getting wrong. The
+learner gets an uninterrupted conversation; you still get the data. **That is what makes
+a low default safe**, and it already works this way.
+
+---
+
 ### Voice notes (STT/TTS)
 
 Let AJ speak a German or English sentence and receive a text correction back. Optionally have Karly read her reply aloud.
@@ -414,6 +656,324 @@ Cloze and sentence answers are auto-mapped to grade 2 (wrong) or 4 (correct). Po
 
 - After feedback is shown, append the grade buttons (`_grade_keyboard()`) so the user can override before advancing
 - Small change to `on_typed()` in `practice.py`
+
+---
+
+## Classroom phase — teacher controls
+
+> **Why now:** English mode is for your students, not just you. The moment other people
+> use the bot you need to know who they are, whether they're actually using it, and how
+> they're doing. This phase is small and private — a handful of students you know, not a
+> public launch. Everything in the Scale phase below stays deferred.
+
+**This reverses one earlier decision.** The Impostor work opened the bot to everyone
+(`_is_authorized()` returns `True` when `ALLOWED_USER_ID` is unset). For a class you want
+the opposite: nobody gets in until you say so. The fix is a third mode rather than going
+back to single-user — see "Access modes" below.
+
+**Build this before the curriculum phase.** Students can already use conversation,
+flashcards, `/quiz` and `/daily` — none of that waits on the course. What it does wait on
+is knowing who they are and letting them in. See
+[`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md) §7 for how the two plans meet.
+
+---
+
+### Step 0 — Blockers to clear before any student joins
+
+Tasks, not observations. Found by reading both plans against the current code.
+
+**Must be done before the first invite:**
+
+| # | Task | Where | What to do |
+|---|---|---|---|
+| **0.1** | **Stop new students landing in German mode** | `db/models.py`, `bot/middleware.py`, approval flow | `learning_mode` defaults to `"german"`, so an approved Spanish-speaking student meets a German tutor and won't know `/language` exists. Set the language at approval time (you pick it when you tap Approve), or give each class a default language that new members inherit. **This is the one that breaks on day one** |
+| **0.2** | **Define the first five minutes** | `bot/handlers/start.py` | Write the actual sequence a new student sees: welcome (in their language) → what this bot is → `/test` → their level → "here's what to do next". A class of beginners will not explore on their own. One screen, three taps, no jargon |
+| **0.3** | **Measure real usage before inviting a class** | — | Run a week yourself and count turns. Compare against the free-tier ceilings in "Cost and capacity" above. Invite in waves — 5 students, then 15, then the rest — rather than 50 on day one |
+| **0.4** | **Enable Groq's Developer tier** | Groq console | Free — add a card, get ~10× the rate limits, pay nothing until you spend. Five minutes, and it's the difference between 20 students and 50 |
+| **0.5** | **Per-student daily cap** | `bot/middleware.py` | Designed in full in [Token budget](#token-budget--making-50-daily-students-fit), tasks T.1–T.5. Meters LLM calls rather than messages, so the free features stay unlimited |
+| **0.6** | **Handle running out of quota gracefully** | `llm/router.py`, `bot/handlers/*` | When every rung is exhausted, `/test`, `/course` and `/quiz` break rather than degrade, because Ollama can't produce JSON. Detect it and say so — *"I'm out of capacity for today, try flashcards or a game"* — and steer to the zero-LLM features instead of erroring |
+
+**Before the second week:**
+
+| # | Task | Where | What to do |
+|---|---|---|---|
+| **0.7** | **Back up the database** | `deploy/` | `karly.db` will hold other people's work. A nightly copy off the OptiPlex, kept for a couple of weeks. Trivial to add, genuinely painful to skip |
+| **0.8** | **Decide on consent** | — | If any student is a minor, storing their writing and reading a dashboard about them needs a decision made deliberately. One line in the welcome telling students what their teacher can see covers the ordinary case |
+
+**Watch, don't build yet:**
+
+| # | Item | Trigger to act |
+|---|---|---|
+| **0.9** | Reminder timezone — stored as `HH:MM` in *server* local time | Only matters if students aren't in your timezone |
+| **0.10** | Sync SQLAlchemy in async handlers (Scale Step 1) | Symptom is *everything* slow at once, not one user failing. Fine at ~20 occasional users; revisit around 50 |
+
+---
+
+### Step 1 — Roster and roles
+
+Every user gets a `role` and, if they're a student, a `class`.
+
+| Item | What to do |
+|---|---|
+| `role` column on `users` | `teacher` / `student` / `guest`. You are the only teacher initially |
+| `class` column (or a `classes` table if you teach more than one group) | Lets `/students` and the weekly digest be scoped to one group |
+| `status` column | `pending` / `active` / `paused` / `removed`. Nothing is ever hard-deleted — a removed student's history stays for your records |
+| `joined_at`, `approved_by` | Basic audit trail |
+
+### Step 2 — Approval flow
+
+What you asked for: a confirmation when someone wants to start using the bot.
+
+1. A new person sends `/start`. They get a friendly "waiting for your teacher to let you
+   in" message and can't use anything else.
+2. **You get a DM:** `👤 Ana García (@ana_g) wants to join. [✅ Approve] [❌ Decline]`,
+   with a **[Approve + assign to class]** option if you run more than one group.
+3. You tap. The student is told immediately and lands in the onboarding sequence from
+   Step 0.2 — **in the language you set for them when approving** (Step 0.1).
+4. Declines are remembered, so a declined user re-sending `/start` doesn't spam you.
+
+**Access modes** — one setting, three behaviours:
+
+| Mode | Behaviour |
+|---|---|
+| `open` | Anyone can use it (today's behaviour) |
+| `approval` | New users wait for your tap ← **the classroom default** |
+| `code` | Students join with a class code you hand out in the lesson, and you confirm afterwards. Reuses the code mechanic already designed for The Impostor |
+
+### Step 3 — What you can see
+
+Three commands, teacher-only.
+
+| Command | Shows |
+|---|---|
+| `/students` | The roster: name, level, last active, current streak, cards due, units passed. Sorted by "who needs attention" — least recently active first |
+| `/student <name>` | One student in depth: CEFR per skill, units passed and failed, accuracy trend over recent weeks, weakest topics, error patterns, total messages and time on task |
+| `/class` | Weekly digest for the whole group: who was active and who wasn't, average accuracy, units completed, and **the mistakes most students are making** — the most useful thing on this list for planning a lesson |
+
+**Alerts, pushed to you rather than polled:**
+
+| Trigger | Message |
+|---|---|
+| A student hasn't used the bot in N days (default 7) | `😴 Ana hasn't practised since Tuesday.` |
+| A student fails the same unit 3 times | `⚠️ Marco has failed "Present perfect" 3 times — worth covering in class.` |
+| A student finishes a level | `🎉 Sofía cleared A2.` |
+
+Weekly digest arrives on a schedule you set, reusing the existing reminder job queue.
+
+### Step 4 — What you deliberately don't see
+
+Worth deciding now rather than after a student asks.
+
+| Data | Default |
+|---|---|
+| Scores, streaks, units, error *patterns*, activity counts | **Visible to you.** This is ordinary gradebook information |
+| Verbatim chat transcripts and their free writing | **Not visible by default.** Aggregates and error categories, yes; reading their conversations, no |
+| Optional per-student opt-in to share writing samples | Worth adding if you want to mark their writing — but make it their choice, and tell them |
+
+Students should be told, at `/start`, what their teacher can see. One short line in the
+welcome message. This costs nothing and avoids the awkward conversation later.
+
+### Step 5 — Usage tracking
+
+**This is the "Usage metering" step from the Scale phase, pulled forward** — the same
+table serves both purposes, so build it once here. It is also task **T.1** of
+[Token budget](#token-budget--making-50-daily-students-fit) below, which is the
+prerequisite for every gate in that section.
+
+One row per LLM call: `user_id, model, tokens_in, tokens_out, task, ts`. The router
+already returns `RouteResult` with token counts; the handlers just need to persist them.
+
+| Gives you | How |
+|---|---|
+| Who's actually using the bot, and how much | Per-student call and message counts, by day and week |
+| Which features get used | Grouped by task — conversation vs `/practice` vs `/course` |
+| Cost per student | Tokens × rate, so a class stays inside the free tier knowingly rather than by luck |
+| A per-student daily cap | One runaway user (or a stuck loop) can't burn the whole quota |
+
+### Step 6 — Optional, once the course exists
+
+Only worth building after the curriculum phase ([`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md)) lands.
+
+| Item | What it does |
+|---|---|
+| Assignments | You assign a unit or level to the class; it becomes their next `/course` task, and `/class` shows who's done it |
+| CSV export | Roster and scores out to a spreadsheet for your own gradebook |
+| Multiple classes | Only if you teach more than one group — otherwise the `class` column is enough |
+
+### Suggested order
+
+0. Clear the day-one blockers (Step 0) — especially the German-mode default
+1. Roster and roles (Step 1) — nothing works without it
+2. Approval flow (Step 2) — the gate you asked for; makes it safe to hand out
+3. Usage tracking (Step 5) — start collecting early, it's worthless retroactively
+4. `/students` and `/student` (Step 3) — the day-to-day view
+5. `/class` digest and alerts (Step 3) — the weekly rhythm
+6. Assignments and export (Step 6) — after the course exists
+
+Steps 0–3 are the minimum to put the bot in front of a class.
+
+---
+
+## Token budget — making 50 daily students fit
+
+> **Goal:** 50 students, all able to use the bot every day, on or near the free tier.
+> Interested, not obsessed. Nobody hits a wall that makes them stop coming back.
+
+This is reachable, but only by metering the **right thing**.
+
+---
+
+### The budget, worked out
+
+| | |
+|---|---|
+| Usable free capacity (mostly Gemini's ~1,500 req/day) | ~1,600 LLM calls/day |
+| Run at 60% of the ceiling, not 100% | **~1,000 calls/day to spend** |
+| Across 50 students | **~20 LLM calls per student per day** |
+
+Twenty calls is a real day's use — roughly twenty back-and-forth messages, or a course
+unit plus a chat plus the daily challenge. It's generous for "getting interested" and
+tight enough that nobody can drain the class.
+
+And in practice it's looser than it sounds: not every student shows up every day, so
+unused allowance is headroom for the ones who do.
+
+---
+
+### Rule 1 — meter LLM calls, not messages
+
+**Most of the bot already costs nothing.** Any gate that counts "messages" would punish
+students for using the free features, which is exactly backwards.
+
+| Always free, never limited | Metered |
+|---|---|
+| `/practice` flashcards (local scheduling) | Conversation messages |
+| Banked `/course` and `/quiz` questions | Roleplay turns |
+| The Impostor game | `/daily` |
+| `/profile`, `/review`, `/students`, progress screens | `/test` placement |
+| Course lesson cards (they're files) | "📖 Explain why" taps |
+| Reading a transcript, retrying a wrong answer | Write-your-own-sentence grading, PDF analysis |
+
+**Design rule: a student who runs out of budget can still learn.** Flashcards, their
+course, and the game are all open. That is the whole reason the curriculum phase matters
+for cost — banked exercises move the most valuable activity into the free column.
+
+### Rule 2 — price actions by what they actually cost
+
+One "credit" ≈ one LLM call. Students see a small number, not tokens.
+
+| Action | Credits |
+|---|---|
+| Conversation message, roleplay turn, "explain why" tap | 1 |
+| `/daily`, `/quiz` (before the bank exists) | 2 |
+| PDF upload and analysis | 5 |
+| `/test` placement | 10 — but once, and it should come out of a separate joining allowance so a new student isn't broke on day one |
+| Everything in the free column above | 0 |
+
+**Starting allowance: 20 credits/day per student**, resetting at midnight. Tunable per
+class — it's one number, not a code change.
+
+---
+
+### Rule 3 — four gates, not one
+
+Each catches something the others don't.
+
+| # | Gate | Stops |
+|---|---|---|
+| **1** | **Per-student daily allowance** (20 credits) | One enthusiastic student eating the class's budget |
+| **2** | **Global daily ceiling** across all students | 50 students each staying under their own cap but collectively exhausting the provider |
+| **3** | **Per-student rate limit** (a few seconds between messages) | Spam, stuck loops, a phone sitting on a key |
+| **4** | **Concurrency queue** | The lesson problem — 30 students at once against a 10–40 req/min ceiling. Queue with a "thinking…" indicator instead of failing |
+
+**Plus a reserve.** Hold back ~25% of the global daily budget until mid-afternoon, so a
+class at 3pm doesn't find that night owls spent everything at 1am. Simple rule, prevents
+the most annoying possible failure.
+
+### Rule 4 — running out is a redirect, never a wall
+
+The moment a student is told "no", they stop coming back. So nobody is ever hard-stopped:
+
+1. **Allowance spent →** *"That's today's chat with me. Your flashcards and course are
+   still open, and the game's always free."* Offer the buttons, don't just say it.
+2. **Still want to talk →** fall through to **Ollama, running locally**. Unlimited, free,
+   lower quality, no structured tasks. The conversation continues; it just gets simpler.
+   (Caveat: the OptiPlex handles a trickle, not a crowd — this is a graceful tail, not a
+   second tier of capacity.)
+3. **Global budget exhausted →** the whole class is told plainly, and pointed at the free
+   activities. Never a silent failure or a raw error.
+
+**Turn the limit into a motivator rather than a punishment:**
+
+| Idea | Effect |
+|---|---|
+| Only show the counter when it's low ("5 left today") | Invisible until it matters; no anxiety |
+| Streak bonus — a few extra credits for practising several days running | The limit becomes a reward to earn |
+| Free-column activities top nothing up but cost nothing | Steers effort toward the things that actually teach |
+| `/grant Ana 20` for the teacher | You can lift a cap for a student who's genuinely working |
+
+---
+
+### Rule 5 — make each call cheaper (as valuable as capping)
+
+Halving what a call costs is the same as doubling the class size. Highest leverage first:
+
+| # | Task | Saving |
+|---|---|---|
+| **B.1** | **Shorten conversation history.** `recent_history(limit=20)` sends 20 prior messages on every turn — most of the ~2,000 input tokens. Cut to 6–8 recent turns plus a rolling summary of older context | Potentially **~40–50% of all input tokens**, the single biggest win |
+| **B.2** | **One daily challenge per level, shared by the class.** Generate `/daily` once per level per day and serve it to every student at that level. 50 calls become ~5 — and the whole class doing the same challenge is *better* teaching, not a compromise | ~90% of `/daily` cost |
+| **B.3** | **Cap output length.** Set `max_tokens` per task so replies stay conversational instead of rambling | ~20–30% of output tokens |
+| **B.4** | **Trim the system prompt.** Persona + correction block ride along on every single call | Small per call, large across 50 students |
+| **B.5** | **Route cheap tasks to the cheap rung.** Lookups and short checks don't need the 120b model | Preserves 120b quota for conversation |
+| **B.6** | **Cache identical requests.** Same "explain why" on the same correction, asked by twenty students, is one answer | Grows with class size |
+
+**B.1 and B.2 together are probably worth more than the entire gating system.** Do them
+first — they raise the ceiling for everyone instead of dividing a fixed pie.
+
+---
+
+### Rule 6 — you need to see it
+
+| Command | Shows |
+|---|---|
+| `/budget` | Today's global usage, % of ceiling, projected exhaustion time, top consumers |
+| Alert at 70% of the daily ceiling | Time to act before students notice anything |
+| Per-student credits in `/student` | Who's actually engaged, and who needs a bigger allowance |
+
+---
+
+### Tasks, in order
+
+| # | Task | Why this order |
+|---|---|---|
+| **T.1** | Usage tracking — one row per LLM call with tokens and task (Classroom Step 5) | You cannot budget what you don't measure. Everything below needs this table |
+| **T.2** | B.1 — shorten conversation history | Biggest single saving, and it's independent of everything else |
+| **T.3** | B.3 + B.4 — output cap and prompt trim | Quick, safe, compounding |
+| **T.4** | Free vs metered classification | Decide once, in one place, which actions cost credits |
+| **T.5** | Per-student daily allowance + the redirect message | The main gate. Useless before T.4 |
+| **T.6** | Global ceiling + reserve pool | Protects the class from itself |
+| **T.7** | Rate limit + concurrency queue | Fixes the whole-class-at-once lesson case |
+| **T.8** | B.2 — shared daily challenge | Bigger win once there are actually 50 students |
+| **T.9** | `/budget` and the 70% alert | Now you can tune the numbers with real data |
+| **T.10** | Streak bonus, `/grant`, low-balance nudges | Polish — makes the limit feel like a game |
+
+**T.1–T.5 are enough to safely invite 50 students.** The rest is tuning.
+
+---
+
+### Where this leaves the goal
+
+| | 50 daily students |
+|---|---|
+| Today, no gates | ❌ Would exhaust the free tier and break `/test` and `/course` |
+| With T.1–T.5 | ✅ Fits, at ~20 credits each |
+| With T.1–T.8 | ✅ Comfortable, with room for heavier users |
+| Plus Groq Developer tier (free) | ✅ Comfortable at **100+** |
+| Plus ~$27/month | ✅ Stop thinking about it entirely |
+
+**The honest summary: gating alone gets you to 50. Gating plus B.1 and B.2 gets you there
+with room to spare. And if it ever becomes tight, the paid escape hatch is about the
+price of a couple of coffees a month.**
 
 ---
 

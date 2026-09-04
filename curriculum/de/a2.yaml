@@ -1,0 +1,50 @@
+# German A2 — spine.
+#
+# REFERENCE UNIT ONLY. This file holds the single hand-written unit from stage H0
+# of CURRICULUM_PLAN.md. The remaining ~23 A2 units get written at H1 and reviewed
+# by hand.
+#
+# spine_hash is sha256 (first 16 hex chars) over compact JSON with sorted keys of
+# {title_target, level, skill, exercises}. Deliberately excludes explain,
+# examples, pitfalls, can_do and order — those can be edited freely without
+# invalidating a single bank item.
+
+- id: de.a2.g07
+  kind: grammar
+  level: A2
+  order: 7
+  title_target: "Perfekt vs. Präteritum"
+  title_l1: "Perfect vs. simple past"
+  can_do: "I can tell someone what I did at the weekend."
+  # Empty while this unit stands alone — lint rejects prereqs pointing at units
+  # that don't exist yet. Becomes [de.a2.g03] once H1 fills in the level.
+  prereqs: []
+  skill: grammar
+
+  explain:
+    - "Spoken German tells past stories with the Perfekt: haben/sein + past participle at the end of the clause."
+    - "Ich habe gearbeitet. / Ich bin gefahren. — the auxiliary is conjugated, the participle never changes."
+    - "Use sein for movement (gehen, fahren, kommen) and change of state (aufstehen, einschlafen, sterben)."
+    - "Everything else takes haben, including every verb with an accusative object."
+    - "The Präteritum survives in speech for sein, haben and the modals: war, hatte, konnte, musste, wollte."
+    - "Writing flips it: novels, reports and news narrate in the Präteritum."
+    - "Regular participles: ge- + stem + -t (gearbeitet). Irregular: ge- + stem + -en, often with a vowel change (gefahren)."
+    - "No ge- after inseparable prefixes (besucht, verstanden) or -ieren (studiert); separable verbs take it inside: aufgestanden."
+
+  examples:
+    - {target: "Ich habe gestern den ganzen Tag gearbeitet.", gloss: "I worked all day yesterday."}
+    - {target: "Wir sind am Samstag ins Kino gegangen.", gloss: "We went to the cinema on Saturday."}
+    - {target: "Ich war müde und hatte keine Zeit.", gloss: "I was tired and didn't have time."}
+
+  pitfalls:
+    - "English 'I worked' is a simple past, but spoken German maps it to the Perfekt, not the Präteritum."
+    - "The Perfekt is not the English present perfect: 'Ich habe ihn gestern gesehen' = 'I saw him yesterday', which English forbids with 'have seen'."
+    - "Never 'ich bin gearbeitet' — sein is only for motion and change of state; arbeiten takes haben."
+
+  exercises:
+    - {type: mcq,       n: 5}
+    - {type: cloze,     n: 5}
+    - {type: transform, n: 3}
+    - {type: produce,   n: 2}
+
+  spine_hash: "sha256:688848b3e4d7607f"
