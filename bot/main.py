@@ -4,10 +4,12 @@ from __future__ import annotations
 import logging
 
 from telegram import BotCommand
+from telegram.constants import ParseMode
 from telegram.ext import (
     Application,
     CallbackQueryHandler,
     CommandHandler,
+    Defaults,
     MessageHandler,
     filters,
 )
@@ -43,7 +45,12 @@ logger = logging.getLogger("karly")
 
 
 def build_application() -> Application:
-    app = Application.builder().token(config.TELEGRAM_BOT_TOKEN).build()
+    app = (
+        Application.builder()
+        .token(config.TELEGRAM_BOT_TOKEN)
+        .defaults(Defaults(parse_mode=ParseMode.MARKDOWN))
+        .build()
+    )
 
     app.add_handler(CommandHandler("start", start.start))
     app.add_handler(CommandHandler("help", start.help_cmd))

@@ -34,16 +34,14 @@ MIN_EXCHANGES = 8
 MAX_EXCHANGES = 12
 
 CEFR_LADDER = ["A1", "A2", "B1", "B2", "C1", "C2"]
-START_LEVEL = "A2"
+START_LEVEL = "A1"
 
 OPEN_BATCH_SIZE = 5
 
 SKILL_QUOTA = {
-    "grammar": 2,
-    "reading": 2,
-    "comprehension": 2,
-    "production": 2,
-    "functional": 2,
+    "grammar": 4,
+    "reading": 3,
+    "comprehension": 3,
     "vocab": 2,
 }
 
@@ -281,10 +279,7 @@ async def _serve_next(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     if item.get("type") == "mcq" and item.get("options"):
         keyboard = _mcq_keyboard(item_no, item["options"])
     else:
-        q_no = context.user_data.get("assess_open_no", 0) + 1
-        context.user_data["assess_open_no"] = q_no
-        item["_q_no"] = q_no
-        label = f"✍️ Pregunta abierta {q_no}:" if en else f"✍️ Offene Frage {q_no}:"
+        label = "✏️ Fill in the blank:" if en else "✏️ Lückentext — schreib das fehlende Wort:"
         text = f"{label}\n{text}"
 
     if count >= MIN_EXCHANGES:
@@ -390,28 +385,39 @@ async def _flush_open(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 @require_auth
 async def assess_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle fill-in-the-blank answers (auto-graded against item['answer'])."""
     item = context.user_data.get("assess_item") or {}
     answer = (update.effective_message.text or "").strip()
+    en = _is_english(context)
 
     transcript = context.user_data["assess_transcript"]
     transcript.append({"role": "user", "text": answer})
+
+    # Auto-grade: compare against the expected answer stored in the item.
+    expected = (item.get("answer") or "").strip()
+    correct = bool(expected) and expected.lower() in answer.lower()
+
     results = context.user_data["assess_results"]
     results.append(
-        {"skill": item.get("skill"), "level": item.get("level"), "correct": None}
-    )
-    context.user_data.setdefault("assess_pending_open", []).append(
-        {
-            "q_no": item.get("_q_no", context.user_data["assess_count"] + 1),
-            "question": _item_text(item),
-            "answer": answer,
-            "result_idx": len(results) - 1,
-            "transcript_idx": len(transcript) - 1,
-        }
+        {"skill": item.get("skill"), "level": item.get("level"), "correct": correct}
     )
     context.user_data["assess_count"] += 1
 
-    if len(context.user_data["assess_pending_open"]) >= OPEN_BATCH_SIZE:
-        await _flush_open(update, context)
+    skill = item.get("skill")
+    user_id = context.user_data.get("assess_user_id")
+    if skill and user_id:
+        update_bkt_state(user_id, skill, correct, level=item.get("level"))
+
+    context.user_data["assess_level"] = _step_level(
+        context.user_data.get("assess_level", START_LEVEL), 1 if correct else -1
+    )
+
+    if en:
+        mark = "✅ ¡Correcto!" if correct else f"❌ Respuesta: *{expected}*"
+    else:
+        mark = "✅ Richtig!" if correct else f"❌ Lösung: *{expected}*"
+    await update.effective_message.reply_text(mark)
+
     return await _serve_next(update, context)
 
 

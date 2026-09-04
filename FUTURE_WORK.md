@@ -1,1037 +1,153 @@
-# Karly — Roadmap & Future Work
+# Karly — Roadmap & Status
 
-Living plan for Karly's evolution. Updated 2026-09-04.
-
----
-
-## TL;DR
-
-**What's working today:** Dual-language tutor bot — German mode (native English speaker learning German, fully featured) and English mode (native Spanish speaker learning English, **now fully featured with all German-mode features**). Adaptive placement test, spaced-repetition flashcards (HLR scheduler, MCQ mode, deck picker, EN→ES/ES→EN flip), daily challenge, rapid quiz targeting weak skills, English roleplay scenes (6 scenarios), weekly progress report, PDF vocabulary extraction, social deduction game (The Impostor), open auth, BKT skill mastery, DKT LSTM (gated), systemd deploy on OptiPlex.
-
-**What to build next (solo phase):**
-1. ✅ **English mode should be in English** — done: interface is now English; Spanish kept for explanations only
-2. ✅ **Correction strictness as a 0–5 dial** — done: `strict / relaxed / off` replaced with 0–5 integer scale; picker UI, warm-up rule, tone rules all implemented
-3. **Games in `/help`** — The Impostor exists but is invisible
-4. **English-mode polish** — small remaining items listed below (`/english` block, backend notice language)
-5. Voice notes — speak German/English, get a text correction back
-6. ✅ Assessment JSON hardening — done: two-layer retry + graceful skip after 3 consecutive failures
-7. ✅ Manual grade override buttons on typed answers — done: grade keyboard always shown after feedback
-
-**Next phase, planned:** give Karly a course — a topic list per CEFR level with a short
-lesson and a set of exercises each, the way test-english.com is organised, written once
-into the repo instead of invented live. **English runs the full ladder, A1 to C1**, built
-one level at a time. Plan and pending tasks in [`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md).
-
-**Classroom controls (Steps 0–3 done):** roster with roles, approval flow (ACCESS_MODE=approval), and teacher views (`/students`, `/student`, `/class`) are all implemented. Per-student daily credit cap and graceful quota exhaustion are live. Remaining: Steps 4–6 (privacy policy, assignments, CSV export), token budget T.6–T.10. See [Classroom phase](#classroom-phase--teacher-controls) below.
-
-**How many students fit for free?** Ungated: roughly **10–20**. **With the budget gates
-planned in [Token budget](#token-budget--making-50-daily-students-fit) — 50 students all
-using it daily**, which is the target. Enabling Groq's Developer tier is free and raises
-that to 100+; beyond that it's about **$27/month**. Reasoning in
-[Cost and capacity](#cost-and-capacity--how-many-students-fit-on-the-free-tier).
-
-**When you're ready to open to the public:**
-→ Multi-tenant foundation → Usage metering → Entitlements → Telegram Stars payments
+*Last updated: 2026-09-04*
 
 ---
 
-## Vision
+## TL;DR — What's pending right now
 
-Turn Karly into a subscription SaaS: many Telegram users, **Groq as the primary LLM** (sub-2s replies are the product's edge), sold via **Telegram Stars**. Build only as far as demand justifies.
+> Everything above the line is the working list. Scan this first every session.
 
-**Locked decisions:**
+### 🔴 Bugs — confirmed, not yet fixed
 
-| Decision | Choice |
-|---|---|
-| First scale target | Paid beta — ≤ hundreds of users |
-| Payments | Telegram Stars (native, recurring) |
-| Free vs paid split | Same model quality for all; gate on volume + features |
-| Primary LLM | Groq `openai/gpt-oss-120b` (fallback `openai/gpt-oss-20b`). Note: `groq/compound*` are agentic systems, not chat-completion — they 404 on `/chat/completions`. |
+| # | Bug | Where | Impact |
+|---|-----|--------|--------|
+| **B-1** | Roleplay turns and `/summary`, `/learn` cost 0 credits — budget leak | `roleplay.py`, `conversation.py`, `documents.py` | Medium — a student can bypass the credit system entirely via roleplay |
+| **B-2** | Token cap for `assess` (512) may truncate verdict JSON; Gemini burns cap on thinking tokens | `router.py` `_TASK_MAX_TOKENS` | Medium — `/test` can silently fail when Groq is exhausted |
+| **B-3** | Daily cache hits still charge full 2 credits; shared prompt bakes in one student's gaps | `daily.py` | Low — price cache hits at 1 credit; drop personal gaps from the shared prompt |
+| **B-4** | Deck picker reverse-direction buttons hardcode `deck:all:rev`, ignoring specific deck choice | `practice.py` | Low |
+| **B-5** | `telegram_id` and `approved_by` columns are `Integer` — overflows for new Telegram accounts (>2³¹) | `db/models.py` | Low now, breaks on Postgres migration |
+| **B-6** | `get_or_create_user` never updates a user's name if it changed in Telegram | `db/repo.py` | Low |
+| **B-7** | Job-queue extra (`python-telegram-bot[job-queue]`) — if not installed, `/remind` silently does nothing | `deploy/` | Operational — verify on OptiPlex |
 
----
+### 🟡 Features — planned, not started
 
-## Current system snapshot
+| # | Item | Priority | Notes |
+|---|------|----------|-------|
+| **F-1** | `/english` block in English mode — redirect to `/spanish` | Low | One-liner in `conversation.py` |
+| **F-2** | Bilingual stale-correction message | Low | `conversation.py` — currently German-only |
+| **F-3** | Backend notices in Spanish for English-mode students | Low | `_BACKEND_NOTICES` in `conversation.py` |
+| **F-4** | Games section in `/help` and `/start` — The Impostor is invisible | Medium | `start.py`, `MENU_COMMANDS` in `main.py` |
+| **F-5** | Correction strictness defaults from placement test (S.7) | Medium | Suggest level in `_finish()` |
+| **F-6** | Teacher sets class default correction level (S.8) | Low | After S.7 |
+| **F-7** | One-time correction nudge after first correction (S.9) | Low | `conversation.py` |
+| **F-8** | First-5-minutes onboarding for newly approved students (Step 0.2) | Medium | `start.py` — approved students get a structured start sequence |
+| **F-9** | Nightly database backup (Step 0.7) | High | `deploy/` — `karly.db` holds student work; a nightly copy is free insurance |
+| **F-10** | Consent line in welcome message (Step 0.8) | Medium | One sentence at `/start`: what the teacher can see |
+| **F-11** | `/mybudget` for students — show their own remaining credits | Low | New command; reuses `credits_remaining()` |
+| **F-12** | Show correction level in `/profile` | Low | One line; helps students understand their current setting |
+| **F-13** | Voice notes — speak German/English, get a text correction back | Future | Groq Whisper → existing correction pipeline |
+| **F-14** | Assignments + CSV export (Step 6) | Future | After curriculum phase exists |
 
-### Backend ladder (live)
+### ✅ Recently fixed (this session)
 
-```
-⚡ Groq (openai/gpt-oss-120b)     — primary; fast
-⚡ Groq Mini (openai/gpt-oss-20b) — Groq 120b daily limit hit
-🤖 Gemini (gemini-3.6-flash)      — both Groq limits hit
-🐌 Ollama (local 3B)              — last resort; chat only
-```
-
-Ollama is excluded from structured tasks (`/test`, doc analysis) — the 3B model can't reliably produce JSON. Per-rung cooldowns are in-process only; they reset on restart (Redis moves this in Phase B).
-
-### Cost and capacity — how many students fit on the free tier
-
-> ⚠️ **Verify these numbers before relying on them.** They're from public write-ups, not
-> from your own dashboards, and providers change limits often. Check
-> `console.groq.com` → Settings → Limits and `ai.google.dev` rate limits, and record what
-> you actually see here.
-
-**The free-tier limits that matter** (per organisation, not per key — extra API keys
-don't help):
-
-| Backend | Requests/day | Requests/min | Tokens/day |
-|---|---|---|---|
-| Groq `openai/gpt-oss-120b` (primary) | ~1,000 | ~30 | **~200K** ← the binding limit |
-| Groq `openai/gpt-oss-20b` (fallback) | higher | ~30 | higher |
-| Gemini Flash (fallback) | ~1,500 | **~10** ← the binding limit | effectively unlimited for us |
-| Ollama, local | unlimited | unlimited | unlimited (but 3B, chat only) |
-
-**The trap in that table:** Groq's 200K tokens/day sounds generous but a tutor turn is
-~2,500 tokens, so the primary backend alone is **~80 conversation turns per day, for
-everyone combined**. Gemini's 1,500 requests/day is the real workhorse, and its ceiling
-is **10 requests per minute across all students at once**.
-
-**Not all features cost the same** — this is the lever that decides your capacity:
-
-| What a student does | LLM calls | Notes |
-|---|---|---|
-| `/practice` flashcard review | **0** | Pure local scheduling. Free forever |
-| `/quiz`, `/course` exercises *after* the curriculum phase | **0** | Answers come from the committed bank |
-| The Impostor game | **0** | No LLM in the game at all |
-| `/course` unit, 15 questions | **2** | Only the write-your-own-sentence items |
-| `/daily` | 1 | |
-| One conversation message | 1 (~2,500 tokens) | **The expensive one** |
-| `/test` placement | ~12 | One-off per student |
-
-**So capacity depends on the activity mix, not the headcount:**
-
-| Students | Mostly chatting | Mostly drilling (flashcards, course, games) |
-|---|---|---|
-| **10** | ✅ Comfortable | ✅ Effortless |
-| **25** | ⚠️ Workable if spread through the day | ✅ Fine |
-| **50** | ❌ Over the daily ceiling | ⚠️ Workable |
-| **100** | ❌ No | ❌ No |
-
-**Two things break before daily volume does:**
-
-1. **Simultaneous use.** Thirty students opening the bot during the same lesson will hit
-   30 requests/min instantly, whatever the daily budget says. **A whole class using it at
-   once in a lesson is the hardest case, not the average day.**
-2. **Falling off the bottom of the ladder.** When Groq and Gemini are both exhausted the
-   only rung left is Ollama 3B, which can't produce reliable JSON — so `/test`, `/course`
-   and `/quiz` **break rather than slow down**.
-
-**Two moves, in order:**
-
-- **Enable Groq's Developer tier — it's free.** You add a card and get roughly 10× the
-  rate limits, still paying nothing until you actually spend. This is the single highest-
-  leverage thing on this page and it takes five minutes. It moves 50 students from "no"
-  to "comfortable".
-- **Then pay, because it's cheap.** 100 students × ~15 turns/day ≈ 45,000 turns/month
-  ≈ 90M input + 22.5M output tokens. At `gpt-oss-120b` rates ($0.15/M in, $0.60/M out)
-  that's **roughly $27/month**. Infrastructure stays $0 while it runs on the OptiPlex.
-
-**Honest summary:** *ungated*, the free tier comfortably covers **10–20 students**,
-stretches to **~50** if they mostly drill rather than chat and don't all pile in at once,
-and **will not** carry 100. The curriculum phase materially increases these numbers,
-because banked exercises cost nothing to serve. Budget about **$27/month** for 100 active
-students.
-
-**With budget gates, 50 daily students is the design target and it fits** — see
-[Token budget](#token-budget--making-50-daily-students-fit). Note that shortening the
-conversation history and sharing one daily challenge per class are each worth more than
-the gates themselves, because they raise the ceiling rather than dividing a fixed pie.
+| Fix | What changed |
+|-----|-------------|
+| **Buttons not responding** | `require_auth` wrapper discarded handler return values — ConversationHandlers never entered their states. Fixed: `return await handler(...)` |
+| **Roleplay silent after first turn** | History dicts used `"content"` key; all backends expect `"text"`. Fixed in `scene_message` and `scene_done` |
+| **Roleplay corrections never fired** | `_correction_block()` compared integer (0–5) against strings. Fixed: now calls `prompts.build_correction_block(level, english=en)` |
+| **Asterisks instead of bold text** | No `parse_mode` set anywhere. Fixed: `Defaults(parse_mode=ParseMode.MARKDOWN)` in `Application.builder()` |
+| **Credit exhaustion buttons broken** | `switch_inline_query_current_chat` requires inline mode and puts text in input field — an error loop. Fixed: `callback_data` buttons with `on_free_feature_tap` handler |
+| **`/start` showed picker to returning users** | Both branches were identical. Fixed: returning users see the welcome/commands message |
+| **Button spinner on blocked taps** | Middleware returned early without calling `query.answer()`. Fixed: `_dismiss_button()` called in every early-return branch |
+| **German reminders for English-mode students** | Reminder text was always German. Fixed: mode-aware text in `_send_reminder()` |
+| **Assessment starts too hard, asks to describe things** | Started at A2, allowed open/production questions. Fixed: starts at A1, MCQ and fill-in-the-blank only, auto-graded |
 
 ---
 
-## Solo phase — what to build next
+## What's working today
 
-These are quality improvements that make sense before opening to other users.
+**Dual-language tutor:** German mode (English speaker learning German) and English mode (Spanish speaker learning English) — both fully featured.
 
----
+**Core features:** adaptive placement test (A1 start, MCQ + fill-in-the-blank, auto-graded), spaced-repetition flashcards (HLR scheduler, MCQ/cloze/sentence modes, deck picker, direction flip), daily mini-challenge (shared per level, cached), rapid skill quiz, roleplay scenes (6 German + 6 English scenarios, corrections at right level), weekly progress report, PDF vocabulary extraction, The Impostor social deduction game, BKT skill mastery, DKT LSTM (gated, activates at 50+ reviews).
 
-### English-mode polish (remaining items)
+**Classroom controls:** roster + roles, approval flow (`ACCESS_MODE=approval`), teacher dashboard (`/students`, `/student`, `/class`, `/budget`, `/grant`), per-student daily credit cap, global ceiling with reserve pool, rate limiting, concurrency queue, streak bonus, low-balance nudge.
 
-Feature parity is **complete** as of 2026-09-03 — all five blocked handlers are unblocked, all UI strings have been switched to English, all prompts are English-aware. What's left is cosmetic/minor:
-
-| Item | File | Status |
-|---|---|---|
-| ✅ Update `WELCOME_ENGLISH` | `bot/handlers/start.py` | Done — commands added, interface in English |
-| ✅ Update `HELP_ENGLISH` | `bot/handlers/start.py` | Done — all commands listed in English |
-| Block `/english` in English mode | `bot/handlers/conversation.py` | Still pending — in `english()`: if `learning_mode == "english"`, reply redirect to `/spanish` |
-| Spanish stale-correction message | `bot/handlers/conversation.py` | Still pending — "Diese Korrektur ist zu alt" should be bilingual |
-| Backend notices in Spanish | `bot/handlers/conversation.py` | Still pending — low priority; backend transitions are rare |
+**Backend ladder:** Groq 120b → Groq 20b → Gemini 3.6-flash → Ollama (chat only). Per-rung cooldowns in-process.
 
 ---
 
-### English-mode feature parity (COMPLETE ✅)
+## Bug detail
 
-English mode currently supports free conversation with corrections and `/spanish` meta-questions. Everything else — placement test, flashcards, daily challenge, quiz, roleplay, weekly report, PDF lessons — is either blocked or silently uses German prompts and German UI text. This section is the complete plan to reach parity.
+### B-1 — Unmetered LLM usage (budget leak)
 
-**Context:** English mode = native Spanish speaker learning English. All UI text shown to the user should be in Spanish. Corrections are always explained in Spanish. The conversation itself is in English.
+These handlers make LLM calls but have no `credits_check()` or `spend()`:
 
-> **Superseded.** The Spanish-UI rule above was the wrong call — English mode should
-> mirror German mode, with the interface in the language being learned and Spanish kept
-> for explanations. The Spanish UI strings this phase produced get rewritten in English.
-> See ["English mode should be in English"](#english-mode-should-be-in-english). The
-> Spanish *teaching* content (correction reasons, debriefs, reports) built here stays.
+| Handler | Function | Has credit gate? |
+|---------|----------|-----------------|
+| `roleplay.py` | `_launch_scene`, `scene_message`, `scene_done` | ❌ No |
+| `conversation.py` | `summary()` | ❌ No (cost defined in `COSTS` but never charged) |
+| `documents.py` | `learn()` | ❌ No (cost defined in `COSTS` but never charged) |
+| `conversation.py` | `english()`, `spanish()` | ❌ No |
 
----
+Fix: add `credits_check` + `spend` calls to each, following the same pattern as `chat()`.
 
-#### Group 1 — New LLM prompts (all in `llm/prompts.py`)
+### B-2 — Token cap may break `/test` and Gemini structured tasks
 
-These are the deepest change: every German-specific prompt needs an English counterpart. The model must understand it is teaching English to a Spanish speaker.
+`_TASK_MAX_TOKENS["assess"] = 512` is tight for the verdict JSON (skills + gaps + summary). Gemini 2.5/3.x models may consume the entire `max_output_tokens` budget on internal thinking tokens and return empty text, causing `LLMUnavailable` and falling through to Ollama — which can't produce JSON.
 
-| Prompt constant | German original | English-mode equivalent needed |
-|---|---|---|
-| `TUTOR_PERSONA` | German tutor for AJ | Already done: `ENGLISH_TUTOR_PERSONA` ✅ |
-| `CORRECTION_STRICT/RELAXED` | Corrections in English about German | Already done: `ENGLISH_CORRECTION_STRICT/RELAXED` ✅ |
-| `ASSESS_INTERVIEW` | Adaptive German placement | `ENGLISH_ASSESS_INTERVIEW` — same structure (mcq/open, CEFR scale), but testing English grammar (articles, tenses, prepositions, phrasal verbs, word order). All prompts/options in English; instruction line in Spanish so the user understands what to do. |
-| `ASSESS_VERDICT` | German CEFR verdict JSON | `ENGLISH_ASSESS_VERDICT` — identical JSON shape; skills renamed to English equivalents (grammar, reading, writing, vocabulary, listening-comprehension). Gaps should be English-specific issues, e.g. "phrasal verbs", "present perfect vs simple past". |
-| `ASSESS_GRADE_OPEN_BATCH` | Grades open German answers | `ENGLISH_ASSESS_GRADE_OPEN_BATCH` — same JSON shape; judge whether the English answer is correct and grammatical; feedback line in Spanish. |
-| `DAILY_CHALLENGE` | 3-item German challenge | `ENGLISH_DAILY_CHALLENGE` — same 3-item JSON structure (cloze / translate / reply), but: cloze sentence is in English with a Spanish gloss; translate = short Spanish sentence → user writes English; reply = a real-life English situation (email, voicemail, conversation). |
-| `QUIZ_ITEMS` | German MCQ quiz | `ENGLISH_QUIZ_ITEMS` — same JSON shape; 4-option MCQ testing English skills (articles, tenses, prepositions, phrasal verbs, word order, vocabulary). Prompts in English with Spanish gloss; skill names adapted to English (grammar, vocab, reading, writing). |
-| `ROLEPLAY_SCENE` | German roleplay | `ENGLISH_ROLEPLAY_SCENE` — same structure; character speaks English at the user's level; corrections on their own lines with Spanish explanations (❌ wrong → ✅ right — motivo en español); /done gives a Spanish debrief. |
-| `SESSION_SUMMARY` | Analyses German mistakes | `ENGLISH_SESSION_SUMMARY` — same JSON shape; summary in Spanish; items list English corrections. Currently says "German sentences" and lists German grammar rules — must be replaced with English error patterns (tense mixing, missing articles, wrong prepositions, phrasal verb errors). |
-| `WEEKLY_REPORT_SYNTHESIS` | German week summary in English | `ENGLISH_WEEKLY_REPORT_SYNTHESIS` — same structure; summary in Spanish; error patterns should be English-specific (not "dative after mit" but "confusion between present perfect and simple past"). |
-| `CORRECTION_EXPLAIN` | Explains German grammar rule in English | `ENGLISH_CORRECTION_EXPLAIN` — explain the English grammar rule in Spanish (2-4 sentences per correction). |
-| `CORRECTION_EXAMPLE` | German example sentence | `ENGLISH_CORRECTION_EXAMPLE` — give one new English example sentence using the corrected form, with a Spanish gloss. |
-| `DOC_EXTRACT_TERMS` | German engineering terms | `ENGLISH_DOC_EXTRACT_TERMS` — extract useful English vocabulary (not necessarily engineering); still returns JSON with term/translation(Spanish)/context_sentence/importance. |
-| `DOC_SUMMARY` | German document summary in English | `ENGLISH_DOC_SUMMARY` — summarise the English document in Spanish, 3-4 sentences. |
-| `LEARN_LESSON` | German lesson from document | `ENGLISH_LEARN_LESSON` — same 3-part structure (dialogue / comprehension questions / cert-style tasks) but in English, with Spanish glosses, targeting the user's English CEFR level. |
+Fix: raise `assess` to 1024; consider passing a higher or uncapped limit to the Gemini rung specifically.
 
 ---
 
-#### Group 2 — Unblock and adapt the five blocked handlers
+## Future directions
 
-Each handler is currently blocked in English mode with a "solo para alemán" message. Here's what each needs:
+### Correction strictness — remaining tasks (S.7–S.9)
 
-**`/test` — assessment (`bot/handlers/assessment.py`)**
-- Remove the block.
-- The handler logic is fully language-agnostic (JSON shapes, state machine, BKT updates). Only the prompts and the intro/done text need to change.
-- In `assess_start()`: check `learning_mode`; if `"english"`, use Spanish intro text and `ENGLISH_ASSESS_INTERVIEW` / `ENGLISH_ASSESS_VERDICT` / `ENGLISH_ASSESS_GRADE_OPEN_BATCH`.
-- The BKT skill names (grammar, reading, comprehension, production, functional, vocab) map directly — no schema change needed.
-- `_format_verdict()` output text is in German ("Dein Einstufungsergebnis" etc.) — needs a Spanish version.
+| # | Task | Notes |
+|---|------|-------|
+| **S.7** | Suggest correction level from placement test result | In `_finish()`: map CEFR level to suggested dial value; show as a one-time nudge |
+| **S.8** | Teacher sets class default level | New env var or `/class setcorr <n>`; student can override |
+| **S.9** | Mention corrections once, early | First time a correction fires, append: *"You can adjust correction detail with /corrections 0–5"* |
 
-**`/practice` and `/flashcards` — spaced repetition (`bot/handlers/practice.py`)**
-- Remove the block.
-- The SRS engine (HLR/SM-2/BKT) is entirely language-agnostic; vocab items are just `term` + `translation` strings.
-- `_direction_label()` currently returns `"DE→EN 🇩🇪"` / `"EN→DE 🇬🇧"` — in English mode should return `"EN→ES 🇺🇸"` / `"ES→EN 🇪🇸"` (showing the user English and answering in Spanish, or vice versa).
-- The deck picker text is all German ("Karteikarten", "Richtung", etc.) — needs a Spanish equivalent string, switching on `learning_mode`.
-- `_pick_mode()` logic is fine as-is (it just determines flashcard vs cloze vs sentence vs MCQ).
-- `practice_flip()` text is German — needs Spanish equivalent.
-- `PRACTICE_SENTENCE_CHECK` prompt says `"German word/phrase"` — needs an `ENGLISH_PRACTICE_SENTENCE_CHECK` that checks whether the English term was used correctly in English, with feedback in Spanish.
-- All in-session `reply_text` strings are German — switch on mode.
+### Engineering quality
 
-**`/daily` — daily challenge (`bot/handlers/daily.py`)**
-- Remove the block.
-- The handler logic (3-item JSON, state machine, scoring) is language-agnostic.
-- Switch prompt: if `learning_mode == "english"`, use `ENGLISH_DAILY_CHALLENGE`.
-- All user-facing strings ("Lückentext", "Übersetze", "Antworte", "Richtig! ✅", etc.) need Spanish equivalents.
-- `_finish()` message is German — needs Spanish version.
+| Idea | Value |
+|------|-------|
+| `TypedDict` for history message dicts | Prevents the `"content"` vs `"text"` class of bug at type-check time |
+| Ladder health check in `/status` | Show which rungs were recently poisoned by exceptions and why — the roleplay bug was invisible because failures silently become cooldowns |
+| Smoke-test script (`scripts/smoke.py`) | Drive every handler once with a fake LLM backend; catches KeyError, wrong return types, missing credit gates without needing Telegram |
+| Centralize credit metering | A single decorator/helper that wraps metered LLM calls — instead of each handler remembering to call `credits_check` + `spend`. The B-1 leak exists because the pattern is copy-paste |
 
-**`/quiz` — rapid MCQ quiz (`bot/handlers/quiz.py`)**
-- Remove the block.
-- The quiz loop and BKT update are language-agnostic.
-- Switch prompt to `ENGLISH_QUIZ_ITEMS` in English mode; skill names (grammar, vocab, etc.) already match.
-- BKT skill names used in `_weakest_skills()` don't need to change — the skills (grammar, reading, comprehension, production, functional, vocab) are valid for English too.
-- Intro text ("Fragen, fokussiert auf…"), per-question text, and finish text are German — needs Spanish versions.
+### Voice notes (future)
 
-**`/roleplay` — roleplay scene (`bot/handlers/roleplay.py`)**
-- Remove the block.
-- The scene list (`_SCENARIOS`) is German-specific (Bäckerei, Technik-Meeting, etc.) — English mode needs its own scene list (e.g., job interview, coffee shop, doctor's office, phone call, hotel check-in, grocery store).
-- Easiest approach: define `_ENGLISH_SCENARIOS` dict alongside `_SCENARIOS`; in `roleplay_start()` pick which list to show based on mode.
-- `_scenario_keyboard()` needs to be mode-aware.
-- `_launch_scene()` switches prompt between `ROLEPLAY_SCENE` and `ENGLISH_ROLEPLAY_SCENE`.
-- `scene_done()` debrief text is German — needs Spanish equivalent.
+Let students speak a German or English sentence and receive a text correction back.
+- Input: Telegram voice message → Groq Whisper → text → existing correction pipeline
+- Output (optional): Gemini TTS → voice reply
+- Gate: `filters.VOICE` handler in `main.py`
+
+### Curriculum phase (future)
+
+A topic list per CEFR level with a short lesson and a set of banked exercises each — the way test-english.com is organised, written once into the repo instead of invented live. This is the single biggest capacity multiplier: banked exercises cost 0 credits to serve. See `CURRICULUM_PLAN.md`.
+
+### Scale phase (when ready to open to the public)
+
+1. **Multi-tenant foundation** — SQLite → Postgres (Neon free tier); fix sync SQLAlchemy in async handlers
+2. **Usage metering** — already done (`LLMUsage` table); wire into entitlements
+3. **Entitlements + gating** — `subscriptions` table; free tier = N msgs/day; paid = unlimited
+4. **Telegram Stars payments** — `/subscribe` → recurring invoice → `successful_payment` handler
+5. **Infrastructure** — long-polling → webhooks; Redis for cross-instance rate-limiting and durable cooldowns; cloud VM
 
 ---
 
-#### Group 3 — UI text / system messages that need Spanish versions
+## Technical notes (for future sessions)
 
-These are all the German-language strings shown to the user outside of LLM-generated content. Each needs a mode check and a Spanish alternative.
+**Why Ollama is excluded from structured tasks:** the local 3B model can't reliably produce valid JSON. Structured ladder (`Task.assess`, `Task.analyze`) stops at Gemini; Ollama only appears in `Task.chat`, `Task.generate`, `Task.lookup`, `Task.check`.
 
-| Location | German string(s) | What to do |
-|---|---|---|
-| `conversation.py` | `QUOTA_MSG`, `ERROR_MSG` | Make both mode-aware constants, or pass mode into the function and pick the string |
-| `conversation.py` | `_BACKEND_NOTICES`, `_RECOVERED_NOTICE` | Backend notices are currently bilingual German+English — in English mode, show Spanish+English instead |
-| `conversation.py` | Correction action buttons: "📖 Warum?" / "➕ Beispiel" / "🎯 Üben" | In English mode: "📖 ¿Por qué?" / "➕ Ejemplo" / "🎯 Practicar" |
-| `conversation.py` | `/corrections` command responses | All German — needs Spanish equivalents; switch on `learning_mode` |
-| `conversation.py` | `/topic` command responses | German — needs Spanish equivalents |
-| `conversation.py` | `/summary` output ("Auswertung", "Zu üben:", "zur Übung gespeichert") | German — needs Spanish |
-| `start.py` | `/profile` output ("Dein Profil", "Noch kein Einstufungstest", "Gespeicherte Vokabeln", "Fällig zum Üben", "Skill mastery (BKT)") | Needs Spanish equivalents; switch on `learning_mode` |
-| `report.py` | `/weekly` and `/review` output strings | German — needs Spanish equivalents |
-| `practice.py` | All in-session strings | As noted in Group 2 |
-| `documents.py` | `/docs`, `/learn`, `/docfocus` response text | German — needs Spanish equivalents; also prompts need to switch |
+**Groq compound models 404:** `groq/compound` and `groq/compound-mini` are agentic systems — they 404 on `/v1/chat/completions`. Use `openai/gpt-oss-120b` and `openai/gpt-oss-20b`.
 
----
+**BKT CEFR level tracking:** each BKT observation records the CEFR level of the item answered. "Grammar: 70%" means 70% mastery at A2, not a global score. A graduated BKT (separate instance per skill+level, graduating up at p > 0.95) is future work.
 
-#### Group 4 — `/english` command behavior in English mode
+**SM-2 kept alongside HLR:** `apply_hlr_grade` runs both. SM-2 easiness/interval fields stay current so `/review` stats keep working.
 
-Currently `/english` is available in English mode but makes no sense there (it asks the user to ask a meta-question "in English about German"). Options:
-- Block `/english` in English mode and redirect to `/spanish` with a Spanish message.
-- Or make `/english` silently redirect to `/spanish` behavior when in English mode.
+**Reminder timezone:** stored as `HH:MM` in server local time. Fine for one timezone; needs per-user timezone when multi-tenant.
 
-Recommended: block it cleanly — "En modo inglés, usa /spanish para hacer preguntas en español."
-
----
-
-#### Implementation order
-
-1. **Group 1** ✅ — all 14 English prompts written in `prompts.py`
-2. **Group 2** ✅ — all five handlers unblocked and mode-aware: assessment, daily, quiz, roleplay, practice
-3. **Group 3** ✅ — mode-aware UI strings switched to English across all handlers; Spanish kept for explanations
-4. **Group 4** ⏳ — `/english` block in English mode (see "English-mode polish" above)
-
----
-
-### The Impostor — classroom social deduction game
-
-A multi-device, classroom-friendly adaptation of Among Us. Karly acts as the silent game master: it assigns secret roles privately to each player's own phone, manages discussion rounds, collects votes, and announces results. Players are physically in the same room but each interact with the bot from their own device.
-
-**Why it fits Karly:** the game is social deduction first — roles, discussion, voting. No tasks by default. The classroom setting is the context: students already have their phones and already know the bot.
-
----
-
-#### Core concept
-
-- **4–10 players**, each on their own phone, physically in the same room.
-- One player (the host) creates a game and gets a short **game code** (e.g. `KARLY-4X7`). They share it verbally or show it to the group.
-- Each other player opens their private chat with Karly and joins using that code.
-- Roles are assigned and delivered **privately** to each player's own phone via DM from the bot. No spoiler tricks needed — only you see your phone.
-- Players discuss the mystery **in person** (they're in the same room). The bot only handles role delivery and voting; it does not moderate the discussion.
-- After discussion, each player votes privately through the bot. When all votes are in, the bot broadcasts the result to every player simultaneously.
-- Game continues round by round until a win condition is met.
-
-**Default mode is pure social deduction — no language tasks.** Tasks are an optional add-on (see "Task mode" below), not the default experience.
-
----
-
-#### Win conditions
-
-| Condition | Winner |
-|---|---|
-| All impostors are voted out | Crewmates win |
-| Impostors equal or outnumber the remaining crewmates | Impostors win (crewmates can never form a majority to vote them out) |
-
----
-
-#### The role card
-
-When the game starts, the bot sends each player a private message with their role. This is the "text per user." It is simple by default:
-
-> **You are a CREWMATE.** 👥
-> There is 1 impostor among you. Find them.
-> Game code: `KARLY-4X7` — Round 1
-
-> **You are the IMPOSTOR.** 🔴
-> Blend in. Don't get voted out.
-> Your fellow impostor: _(none / Ana)_
-> Game code: `KARLY-4X7` — Round 1
-
-The role card can later be extended with LLM-generated flavour text (a character name, a backstory sentence) to make the social deduction richer, but that is a future enhancement, not the MVP.
-
----
-
-#### Command set
-
-| Command | Who | State | What it does |
-|---|---|---|---|
-| `/impostor new [impostors]` | Anyone | Any | Creates a new session. Generates a unique game code. Optional arg sets the number of impostors (default 1). Bot replies with the code to share. Clears any existing session from this chat. |
-| `/impostor join <code> <name>` | Any online player | Lobby | Sent from each player's own chat. Registers them as an **online player** under that name. Bot confirms with a lobby list. Name must be unique within the session. |
-| `/impostor add <name>` | Host only | Lobby | Registers an **offline player** by name — no phone, no Telegram account needed. Their role card will be shown on the host's phone during role reveal. Name must be unique. |
-| `/impostor players` | Anyone | Any | Prints the current lobby list, indicating which players are online (📱) vs offline (👤). |
-| `/impostor start` | Host only | Lobby | Closes the lobby (min 4 players total, online + offline). Shuffles and assigns roles. For online players: sends their role card privately via DM. For offline players: sends their role card to the host's chat, one per message, each wrapped in a spoiler tag with a "Show this to [Name] privately" label. |
-| `/impostor vote <name>` | Any alive online player | Active | Records this player's vote for `<name>`. Bot confirms receipt privately. |
-| `/impostor vote <voter> <target>` | Host only | Active | Proxy vote — host submits a vote on behalf of an offline player. Bot confirms. This is how offline players participate in voting: they tell the host who they want to eliminate, and the host enters it. |
-| `/impostor skip [voter]` | Online player / Host | Active | Records an abstention. With no argument: the sender abstains. With a name argument (host only): proxy abstention for an offline player. |
-| `/impostor status` | Anyone | Active | Shows the vote tally so far without revealing who voted for whom: e.g. `4/6 players have voted.` |
-| `/impostor end` | Host only | Any | Aborts the game. Bot notifies all online players via DM. |
-
-The host is the player whose chat started the session (ran `/impostor new`). Host-only commands check `game["host_chat_id"] == update.effective_chat.id`.
-
----
-
-#### Full round flow
-
-One round:
-
-1. **Role phase (round 1 only):** bot sends each player their role card privately via DM.
-2. **Discussion phase:** players talk in person. The bot is silent. No time limit imposed by the bot — the group decides when to vote.
-3. **Vote phase:** each player sends `/impostor vote <name>` (or `/impostor skip`) to their own chat. Bot collects votes silently. Once every alive player has voted (or the host calls `/impostor start` as a vote-close shortcut — consider renaming to `/impostor close` post-start), bot tallies.
-4. **Result broadcast:** bot sends a message to every player's chat simultaneously announcing: who was eliminated, how many votes they got, and whether they were crewmate or impostor. Example:
-   > 🗳 Vote result — Round 1
-   > **Ana** was eliminated (4 votes).
-   > She was a **CREWMATE**. 🔵
-   > Impostors survive. 5 players remain.
-5. **Win check:** if a win condition is met, bot announces the winner to all players and the game ends. Otherwise, a new round begins — bot sends updated role cards (marked "Round 2") to all surviving players.
-
-For subsequent rounds, crewmates only know that one player was eliminated and whether they were crewmate or impostor. Impostors still know each other. No new role card is needed unless a player wants to reconfirm — `/impostor role` can be used mid-game to re-display the player's current card.
-
----
-
-#### State model
-
-Stored in `context.bot_data["games"]` — a dict keyed by game code. This makes state global across all user connections, which is required since multiple users interact with the same session. No database table needed for MVP; state lives in memory (lost on bot restart, acceptable for a classroom game).
-
-```python
-context.bot_data["games"] = {
-  "KARLY-4X7": {
-    "host_chat_id": 123456789,
-    "state": "lobby" | "active" | "ended",
-    "impostor_count": 1,
-    "round": 1,
-    "players": {
-      "Ana": {
-        "chat_id": 111111111,  # None for offline players
-        "online": True,        # False = added via /impostor add
-        "role": "crewmate" | "impostor",
-        "eliminated": False,
-        "vote_this_round": None,   # target name or "skip"
-      },
-      "Carlos": {
-        "chat_id": None,
-        "online": False,       # offline player — no DMs, proxy voting
-        "role": "impostor",
-        "eliminated": False,
-        "vote_this_round": None,
-      },
-    }
-  }
-}
-```
-
-**Online players** (`chat_id` is set): the bot DMs them directly for role cards and result broadcasts. `chat_id` is captured when they send `/impostor join`.
-
-**Offline players** (`chat_id` is `None`): role cards are sent to the host's chat, wrapped in spoiler tags — `||YOUR ROLE: CREWMATE 👥||` — with a clear label: `📵 Show this to Carlos privately, then tap to hide again.` Offline players vote by telling the host verbally; the host submits the proxy vote. Offline players receive no broadcast DMs — the host reads results aloud or shows their phone.
-
-For the broadcast `asyncio.gather(...)`, filter to online players only:
-```python
-await asyncio.gather(*[
-    context.bot.send_message(chat_id=p["chat_id"], text=result_text)
-    for p in game["players"].values()
-    if p["online"] and not p["eliminated"]
-])
-```
-
----
-
-#### Auth — open to all users
-
-The bot is now open to any Telegram user — the single-user restriction is removed. This affects both the tutor and the game.
-
-**Tutor (open to all):** remove the adoption logic from `bot/middleware.py`. The new rule is simple: any Telegram user who messages the bot gets a `User` row created automatically via `get_or_create_user`, and can use all tutor features with their own independent data. The `ALLOWED_USER_ID` env var stays as an optional hard restriction for private deployments, but it defaults to unset (open).
-
-Changes needed in `bot/middleware.py`:
-- `_is_authorized()` returns `True` for everyone when `ALLOWED_USER_ID` is not set
-- Remove the `any_user_exists()` first-user-adoption check — it only made sense for a single-user bot
-- `get_or_create_user()` already handles new users correctly; no change needed there
-
-**Game commands specifically:** because the bot is now open, game commands don't need a special bypass at all — they can use `@require_auth` like everything else. The game code remains the practical access control (you need to know it to join a session), but auth is no longer a distinct problem to solve.
-
-**Rate limiting / abuse:** the user has decided to defer caps and metering to later. This is acceptable for now — the bot runs on Groq's free tier, which self-limits via quota. Document this decision: metering is planned in the scale phase (see "Step 2 — Usage metering") and should be revisited before promoting the bot publicly.
-
-> **Superseded for classroom use.** Open auth stays right for the game, but students need
-> an approve-before-joining gate and per-student usage tracking. See
-> [Classroom phase](#classroom-phase--teacher-controls) — it adds an access *mode* rather
-> than reverting to single-user, so the game keeps working.
-
----
-
-#### Broadcast implementation
-
-When the vote closes, the bot must send a message to every player simultaneously. Python-telegram-bot's async model makes this straightforward:
-
-```python
-# pseudocode
-await asyncio.gather(*[
-    context.bot.send_message(chat_id=p["chat_id"], text=result_text)
-    for p in game["players"].values()
-    if not p["eliminated"]
-])
-```
-
-This runs all DMs concurrently. Each player sees the result at essentially the same moment, which is important for the game's fairness.
-
----
-
-#### Task mode (optional, not default)
-
-In a future iteration, an optional `/impostor new --tasks` flag enables language tasks per round (one question per player before voting). This reuses the existing quiz/daily prompt infrastructure. The default game has no tasks.
-
-This flag is not part of the MVP. It is noted here so the state model and command set are designed to accommodate it without a rewrite. When tasks are added, the round flow gains a "task phase" between role card and discussion, and the state model gains a `tasks_enabled` boolean and per-player task record.
-
----
-
-#### File layout
-
-- `bot/handlers/game.py` — all `/impostor` command handlers
-- No new database models — state is in `context.bot_data`
-- No new LLM prompts — MVP has no LLM calls during the game
-- `bot/main.py` — register all `/impostor` subcommands as separate `CommandHandler("impostor_new")` etc., or handle subcommand routing inside a single `impostor` dispatcher function
-
-**Note on command routing:** Telegram doesn't natively support subcommands (`/impostor new` vs `/impostor join`). The cleanest approach is a single `CommandHandler("impostor", impostor_dispatch)` that reads `context.args[0]` and routes to the right function. Alternatively, use separate commands (`/igame`, `/ijoin`, `/ivote`) — less readable but simpler to wire up.
-
----
-
-#### Implementation order
-
-1. **Open auth** — simplify `bot/middleware.py`: remove the first-user adoption check; `_is_authorized()` returns `True` when `ALLOWED_USER_ID` is unset. Test that a second Telegram account can access tutor commands independently.
-2. Game code generator + session creation (`/impostor new`)
-3. Online join flow + chat_id registration (`/impostor join`)
-4. Offline player registration (`/impostor add`)
-5. Lobby display with online/offline indicators (`/impostor players`)
-6. Role assignment — DM to online players, spoiler cards on host's chat for offline players (`/impostor start`)
-7. Vote collection — direct votes from online players, proxy votes from host for offline players (`/impostor vote`, `/impostor skip`, `/impostor status`)
-8. Result broadcast to online players only; win check + game end (`/impostor end`)
-9. Subcommand routing in `bot/main.py`
-
----
-
-### English mode should be in English
-
-**This reverses the principle the English-mode parity work was built on.** That work
-stated: *"All UI text shown to the user should be in Spanish."* That's wrong for a
-learner — it makes English mode feel like a Spanish app that occasionally speaks English,
-when German mode feels like a German app. English mode should mirror German mode:
-**the target language everywhere, the native language only where the user genuinely
-needs it.**
-
-The rule, stated once: **conversation and interface in the language being learned;
-explanations and reports in the language they already speak.**
-
-| Surface | German mode (the model to copy) | English mode today | Should be |
-|---|---|---|---|
-| The conversation itself | German | English ✅ | English ✅ |
-| Menus, buttons, `/help`, `/profile`, `/review` | German | Spanish ❌ | **English** |
-| Prompts inside `/practice`, `/daily`, `/quiz`, `/course` | German | Spanish ❌ | **English** |
-| Error and quota messages | German | Spanish ❌ | **English** |
-| The `— why` on a correction | English | Spanish ✅ | Spanish ✅ keep |
-| Meta-questions (`/english` ↔ `/spanish`) | English | Spanish ✅ | Spanish ✅ keep |
-| Roleplay debrief after `/done` | English | Spanish ✅ | Spanish ✅ keep |
-| `/weekly`, `/summary`, document summaries | English | Spanish ✅ | Spanish ✅ keep |
-| Vocabulary translations | English | Spanish ✅ | Spanish ✅ keep |
-
-So the work is: **the Spanish UI strings written during the parity phase get rewritten in
-English.** The Spanish *teaching* content — explanations, debriefs, reports — stays exactly
-as it is. Roughly: `start.py`, `report.py`, `practice.py`, `quiz.py`, `daily.py`,
-`roleplay.py`, `documents.py` UI strings switch; `llm/prompts.py` mostly doesn't.
-
-**The A1 problem, and the fix.** An all-English interface is hostile to a true beginner —
-and the plan is now to teach from A1 ([`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md)). So make
-the amount of Spanish a setting rather than a constant:
-
-| `l1_support` | Interface | Who |
-|---|---|---|
-| `full` | Spanish interface, Spanish explanations | A1–A2 |
-| `minimal` | **English interface, Spanish explanations** ← the default | A2–B1 |
-| `off` | Everything in English, including the `— why` lines | B2+ |
-
-Default it from the placement test, let the user change it with `/language` or a similar
-command, and nudge upward when they clear a level: *"Your English is good enough — want
-me to switch the menus to English?"* That single question turns a settings toggle into a
-small reward.
-
----
-
-### Games should appear in `/help`
-
-The Impostor exists (`bot/handlers/game.py`) but is invisible — it's in neither `/help`
-nor the welcome message, so nobody who wasn't told about it will ever find it.
-
-| Item | What to do |
-|---|---|
-| New `Games` section in `/help` | List `/impostor new`, `join`, `add`, `players`, `start`, `vote`, `skip`, `status`, `end` — grouped, not as nine flat lines |
-| Same section in `/start` welcome | One line, not the full command list: *"🎭 /impostor — social deduction game for the class"* |
-| Both language modes | German and English versions of the section |
-| Make the structure extensible | Future activities land in the same section rather than each needing its own help edit |
-| Consider `/games` | A short menu listing what's available, so `/help` doesn't grow forever. Worth it once there's a second game |
-
-Small task, real payoff: a feature nobody can find has no users. Worth doing at the same
-time as the `/help` and welcome-message updates already listed under English-mode polish
-above — same files, same edit.
-
-**Games sit outside the learning process, deliberately.** They're an add-on that makes
-students want to open the bot, not a teaching tool. So:
-
-| Rule | Why |
-|---|---|
-| **No corrections during a game** | Whatever the correction setting says. Being marked up mid-game kills it |
-| **No mastery, BKT, or vocabulary capture from game messages** | Game chat is not evidence about their English. Letting it into the skill model would quietly poison `/profile` and `/quiz` targeting |
-| **Doesn't count toward the practice streak** | The streak should mean study. Keep the reward honest |
-| **Does count as activity** in `/students` and the class digest | You still want to know a quiet student is at least showing up |
-| **Free to run** | The game makes no LLM calls, so it costs nothing against the quota — which makes it the right thing to point students at when capacity is tight (Step 0.6) |
-
-Present them that way in `/help` too: a **Games** section clearly separate from the
-learning commands, not mixed in among them.
-
----
-
-### Correction strictness — a 0–5 scale
-
-**Replaces `strict / relaxed / off` with a dial from 0 to 5.** Three settings can't
-express what's actually wanted: today's "relaxed" still corrects conjugation and article
-gender, and there's nothing between it and full markup. A dial keeps what works — an off
-switch and an exam-grade setting — and puts a genuinely quiet mode at the bottom where
-it belongs.
-
-**Goal, unchanged: nobody should feel judged for talking.** Students go quiet if every
-message comes back marked up. Default to a patient conversation partner; become an
-examiner only when asked.
-
----
-
-#### The scale
-
-The axis is **what threshold of error is worth mentioning**, plus a cap on how many.
-
-| Level | Name | Corrects | Cap | Slang | Typos & punctuation |
-|---|---|---|---|---|---|
-| **0** | **Off** | Nothing, ever. Pure conversation | — | ignored | ignored |
-| **1** | **Gentle** ← **default** | Only what genuinely breaks meaning — a sentence a native speaker would misread. **Most messages get nothing** | 1 | ignored | ignored |
-| **2** | **Light** | Level 1, plus mistakes they keep repeating — a pattern earns a mention even when the meaning was clear | 1 | ignored | ignored |
-| **3** | **Balanced** | Clear grammar errors even when meaning survives: wrong tense, wrong preposition, missing article | 2 | 💬 noted, not an error | ignored |
-| **4** | **Thorough** | Level 3, plus word choice and naturalness — understandable, but a native wouldn't say it — and register mismatch | 3–4 | 💬 noted | ignored |
-| **5** | **Exam** | Everything. Typos, capitals, punctuation, style, and better-phrasing suggestions. Exam-marking mode | none | flagged as register | **corrected** |
-
-**Level 1 is the one that matters, and it's the default.** It means what it says:
-*cares about the important stuff and ignores the rest — entirely.* Not "mentions it more
-gently", not "saves it for the end". Ignores it. A message with three small slips and
-clear meaning gets zero corrections and a normal reply.
-
-**Level 0 is not the same as level 1.** At 0 nothing is ever shown. At 1 the bot will
-still speak up if it genuinely can't tell what you meant — which is the difference
-between a silent partner and a patient one.
-
----
-
-#### Tasks
-
-| # | Task | Status |
-|---|---|---|
-| ✅ **S.1** | **Build the correction block from flags, not six prose blobs** | Done — `build_correction_block(level, en)` in `llm/prompts.py`; single template, per-level table |
-| ✅ **S.2** | **Say the quiet part in the prompt** | Done — level 1–2 blocks explicitly say "returning no corrections is the expected outcome" |
-| ✅ **S.3** | **Migrate the existing column** | Done — `_migrate_correction_level_to_int()` maps `off`→0, `relaxed`→1, `strict`→4 |
-| ✅ **S.4** | **`/corrections` becomes a picker** | Done — 6-button inline picker; `/corrections 3` also works |
-| ✅ **S.5** | **Warm-up rule** | Done — no corrections for first 5 messages or after 24h break (levels 1–4) |
-| ✅ **S.6** | **Tone rules in the persona, at every level** | Done — `TONE_RULES` block appended at every level |
-| **S.7** | **Sensible default by level** | Pending — suggest level from placement test result |
-| **S.8** | **Class default** | Pending — teacher sets starting level; student choice overrides |
-| **S.9** | **Mention it once, early** | Pending — nudge message after first correction |
-
----
-
-#### What the scale does not touch
-
-| | |
-|---|---|
-| **Course exercises** | Inside a unit an answer is right or wrong and is marked as such — that's what starting an exercise asked for. Strictness governs *conversation* only |
-| **Games** | Ignored entirely. No corrections mid-game at any level |
-| **What gets recorded** | Unchanged at every level, including 0 |
-
-**Nothing is lost by staying quiet.** Mistakes are still captured even when they aren't
-shown: they feed `/summary`, the weekly report, the BKT skill model, flashcards, and —
-once the classroom phase lands — your view of what the class is getting wrong. The
-learner gets an uninterrupted conversation; you still get the data. **That is what makes
-a low default safe**, and it already works this way.
-
----
-
-### Voice notes (STT/TTS)
-
-Let AJ speak a German or English sentence and receive a text correction back. Optionally have Karly read her reply aloud.
-
-- **Input:** Telegram voice message → Groq Whisper (or Google STT) → text → normal correction pipeline
-- **Output (optional):** Gemini TTS or gTTS → send voice reply
-- **Gate:** voice message handler in `bot/main.py` (`filters.VOICE`); transcription replaces the text message in the conversation flow
-- **Why:** speaking practice is the hardest skill to drill over text; this is the highest-impact stretch feature
-
-### Assessment JSON hardening ✅ Done
-
-`_next_item()` retries with a simplified prompt on bad JSON, skips after a second failure, and aborts the session gracefully after 3 consecutive skips. `_finish()` also retries with a JSON-only hint before showing an error.
-
-### Manual grade override on typed answers ✅ Done
-
-`on_typed()` in `practice.py` now always shows the grade keyboard after feedback (cloze and sentence modes). Students can tap any grade to override the auto-grade before advancing.
-
----
-
-## Classroom phase — teacher controls
-
-> **Why now:** English mode is for your students, not just you. The moment other people
-> use the bot you need to know who they are, whether they're actually using it, and how
-> they're doing. This phase is small and private — a handful of students you know, not a
-> public launch. Everything in the Scale phase below stays deferred.
-
-**This reverses one earlier decision.** The Impostor work opened the bot to everyone
-(`_is_authorized()` returns `True` when `ALLOWED_USER_ID` is unset). For a class you want
-the opposite: nobody gets in until you say so. The fix is a third mode rather than going
-back to single-user — see "Access modes" below.
-
-**Build this before the curriculum phase.** Students can already use conversation,
-flashcards, `/quiz` and `/daily` — none of that waits on the course. What it does wait on
-is knowing who they are and letting them in. See
-[`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md) §7 for how the two plans meet.
-
----
-
-### Step 0 — Blockers to clear before any student joins
-
-Tasks, not observations. Found by reading both plans against the current code.
-
-**Must be done before the first invite:**
-
-| # | Task | Where | Status |
-|---|---|---|---|
-| ✅ **0.1** | **Stop new students landing in German mode** | `db/models.py`, `bot/middleware.py`, approval flow | Done — `language_chosen` flag + middleware gate intercepts any user who hasn't picked; approval buttons set the language at approval time |
-| **0.2** | **Define the first five minutes** | `bot/handlers/start.py` | Pending — approved students get a welcome message + "start with /test" nudge, but no full onboarding sequence yet |
-| **0.3** | **Measure real usage before inviting a class** | — | Operational — run a week, invite in waves |
-| **0.4** | **Enable Groq's Developer tier** | Groq console | Operational — free card, ~10× rate limits |
-| ✅ **0.5** | **Per-student daily cap** | `bot/credits.py`, `db/repo.py` | Done — 20-credit/day allowance; credit costs in `COSTS` dict; `check_credits` + `spend` in every metered handler |
-| ✅ **0.6** | **Handle running out of quota gracefully** | `bot/credits.py`, `bot/handlers/*` | Done — `capacity_exhausted_text/keyboard` shown on `QuotaExceeded` across all handlers; points to free features (flashcards, game) |
-
-**Before the second week:**
-
-| # | Task | Where | What to do |
-|---|---|---|---|
-| **0.7** | **Back up the database** | `deploy/` | `karly.db` will hold other people's work. A nightly copy off the OptiPlex, kept for a couple of weeks. Trivial to add, genuinely painful to skip |
-| **0.8** | **Decide on consent** | — | If any student is a minor, storing their writing and reading a dashboard about them needs a decision made deliberately. One line in the welcome telling students what their teacher can see covers the ordinary case |
-
-**Watch, don't build yet:**
-
-| # | Item | Trigger to act |
-|---|---|---|
-| **0.9** | Reminder timezone — stored as `HH:MM` in *server* local time | Only matters if students aren't in your timezone |
-| **0.10** | Sync SQLAlchemy in async handlers (Scale Step 1) | Symptom is *everything* slow at once, not one user failing. Fine at ~20 occasional users; revisit around 50 |
-
----
-
-### Step 1 — Roster and roles ✅ Done
-
-Every user gets a `role` and a `status`.
-
-| Item | Status |
-|---|---|
-| ✅ `role` column on `users` | Done — `"teacher"` / `"student"` (default). Set from `TEACHER_TELEGRAM_ID` env var on startup |
-| `class_name` column | Done — column exists; class scoping for `/students` is future work |
-| ✅ `status` column | Done — `"pending"` / `"active"` (default) / `"removed"`. Soft-delete only |
-| ✅ `joined_at`, `approved_by` | Done — set at approval time |
-
-### Step 2 — Approval flow ✅ Done
-
-| Behaviour | Status |
-|---|---|
-| New student sends `/start`, sees language picker | ✅ Done |
-| After language pick, student sees "waiting for approval" message | ✅ Done |
-| Teacher gets DM with student name, chosen language, [✅ German] [✅ English] [❌ Decline] buttons | ✅ Done |
-| On approval: student status → active, language set, welcome DM sent | ✅ Done |
-| On decline: student status → removed; subsequent `/start` shows "no access" | ✅ Done |
-| Declined user re-sending `/start` doesn't re-notify teacher | ✅ Done — only notified on first language pick |
-
-**Access modes** — configured via `ACCESS_MODE` env var:
-
-| Mode | Behaviour |
-|---|---|
-| `open` | Anyone can use it — default |
-| `approval` | New users wait for teacher approval — set `ACCESS_MODE=approval` + `TEACHER_TELEGRAM_ID` |
-| `code` | Pending — would reuse The Impostor game-code mechanic |
-
-### Step 3 — What you can see ✅ Done (core commands)
-
-| Command | Status |
-|---|---|
-| ✅ `/students` | Done — roster with status icons (🟢🟡🔴⏳), level, last-active, streak |
-| ✅ `/student <name>` | Done — CEFR level + skills + gaps + last active + streak + cards + sessions + joined date |
-| ✅ `/class` | Done — weekly snapshot: active count, inactive list, pending count |
-
-Weekly digest on a schedule — pending (would reuse the reminder job queue).
-
-### Step 4 — What you deliberately don't see
-
-Worth deciding now rather than after a student asks.
-
-| Data | Default |
-|---|---|
-| Scores, streaks, units, error *patterns*, activity counts | **Visible to you.** This is ordinary gradebook information |
-| Verbatim chat transcripts and their free writing | **Not visible by default.** Aggregates and error categories, yes; reading their conversations, no |
-| Optional per-student opt-in to share writing samples | Worth adding if you want to mark their writing — but make it their choice, and tell them |
-
-Students should be told, at `/start`, what their teacher can see. One short line in the
-welcome message. This costs nothing and avoids the awkward conversation later.
-
-### Step 5 — Usage tracking
-
-**This is the "Usage metering" step from the Scale phase, pulled forward** — the same
-table serves both purposes, so build it once here. It is also task **T.1** of
-[Token budget](#token-budget--making-50-daily-students-fit) below, which is the
-prerequisite for every gate in that section.
-
-One row per LLM call: `user_id, model, tokens_in, tokens_out, task, ts`. The router
-already returns `RouteResult` with token counts; the handlers just need to persist them.
-
-| Gives you | How |
-|---|---|
-| Who's actually using the bot, and how much | Per-student call and message counts, by day and week |
-| Which features get used | Grouped by task — conversation vs `/practice` vs `/course` |
-| Cost per student | Tokens × rate, so a class stays inside the free tier knowingly rather than by luck |
-| A per-student daily cap | One runaway user (or a stuck loop) can't burn the whole quota |
-
-### Step 6 — Optional, once the course exists
-
-Only worth building after the curriculum phase ([`CURRICULUM_PLAN.md`](CURRICULUM_PLAN.md)) lands.
-
-| Item | What it does |
-|---|---|
-| Assignments | You assign a unit or level to the class; it becomes their next `/course` task, and `/class` shows who's done it |
-| CSV export | Roster and scores out to a spreadsheet for your own gradebook |
-| Multiple classes | Only if you teach more than one group — otherwise the `class` column is enough |
-
-### Suggested order
-
-0. ✅ Clear the day-one blockers (Step 0) — especially the German-mode default
-1. ✅ Roster and roles (Step 1) — nothing works without it
-2. ✅ Approval flow (Step 2) — the gate you asked for; makes it safe to hand out
-3. ✅ Usage tracking (Step 5 / T.1) — collecting from day one
-4. ✅ `/students` and `/student` (Step 3) — the day-to-day view
-5. ✅ `/class` digest (Step 3) — the weekly snapshot
-6. Assignments and export (Step 6) — after the course exists
-
-Steps 0–3 are the minimum to put the bot in front of a class. **All of them are done.**
-
----
-
-## Token budget — making 50 daily students fit
-
-> **Goal:** 50 students, all able to use the bot every day, on or near the free tier.
-> Interested, not obsessed. Nobody hits a wall that makes them stop coming back.
-
-This is reachable, but only by metering the **right thing**.
-
----
-
-### The budget, worked out
-
-| | |
-|---|---|
-| Usable free capacity (mostly Gemini's ~1,500 req/day) | ~1,600 LLM calls/day |
-| Run at 60% of the ceiling, not 100% | **~1,000 calls/day to spend** |
-| Across 50 students | **~20 LLM calls per student per day** |
-
-Twenty calls is a real day's use — roughly twenty back-and-forth messages, or a course
-unit plus a chat plus the daily challenge. It's generous for "getting interested" and
-tight enough that nobody can drain the class.
-
-And in practice it's looser than it sounds: not every student shows up every day, so
-unused allowance is headroom for the ones who do.
-
----
-
-### Rule 1 — meter LLM calls, not messages
-
-**Most of the bot already costs nothing.** Any gate that counts "messages" would punish
-students for using the free features, which is exactly backwards.
-
-| Always free, never limited | Metered |
-|---|---|
-| `/practice` flashcards (local scheduling) | Conversation messages |
-| Banked `/course` and `/quiz` questions | Roleplay turns |
-| The Impostor game | `/daily` |
-| `/profile`, `/review`, `/students`, progress screens | `/test` placement |
-| Course lesson cards (they're files) | "📖 Explain why" taps |
-| Reading a transcript, retrying a wrong answer | Write-your-own-sentence grading, PDF analysis |
-
-**Design rule: a student who runs out of budget can still learn.** Flashcards, their
-course, and the game are all open. That is the whole reason the curriculum phase matters
-for cost — banked exercises move the most valuable activity into the free column.
-
-### Rule 2 — price actions by what they actually cost
-
-One "credit" ≈ one LLM call. Students see a small number, not tokens.
-
-| Action | Credits |
-|---|---|
-| Conversation message, roleplay turn, "explain why" tap | 1 |
-| `/daily`, `/quiz` (before the bank exists) | 2 |
-| PDF upload and analysis | 5 |
-| `/test` placement | 10 — but once, and it should come out of a separate joining allowance so a new student isn't broke on day one |
-| Everything in the free column above | 0 |
-
-**Starting allowance: 20 credits/day per student**, resetting at midnight. Tunable per
-class — it's one number, not a code change.
-
----
-
-### Rule 3 — four gates, not one
-
-Each catches something the others don't.
-
-| # | Gate | Stops |
-|---|---|---|
-| **1** | **Per-student daily allowance** (20 credits) | One enthusiastic student eating the class's budget |
-| **2** | **Global daily ceiling** across all students | 50 students each staying under their own cap but collectively exhausting the provider |
-| **3** | **Per-student rate limit** (a few seconds between messages) | Spam, stuck loops, a phone sitting on a key |
-| **4** | **Concurrency queue** | The lesson problem — 30 students at once against a 10–40 req/min ceiling. Queue with a "thinking…" indicator instead of failing |
-
-**Plus a reserve.** Hold back ~25% of the global daily budget until mid-afternoon, so a
-class at 3pm doesn't find that night owls spent everything at 1am. Simple rule, prevents
-the most annoying possible failure.
-
-### Rule 4 — running out is a redirect, never a wall
-
-The moment a student is told "no", they stop coming back. So nobody is ever hard-stopped:
-
-1. **Allowance spent →** *"That's today's chat with me. Your flashcards and course are
-   still open, and the game's always free."* Offer the buttons, don't just say it.
-2. **Still want to talk →** fall through to **Ollama, running locally**. Unlimited, free,
-   lower quality, no structured tasks. The conversation continues; it just gets simpler.
-   (Caveat: the OptiPlex handles a trickle, not a crowd — this is a graceful tail, not a
-   second tier of capacity.)
-3. **Global budget exhausted →** the whole class is told plainly, and pointed at the free
-   activities. Never a silent failure or a raw error.
-
-**Turn the limit into a motivator rather than a punishment:**
-
-| Idea | Effect |
-|---|---|
-| Only show the counter when it's low ("5 left today") | Invisible until it matters; no anxiety |
-| Streak bonus — a few extra credits for practising several days running | The limit becomes a reward to earn |
-| Free-column activities top nothing up but cost nothing | Steers effort toward the things that actually teach |
-| `/grant Ana 20` for the teacher | You can lift a cap for a student who's genuinely working |
-
----
-
-### Rule 5 — make each call cheaper (as valuable as capping)
-
-Halving what a call costs is the same as doubling the class size. Highest leverage first:
-
-| # | Task | Saving |
-|---|---|---|
-| **B.1** | **Shorten conversation history.** `recent_history(limit=20)` sends 20 prior messages on every turn — most of the ~2,000 input tokens. Cut to 6–8 recent turns plus a rolling summary of older context | Potentially **~40–50% of all input tokens**, the single biggest win |
-| **B.2** | **One daily challenge per level, shared by the class.** Generate `/daily` once per level per day and serve it to every student at that level. 50 calls become ~5 — and the whole class doing the same challenge is *better* teaching, not a compromise | ~90% of `/daily` cost |
-| **B.3** | **Cap output length.** Set `max_tokens` per task so replies stay conversational instead of rambling | ~20–30% of output tokens |
-| **B.4** | **Trim the system prompt.** Persona + correction block ride along on every single call | Small per call, large across 50 students |
-| **B.5** | **Route cheap tasks to the cheap rung.** Lookups and short checks don't need the 120b model | Preserves 120b quota for conversation |
-| **B.6** | **Cache identical requests.** Same "explain why" on the same correction, asked by twenty students, is one answer | Grows with class size |
-
-**B.1 and B.2 together are probably worth more than the entire gating system.** Do them
-first — they raise the ceiling for everyone instead of dividing a fixed pie.
-
----
-
-### Rule 6 — you need to see it
-
-| Command | Shows |
-|---|---|
-| `/budget` | Today's global usage, % of ceiling, projected exhaustion time, top consumers |
-| Alert at 70% of the daily ceiling | Time to act before students notice anything |
-| Per-student credits in `/student` | Who's actually engaged, and who needs a bigger allowance |
-
----
-
-### Tasks, in order
-
-| # | Task | Status |
-|---|---|---|
-| ✅ **T.1** | Usage tracking — `LLMUsage` table, one row per LLM call | Done — `record_llm_usage` in `db/repo.py`; `spend()` wired into all metered handlers |
-| ✅ **T.2** | B.1 — shorten conversation history | Done — `CONTEXT_WINDOW_MESSAGES = 8` (was 20); ~40% input token reduction |
-| ✅ **T.3** | B.3 + B.4 — output cap per task | Done — `_TASK_MAX_TOKENS` dict in `router.py`; caps threaded through Groq and Gemini backends. Prompt trim (B.4) is ongoing as prompts are edited. |
-| ✅ **T.4** | Free vs metered classification | Done — `COSTS` dict in `bot/credits.py`; free features always 0 |
-| ✅ **T.5** | Per-student daily allowance + the redirect message | Done — `check_credits` / `spend` / `daily_credits_used`; exhaustion message points to free features |
-| ✅ **T.6** | Global ceiling + reserve pool | Done — `GLOBAL_DAILY_CREDIT_LIMIT` (default 1000); before `RESERVE_HOUR_UTC` (default 14:00 UTC) only 75% is available; shows class-wide exhaustion message distinct from per-user message |
-| ✅ **T.7** | Rate limit + concurrency queue | Done — `check_rate_limit()` per-user cooldown in `chat()` via `context.user_data`; `asyncio.Semaphore(LLM_CONCURRENCY_LIMIT)` in `route_result()` with `LLM_QUEUE_TIMEOUT` before raising `LLMUnavailable` |
-| ✅ **T.8** | B.2 — shared daily challenge | Done — `context.bot_data[f"daily:{mode}:{level}:{date}"]` cache; one LLM call per level per day, copied for each student's independent queue |
-| ✅ **T.9** | `/budget` and the 70% alert | Done — teacher-only command; shows global used/limit/%, reserve pool note, projected depletion, top 5 consumers |
-| ✅ **T.10** | Streak bonus, `/grant`, low-balance nudges | Done — streak adds up to +5 credits/day to per-student limit; `/grant <name> <n>` persisted in `CreditGrant` table; nudge shown when ≤5 credits remain |
-
-**T.1–T.10 are all done.**
-
----
-
-### Where this leaves the goal
+**Capacity at a glance:**
 
 | | 50 daily students |
 |---|---|
-| Today, no gates | ❌ Would exhaust the free tier and break `/test` and `/course` |
-| With T.1–T.5 | ✅ Fits, at ~20 credits each |
-| With T.1–T.8 | ✅ Comfortable, with room for heavier users |
-| Plus Groq Developer tier (free) | ✅ Comfortable at **100+** |
-| Plus ~$27/month | ✅ Stop thinking about it entirely |
-
-**The honest summary: gating alone gets you to 50. Gating plus B.1 and B.2 gets you there
-with room to spare. And if it ever becomes tight, the paid escape hatch is about the
-price of a couple of coffees a month.**
-
----
-
-## Scale phase — open to other users
-
-> **Don't touch until you're ready to invite the first beta users.** While it's just you, none of this is worth building — the bot works fine as-is.
-
-### Step 1 — Multi-tenant foundation
-
-- Remove the single-user gate; every Telegram user auto-provisions a `User` row
-- **SQLite → Postgres** (Neon free tier to start)
-- **Fix sync SQLAlchemy in async handlers** — fine at one user, blocks the event loop under concurrency; this is the main lift
-
-### Step 2 — Usage metering
-
-One row per LLM call (`user_id, model, tokens_in, tokens_out, task, ts`). The router already returns `RouteResult` with token counts — the handler just needs to persist them. Prerequisite for entitlements.
-
-### Step 3 — Entitlements + gating
-
-`subscriptions` table; extend `require_auth` → `require_tier` / `check_quota`. Free = N msgs/day, no PDF, no `/summary`; paid = unlimited, PDFs, priority.
-
-### Step 4 — Telegram Stars payments
-
-`/subscribe` sends a recurring Stars invoice; handle `pre_checkout_query` → `successful_payment` → renewal/cancel; grace period + auto-downgrade on lapse.
-
-### Step 5 — Cross-cutting (required at beta)
-
-- Privacy policy + ToS (storing user writing + taking payment; GDPR export/delete is easy given the per-`user_id` schema)
-- Hard per-user daily cost cap — one runaway user burns Groq budget
-- Move to a cloud VM/container; OptiPlex becomes dev/staging
-
-### Step 6 — Infrastructure (Phase B/C, when needed)
-
-- Long-polling → webhooks + stateless instances behind a load balancer
-- Redis for cross-instance rate-limiting and durable `LadderState` (cooldowns survive restarts)
-- Durable reminder scheduler (current in-process job-queue doesn't survive multi-instance)
-- Read replicas, response streaming, multi-region
-
----
-
-## ML roadmap
-
-All three stages are approved and architecturally designed. Stages 1 and 2 are **live**. Stage 3 is built but gated.
-
-### Stage 1 — HLR recall scheduler ✅ Live
-
-`srs/hlr.py` replaces SM-2's fixed-multiplier with a per-item memory half-life. Every review logs to `ReviewLog`; `apply_hlr_grade` updates both HLR and SM-2 (for stats compatibility).
-
-### Stage 2 — BKT skill mastery ✅ Live
-
-`srs/bkt.py` tracks mastery probability per skill (grammar / reading / comprehension / production / functional / vocab) using classic Bayesian Knowledge Tracing. Updates fire after every assessment item and quiz answer. State is stored in `ConceptMastery` as `{skill: {p, level}}` — the CEFR level of the item is recorded alongside the probability so `/profile` shows e.g. `Grammar (A2): ███████░░░ 70%`. Powers `/quiz` target selection.
-
-### Stage 3 — DKT LSTM (TensorFlow) ⏳ Built, gated
-
-`srs/dkt.py` implements an LSTM over the user's full review sequence. Gated behind: (a) TensorFlow importable and (b) ≥ 50 reviews logged. With a single user the model will overfit; it becomes meaningful at multi-user beta scale. `review_history_for_dkt()` in `repo.py` builds the training data. No action needed — it activates automatically when the gate opens.
-
----
-
-## Technical notes
-
-These are implementation details worth preserving so future sessions don't re-derive them.
-
-### Why Ollama is excluded from structured tasks
-
-The local 3B model cannot reliably produce valid JSON. During assessment it returned an answer instead of a question (the JSON blob was the answer string). The structured ladder (`Task.assess`, `Task.analyze`) stops at Gemini; Ollama only appears in `Task.chat`, `Task.generate`, `Task.lookup`, `Task.check`.
-
-### Groq compound models
-
-`groq/compound` and `groq/compound-mini` are agentic systems, not chat-completion endpoints — they return 404 on `/v1/chat/completions`. Use `openai/gpt-oss-120b` and `openai/gpt-oss-20b` instead. Check `config.py` defaults and the OptiPlex `.env` for any overrides.
-
-### BKT CEFR level tracking
-
-Each BKT observation records the CEFR level of the item that was answered. This means "Grammar: 70%" is always "70% mastery of grammar at A2" (or whatever level was being tested), not an undifferentiated global score. A proper graduated BKT (separate instance per skill+level, graduating up when mastery > 0.95) is future work post-beta.
-
-### SM-2 kept alongside HLR
-
-`apply_hlr_grade` runs both HLR and SM-2 on every review. SM-2 easiness/interval fields stay current so `/review` stats (hardest items by easiness factor) keep working without changes.
-
-### Reminder timezone
-
-Reminder times are stored as "HH:MM" and interpreted in server local time. Fine for a single user; needs per-user timezone when multi-tenant.
+| No gates | ❌ Exhausts free tier |
+| With credit gates (T.1–T.5) | ✅ Fits at ~20 credits each |
+| With gates + shared daily cache (T.1–T.8) | ✅ Comfortable |
+| + Groq Developer tier (free, add a card) | ✅ Comfortable at 100+ |
+| + ~$27/month | ✅ Stop thinking about it |

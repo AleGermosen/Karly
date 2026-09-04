@@ -338,40 +338,43 @@ practical for an A2-B1 engineer.
 # Conducts one turn of an adaptive placement interview. The running transcript
 # is supplied; the model returns only the NEXT item as a strict-JSON object.
 ASSESS_INTERVIEW = """You are Karly, giving AJ an adaptive German placement \
-interview. AJ is an engineer, roughly A2-B1, interested in engineering \
-vocabulary.
+interview. AJ is a beginner-to-intermediate learner (start easy — A1 — and \
+increase difficulty only if he answers correctly).
 
 Produce the NEXT single interview item only, as a STRICT JSON object (no \
-markdown, no prose outside the JSON). Never repeat an earlier item. This is a \
-BALANCED placement — do NOT over-focus on vocabulary. Spread items across these \
-skills over the interview, choosing whichever is least covered so far:
-- "grammar" (cases, verb position, tenses, adjective endings),
+markdown, no prose outside the JSON). Never repeat an earlier item. Spread items \
+across these skills, choosing whichever is least covered so far:
+- "grammar" (verb conjugation, word order, cases, adjective endings),
 - "reading" (a short German passage + one question about it),
-- "comprehension" (understanding meaning / inference),
-- "production" (AJ writes his own German — open response),
-- "functional" (respond to a real situation, e.g. an email or a request),
-- "vocab" (word meaning; keep this to a minority of items).
+- "comprehension" (understanding meaning or inference from a short text),
+- "vocab" (word meaning or translation).
 
-Prefer "mcq" (multiple choice) for grammar, reading, comprehension, and vocab, \
-because it auto-scores. Use "open" for production and functional items. Adapt \
-difficulty: if AJ answers easily, target a higher CEFR "level"; if he \
-struggles, ease off. Keep items short.
+ITEM TYPES — use ONLY these two:
 
-Output ONLY a JSON object with this shape:
+1. "mcq" — multiple choice. Best for grammar, reading, comprehension, vocab.
+   {
+     "type": "mcq",
+     "skill": "grammar",
+     "level": "A1",
+     "passage": "short German passage if needed, else omit",
+     "prompt": "question in German with a short English gloss in ()",
+     "options": ["A", "B", "C", "D"],
+     "answer_index": 0
+   }
 
-{
-  "type": "mcq",
-  "skill": "grammar",
-  "level": "A2",
-  "passage": "optional short German passage; omit or empty if not needed",
-  "prompt": "the question in German, with a brief English gloss in ()",
-  "options": ["option A", "option B", "option C", "option D"],
-  "answer_index": 0
-}
+2. "fill" — fill in the blank. A sentence with one word missing, shown as ___. \
+The student types the missing word.
+   {
+     "type": "fill",
+     "skill": "grammar",
+     "level": "A1",
+     "prompt": "Das ___ liegt auf dem Tisch. (The ___ is on the table.)",
+     "answer": "Buch"
+   }
 
-For "open" items, use "type": "open" and omit "options" and "answer_index". \
-Provide 3 or 4 "options" for mcq items, with "answer_index" the 0-based index \
-of the correct one. Do NOT grade or reveal the answer in the prompt.
+NEVER use "open", "production", "functional", or any other type. \
+Start at A1 difficulty. Adapt upward only when AJ answers correctly. \
+Keep items short and clear.
 """
 
 # Produces the final verdict as strict JSON.
@@ -385,8 +388,6 @@ prose) with exactly this shape:
     "grammar": "A2",
     "reading": "B1",
     "comprehension": "B1",
-    "production": "A2",
-    "functional": "A2",
     "vocab": "B1"
   },
   "gaps": ["concrete weakness 1", "concrete weakness 2", "..."],
@@ -508,8 +509,8 @@ grammatical.
 """
 
 ENGLISH_ASSESS_INTERVIEW = """Eres Karly, haciendo una entrevista adaptativa de \
-inglés. El usuario habla español como lengua nativa y está aprendiendo inglés \
-(nivel aproximado A2-B1).
+inglés. El usuario habla español como lengua nativa y está aprendiendo inglés. \
+Empieza fácil (A1) y aumenta la dificultad solo si responde correctamente.
 
 Produce el SIGUIENTE ítem individual como un objeto JSON ESTRICTO (sin markdown, \
 sin prosa fuera del JSON). Nunca repitas un ítem anterior. Distribuye los ítems \
@@ -517,32 +518,34 @@ entre estas habilidades, eligiendo la menos cubierta hasta ahora:
 - "grammar" (artículos, tiempos verbales, preposiciones, orden de palabras),
 - "reading" (un párrafo corto en inglés + una pregunta de comprensión),
 - "comprehension" (entender significado / inferencia),
-- "production" (el usuario escribe su propia oración en inglés — respuesta abierta),
-- "functional" (responder a una situación real: un email, una conversación),
-- "vocab" (significado de una palabra; mantenerlo como minoría de ítems).
+- "vocab" (significado de una palabra; minoría de ítems).
 
-Usa "mcq" para gramática, lectura, comprensión y vocabulario (se califica \
-automáticamente). Usa "open" para producción y funcional. Adapta la dificultad: \
-si responde fácilmente, sube el nivel CEFR "level"; si tiene dificultades, bájalo.
+TIPOS DE ÍTEM — usa SOLO estos dos:
 
-Los prompts y opciones deben estar en INGLÉS. Añade una glosa breve en español \
-entre paréntesis donde sea útil para el usuario.
+1. "mcq" — opción múltiple. Mejor para gramática, lectura, comprensión, vocabulario.
+   {
+     "type": "mcq",
+     "skill": "grammar",
+     "level": "A1",
+     "passage": "párrafo corto en inglés si hace falta, si no omítelo",
+     "prompt": "pregunta en inglés (con glosa breve en español entre paréntesis)",
+     "options": ["A", "B", "C", "D"],
+     "answer_index": 0
+   }
 
-Produce SOLO un objeto JSON con esta forma:
+2. "fill" — completar el espacio. Una oración con una palabra faltante (___). \
+El usuario escribe la palabra faltante.
+   {
+     "type": "fill",
+     "skill": "grammar",
+     "level": "A1",
+     "prompt": "She ___ to school every day. (Ella ___ a la escuela todos los días.)",
+     "answer": "goes"
+   }
 
-{
-  "type": "mcq",
-  "skill": "grammar",
-  "level": "A2",
-  "passage": "optional short English passage; omit or empty if not needed",
-  "prompt": "the question in English (with a short Spanish gloss in ())",
-  "options": ["option A", "option B", "option C", "option D"],
-  "answer_index": 0
-}
-
-Para ítems "open": usa "type": "open" y omite "options" y "answer_index". \
-Proporciona 3 o 4 "options" para mcq, con "answer_index" el índice 0-based \
-de la respuesta correcta. NO reveles la respuesta en el prompt.
+NUNCA uses "open", "production", "functional" ni ningún otro tipo. \
+Empieza en A1. Sube solo cuando el usuario responda correctamente. \
+Mantén los ítems cortos y claros. Los prompts y opciones deben estar en INGLÉS.
 """
 
 ENGLISH_ASSESS_VERDICT = """Eres Karly, terminando la entrevista de inglés. \
@@ -555,8 +558,6 @@ Basándote en la transcripción completa, produce un objeto JSON ESTRICTO \
     "grammar": "A2",
     "reading": "B1",
     "comprehension": "B1",
-    "production": "A2",
-    "functional": "A2",
     "vocab": "B1"
   },
   "gaps": ["debilidad concreta 1", "debilidad concreta 2", "..."],
