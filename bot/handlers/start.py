@@ -32,7 +32,8 @@ WELCOME_GERMAN = (
     "/test — Einstufungstest\n"
     "/profile — dein Lernprofil\n"
     "/weekly — Wochenbericht\n\n"
-    "/help — alle Commands"
+    "/help — alle Commands\n\n"
+    "ℹ️ Dein Lehrer kann deinen Lernfortschritt sehen (Level, Aktivität, Fehler-Schwerpunkte) — aber nicht deine genauen Nachrichten."
 )
 
 WELCOME_ENGLISH = (
@@ -48,7 +49,8 @@ WELCOME_ENGLISH = (
     "/weekly — weekly progress report\n"
     "/docs — practice from a PDF\n"
     "🎭 /impostor — social deduction game for the class\n\n"
-    "/help — all commands"
+    "/help — all commands\n\n"
+    "ℹ️ Your teacher can see your learning progress (level, activity, weak areas) — but not your exact messages."
 )
 
 LANGUAGE_PICKER = (

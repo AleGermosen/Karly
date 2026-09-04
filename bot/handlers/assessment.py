@@ -21,7 +21,7 @@ from telegram.ext import (
 
 from bot import credits as credit_mod
 from bot.middleware import require_auth
-from db.repo import get_user_by_telegram_id, save_assessment, update_bkt_state
+from db.repo import get_user_by_telegram_id, save_assessment, set_correction_level, update_bkt_state
 from llm import prompts
 from llm.gemini import LLMUnavailable, QuotaExceeded
 from llm.router import Task
@@ -498,8 +498,41 @@ async def _finish(
         label = "\nTus preguntas de opción múltiple (auto-calificadas):\n" if en else "\nDeine Auswahlfragen (auto-scored):\n"
         message += label + breakdown
     await update.effective_message.reply_text(message)
+
+    # Suggest a correction level if the user hasn't manually set one.
+    if user and user.correction_level == 1:  # still at default "gentle"
+        suggested = _suggest_correction_level(verdict.get("overall"))
+        if suggested is not None and suggested != user.correction_level:
+            set_correction_level(user.id, suggested)
+            level_names = {0: "off", 1: "gentle", 2: "light", 3: "balanced", 4: "thorough", 5: "exam"}
+            label = level_names.get(suggested, str(suggested))
+            if en:
+                nudge = (
+                    f"💡 Based on your level I've set corrections to *{label}* ({suggested}/5). "
+                    "You can always change it with /corrections 0–5."
+                )
+            else:
+                nudge = (
+                    f"💡 Basierend auf deinem Level habe ich Korrekturen auf *{label}* ({suggested}/5) gesetzt. "
+                    "Du kannst das jederzeit mit /corrections 0–5 ändern."
+                )
+            await update.effective_message.reply_text(nudge)
+
     _clear(context)
     return ConversationHandler.END
+
+
+# Maps CEFR overall level → suggested correction_level (0-5 scale).
+# Beginners need gentle; advanced learners benefit from thorough corrections.
+_CEFR_TO_CORRECTION = {
+    "A1": 1, "A2": 2, "B1": 3, "B2": 4, "C1": 5, "C2": 5,
+}
+
+
+def _suggest_correction_level(overall: str | None) -> int | None:
+    if not overall:
+        return None
+    return _CEFR_TO_CORRECTION.get(overall.upper())
 
 
 def _format_verdict(v: dict, en: bool) -> str:

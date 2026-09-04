@@ -19,6 +19,7 @@ from telegram.ext import (
     filters,
 )
 
+from bot import credits as credit_mod
 from bot.middleware import require_auth
 from db.repo import get_user_by_telegram_id, record_practice
 from llm import prompts
@@ -204,6 +205,12 @@ async def _launch_scene(
     if user is None:
         return ConversationHandler.END
 
+    _credit_status = credit_mod.credits_check(user.id, credit_mod.COSTS["chat"])
+    if _credit_status != "ok":
+        _text, _kb = credit_mod.credit_error_response(en, _credit_status)
+        await update.effective_message.reply_text(_text, reply_markup=_kb)
+        return ConversationHandler.END
+
     _, title, description = scenario
     level = _user_level(user)
     correction_block = _correction_block(user.correction_level, en)
@@ -228,6 +235,8 @@ async def _launch_scene(
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
+    credit_mod.spend(user.id, task="chat", model="roleplay")
+
     context.user_data["scene_key"] = key
     context.user_data["scene_title"] = title
     context.user_data["scene_system"] = system
@@ -251,6 +260,14 @@ async def scene_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     if not system:
         return ConversationHandler.END
 
+    user = get_user_by_telegram_id(update.effective_user.id)
+    if user:
+        _credit_status = credit_mod.credits_check(user.id, credit_mod.COSTS["chat"])
+        if _credit_status != "ok":
+            _text, _kb = credit_mod.credit_error_response(en, _credit_status)
+            await update.effective_message.reply_text(_text, reply_markup=_kb)
+            return IN_SCENE
+
     history.append({"role": "user", "text": text})
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
 
@@ -266,6 +283,8 @@ async def scene_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         await update.effective_message.reply_text(msg)
         return IN_SCENE
 
+    if user:
+        credit_mod.spend(user.id, task="chat", model="roleplay")
     history.append({"role": "assistant", "text": reply})
     context.user_data["scene_history"] = history
     context.user_data["scene_turns"] = context.user_data.get("scene_turns", 0) + 1
@@ -292,10 +311,13 @@ async def scene_done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
+    user_id = context.user_data.get("scene_user_id")
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     llm_history = [{"role": h["role"], "text": h["text"]} for h in history]
     try:
         debrief = await route(Task.chat, "/done", system=system, history=llm_history)
+        if user_id:
+            credit_mod.spend(user_id, task="chat", model="roleplay_debrief")
     except (QuotaExceeded, LLMUnavailable):
         debrief = "(¡Buen trabajo de todas formas!)" if en else "(Feedback nicht verfügbar — gute Arbeit trotzdem!)"
 

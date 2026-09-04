@@ -411,6 +411,14 @@ async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             "Ask a meta-question in English, e.g. /english when do I use dative?"
         )
         return
+    en = False
+    _uid = user.id if user else None
+    if _uid:
+        _credit_status = credit_mod.credits_check(_uid, credit_mod.COSTS["chat"])
+        if _credit_status != "ok":
+            _text, _kb = credit_mod.credit_error_response(en, _credit_status)
+            await update.effective_message.reply_text(_text, reply_markup=_kb)
+            return
     try:
         result = await _route_with_typing(
             context,
@@ -426,6 +434,8 @@ async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.effective_message.reply_text(ERROR_MSG)
         return
 
+    if _uid:
+        credit_mod.spend(_uid, task="chat", model=result.rung.model_id)
     prev_label = context.user_data.get("last_backend_label")
     new_label = result.rung.label
     notice = _backend_notice(prev_label, new_label)
@@ -439,12 +449,21 @@ async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 @require_auth
 async def spanish(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/spanish <pregunta> — meta-question in Spanish (for English-mode users)."""
+    user = get_user_by_telegram_id(update.effective_user.id)
+    en = True
     question = " ".join(context.args).strip() if context.args else ""
     if not question:
         await update.effective_message.reply_text(
             "Haz una pregunta en español, por ejemplo: /spanish ¿cuándo uso 'the'?"
         )
         return
+    _uid = user.id if user else None
+    if _uid:
+        _credit_status = credit_mod.credits_check(_uid, credit_mod.COSTS["chat"])
+        if _credit_status != "ok":
+            _text, _kb = credit_mod.credit_error_response(en, _credit_status)
+            await update.effective_message.reply_text(_text, reply_markup=_kb)
+            return
     try:
         result = await _route_with_typing(
             context,
@@ -460,6 +479,8 @@ async def spanish(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.effective_message.reply_text(ERROR_MSG)
         return
 
+    if _uid:
+        credit_mod.spend(_uid, task="chat", model=result.rung.model_id)
     prev_label = context.user_data.get("last_backend_label")
     new_label = result.rung.label
     notice = _backend_notice(prev_label, new_label)
@@ -582,6 +603,11 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     en = getattr(user, "learning_mode", "german") == "english"
+    _credit_status = credit_mod.credits_check(user.id, credit_mod.COSTS["summary"])
+    if _credit_status != "ok":
+        _text, _kb = credit_mod.credit_error_response(en, _credit_status)
+        await update.effective_message.reply_text(_text, reply_markup=_kb)
+        return
     messages = recent_user_messages(user.id, limit=config.CONTEXT_WINDOW_MESSAGES)
     if not messages:
         if en:
@@ -597,6 +623,7 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     batch = "\n".join(f"- {m}" for m in messages)
     try:
         result, _ = await _summary_analyze(context, update.effective_message.chat_id, batch, en=en)
+        credit_mod.spend(user.id, task="summary", model="analyze")
     except (QuotaExceeded, AllBackendsExhausted):
         await update.effective_message.reply_text(QUOTA_MSG_EN if en else QUOTA_MSG)
         return

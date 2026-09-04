@@ -241,7 +241,7 @@ _LADDERS: dict[Task, list[Rung]] = _build_ladders()
 # conversational; structured tasks (assess/analyze) get more room for JSON.
 _TASK_MAX_TOKENS: dict[Task, int] = {
     Task.chat: 700,
-    Task.assess: 512,
+    Task.assess: 1024,
     Task.generate: 1000,
     Task.analyze: 900,
     Task.lookup: 256,

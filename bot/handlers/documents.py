@@ -290,12 +290,19 @@ async def learn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await context.bot.send_chat_action(
         chat_id=update.effective_message.chat_id, action="typing"
     )
+    _credit_status = credit_mod.credits_check(user.id, credit_mod.COSTS["learn"])
+    if _credit_status != "ok":
+        _text, _kb = credit_mod.credit_error_response(en, _credit_status)
+        await update.effective_message.reply_text(_text, reply_markup=_kb)
+        return
+
     lesson_prompt_tpl = prompts.ENGLISH_LEARN_LESSON if en else prompts.LEARN_LESSON
     system = lesson_prompt_tpl.format(
         level=level, summary=document.get("summary") or "(no summary)", terms=terms_str
     )
     try:
         lesson = await route(Task.generate, "Generate the lesson now.", system=system)
+        credit_mod.spend(user.id, task="learn", model="generate")
     except QuotaExceeded:
         await update.effective_message.reply_text(
             credit_mod.capacity_exhausted_text(en),

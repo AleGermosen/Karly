@@ -876,11 +876,33 @@ async def on_set_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     lang_label = "German" if mode == "german" else "English"
     class_label = f" → {cls.name}" if cls else ""
 
-    # Welcome the student.
-    from bot.handlers.start import WELCOME_GERMAN, WELCOME_ENGLISH
-    welcome = (WELCOME_GERMAN if mode == "german" else WELCOME_ENGLISH) + (
-        "\n\n✅ Your teacher approved you — welcome! Start with /test to find your level."
-    )
+    # Welcome the student with a structured onboarding message.
+    first_name = (student_user.name or "").split()[0] or "there"
+    class_line = f"\n📚 Class: *{cls.name}*" if cls else ""
+    if mode == "german":
+        welcome = (
+            f"✅ *Willkommen bei Karly, {first_name}!*\n"
+            f"Dein Lehrer hat dich freigeschaltet.{class_line}\n\n"
+            "Hier sind deine ersten Schritte:\n\n"
+            "1️⃣ */test* — mach den Einstufungstest (~10 Fragen)\n"
+            "2️⃣ Schreib mir einfach auf Deutsch — ich korrigiere dich\n"
+            "3️⃣ */practice* — Vokabeln mit Karteikarten üben\n"
+            "4️⃣ */daily* — tägliche Mini-Challenge (3 kurze Aufgaben)\n\n"
+            "ℹ️ Dein Lehrer kann deinen Fortschritt sehen (Level, Aktivität, Fehler-Schwerpunkte).\n\n"
+            "/help zeigt alle Commands."
+        )
+    else:
+        welcome = (
+            f"✅ *¡Bienvenido/a a Karly, {first_name}!*\n"
+            f"Tu profesor/a te ha aprobado.{class_line}\n\n"
+            "Tus primeros pasos:\n\n"
+            "1️⃣ */test* — haz la prueba de nivel (~10 preguntas)\n"
+            "2️⃣ Escríbeme en inglés — te corrijo y explico\n"
+            "3️⃣ */practice* — practica vocabulario con tarjetas\n"
+            "4️⃣ */daily* — mini-reto diario (3 ejercicios cortos)\n\n"
+            "ℹ️ Tu profesor/a puede ver tu progreso (nivel, actividad, áreas débiles).\n\n"
+            "/help muestra todos los comandos."
+        )
     try:
         await context.bot.send_message(chat_id=student_user.telegram_id, text=welcome)
     except Exception:
