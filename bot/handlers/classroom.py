@@ -415,14 +415,28 @@ async def newclass(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.effective_message.reply_text("🚫 Teacher only.")
         return
     if not context.args:
-        await update.effective_message.reply_text("Usage: /newclass <class name>\nExample: /newclass A1 Beginners")
+        await update.effective_message.reply_text(
+            "Usage: /newclass <class name> [german|english]\n"
+            "Example: /newclass A1 Beginners english"
+        )
         return
 
-    name = " ".join(context.args)
-    mode = getattr(caller, "learning_mode", "german") or "german"
+    args = context.args
+    if args[-1].lower() in ("german", "english"):
+        mode = args[-1].lower()
+        name = " ".join(args[:-1])
+    else:
+        mode = getattr(caller, "learning_mode", "german") or "german"
+        name = " ".join(args)
+
+    if not name:
+        await update.effective_message.reply_text("Please provide a class name.")
+        return
+
     cls = create_class(name=name, teacher_id=caller.id, learning_mode=mode)
+    flag = "🇺🇸" if mode == "english" else "🇩🇪"
     await update.effective_message.reply_text(
-        f"✅ Class *{cls.name}* created (id={cls.id}).\n"
+        f"✅ Class *{cls.name}* {flag} created.\n"
         "Use /moveclass <student> <class> to assign students."
     )
 
