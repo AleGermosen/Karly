@@ -1,0 +1,1019 @@
+- id: en.a2.g01
+  kind: grammar
+  level: A2
+  order: 1
+  title_target: Past continuous
+  title_l1: Pasado continuo
+  can_do: I can describe what was happening at a particular time in the past.
+  prereqs:
+  - en.a1.g06
+  - en.a1.g16
+  skill: grammar
+  explain:
+  - Past continuous describes an action in progress at a specific moment in the past.
+  - 'Form: was/were + verb-ing. I was sleeping. They were talking.'
+  - 'Use it to set the scene for a shorter action: I was cooking when the phone rang.'
+  - The shorter, completed action uses the past simple.
+  - 'When / while: ''When the phone rang, I was cooking.'' / ''While I was cooking,
+    the phone rang.'''
+  - 'Negative: wasn''t/weren''t + -ing. He wasn''t listening.'
+  - 'Question: Was she working? Were they waiting?'
+  examples:
+  - target: At eight o'clock last night I was watching TV.
+    gloss: Anoche a las ocho estaba viendo la televisión.
+  - target: While she was driving, her phone rang.
+    gloss: Mientras conducía, le sonó el teléfono.
+  - target: They weren't sleeping — they were reading.
+    gloss: No estaban durmiendo, estaban leyendo.
+  pitfalls:
+  - 'Don''t use continuous with stative verbs: ''I was knowing'' is wrong. Say ''I
+    knew''.'
+  - Spanish uses the imperfect (estaba + gerundio) similarly. The structure maps well.
+  - 'The past simple interrupts the continuous: use ''when'' before the simple, ''while''
+    before the continuous.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:f446ac9ba48411cd
+- id: en.a2.g02
+  kind: grammar
+  level: A2
+  order: 2
+  title_target: 'Present perfect: ever, never, already, yet'
+  title_l1: 'Pretérito perfecto: ever, never, already, yet'
+  can_do: I can talk about experiences and say whether things have happened.
+  prereqs:
+  - en.a1.g18
+  skill: grammar
+  explain:
+  - 'Form: have/has + past participle. I have seen. She has eaten.'
+  - 'Use for experiences (no specific time): Have you ever been to London?'
+  - ever = at any time in your life (questions). never = not at any time (negatives).
+  - already = sooner than expected (affirmative). She's already finished!
+  - yet = expected but unknown if happened (negatives/questions). Has he arrived yet?
+  - 'Regular past participles: -ed (worked). Many irregular: go → gone, eat → eaten,
+    see → seen.'
+  - 'Contraction: I have → I''ve, she has → she''s, they have → they''ve.'
+  examples:
+  - target: Have you ever tried sushi? — No, I've never tried it.
+    gloss: ¿Has probado alguna vez el sushi? — No, nunca lo he probado.
+  - target: She's already done her homework.
+    gloss: Ella ya ha hecho su tarea.
+  - target: I haven't called him yet.
+    gloss: Todavía no lo he llamado.
+  pitfalls:
+  - Spanish uses the preterite ('fui') where English uses present perfect ('I have
+    been'). Don't mix them.
+  - 'Never use ''ever'' in affirmatives: ''I have ever seen it'' is wrong. Use ''already''
+    or nothing.'
+  - '''Yet'' goes at the end: ''I haven''t finished yet'' not ''I haven''t yet finished''
+    (formal exception).'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:de958f459b24286d
+- id: en.a2.g03
+  kind: grammar
+  level: A2
+  order: 3
+  title_target: Present perfect vs past simple
+  title_l1: Pretérito perfecto vs pasado simple
+  can_do: I can choose the right past tense for what I want to say.
+  prereqs:
+  - en.a2.g02
+  - en.a1.g17
+  - en.a1.g18
+  skill: grammar
+  explain:
+  - 'Past simple = specific finished time: I saw him yesterday. She left in 2019.'
+  - 'Present perfect = no specific time, or result still relevant: I''ve seen that
+    film.'
+  - 'Time words force past simple: yesterday, last week, ago, in 2020, when I was
+    young.'
+  - 'Time words that go with present perfect: ever, never, already, yet, just, recently,
+    so far.'
+  - '''Just'' = very recently (present perfect): I''ve just eaten. Don''t use past
+    simple with ''just''.'
+  - 'If you give a time: past simple. If you don''t: present perfect is often correct.'
+  examples:
+  - target: I've seen that film — I saw it last Tuesday.
+    gloss: He visto esa película — la vi el martes pasado.
+  - target: Have you ever been to Paris? — Yes, I went in 2022.
+    gloss: ¿Has estado alguna vez en París? — Sí, fui en 2022.
+  - target: She's just arrived — she arrived ten minutes ago.
+    gloss: Acaba de llegar — llegó hace diez minutos.
+  pitfalls:
+  - 'Spanish speakers often use the preterite when English needs present perfect:
+    ''Did you eat?'' vs ''Have you eaten?'''
+  - 'The word ''ago'' always triggers past simple: ''I saw him two days ago'' (not
+    ''I have seen'').'
+  - Questions about experience use present perfect; follow-up detail uses past simple.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:3ccf0142f8b724ff
+- id: en.a2.g04
+  kind: grammar
+  level: A2
+  order: 4
+  title_target: Going to — future plans and predictions
+  title_l1: Going to — planes y predicciones futuras
+  can_do: I can talk about plans I have already decided on.
+  prereqs:
+  - en.a1.g06
+  skill: grammar
+  explain:
+  - 'Use ''going to'' for plans and intentions already decided: I''m going to study
+    medicine.'
+  - 'Also for predictions based on evidence: Look at those clouds — it''s going to
+    rain!'
+  - 'Form: am/is/are + going to + base verb.'
+  - 'Negative: I''m not going to eat meat anymore.'
+  - 'Question: Are you going to come to the party?'
+  - In speech, 'going to' often sounds like 'gonna' — but write 'going to' formally.
+  examples:
+  - target: We're going to visit my grandmother this weekend.
+    gloss: Vamos a visitar a mi abuela este fin de semana.
+  - target: She isn't going to take the job — the salary is too low.
+    gloss: No va a aceptar el trabajo — el sueldo es muy bajo.
+  - target: Look at that car! It's going to crash!
+    gloss: ¡Mira ese coche! ¡Va a chocar!
+  pitfalls:
+  - '''Going to go'' sounds repetitive but is grammatically correct: ''I''m going
+    to go to the gym''.'
+  - 'Don''t confuse ''going to'' (plan) with ''will'' (spontaneous decision): ''I''m
+    going to call him'' (planned) vs ''I''ll call him'' (just decided).'
+  - Spanish 'voy a + infinitivo' maps directly. Use this as your model.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:d1423c5aea809743
+- id: en.a2.g05
+  kind: grammar
+  level: A2
+  order: 5
+  title_target: Will — predictions and spontaneous decisions
+  title_l1: Will — predicciones y decisiones espontáneas
+  can_do: I can make predictions and offer to help using will.
+  prereqs:
+  - en.a2.g04
+  skill: grammar
+  explain:
+  - Will + base verb. No -s, no 'to'. She will come. They'll call.
+  - 'Use for predictions (no evidence, just belief): I think it will be cold tomorrow.'
+  - 'Use for spontaneous decisions (made at the moment of speaking): ''I''ll have
+    the pasta, please.'''
+  - 'Use for offers and promises: I''ll help you. I won''t forget — I promise.'
+  - 'Negative: won''t (= will not). He won''t like this.'
+  - 'Question: Will she be there? Do you think he''ll come?'
+  - 'Contraction: I''ll, you''ll, he''ll, she''ll, we''ll, they''ll.'
+  examples:
+  - target: Don't worry — I'll carry that for you.
+    gloss: No te preocupes, yo te llevo eso.
+  - target: I think English will be useful in my career.
+    gloss: Creo que el inglés me será útil en mi carrera.
+  - target: He won't agree — he never does.
+    gloss: No va a estar de acuerdo — nunca lo está.
+  pitfalls:
+  - 'Will is NOT used for plans: ''Tomorrow I will go to the dentist'' sounds like
+    a prediction. Say ''I''m going to go''.'
+  - 'Never add -s: ''She wills'' is wrong. Modal verbs have no third-person ending.'
+  - 'Won''t = will not. Very common in speech: ''I won''t be late.'''
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:bcfaaa843b3b08fe
+- id: en.a2.g06
+  kind: grammar
+  level: A2
+  order: 6
+  title_target: Comparatives
+  title_l1: Comparativos
+  can_do: I can compare two people, places or things.
+  prereqs:
+  - en.a1.g01
+  skill: grammar
+  explain:
+  - 'Short adjectives (1 syllable): add -er + than. fast → faster than. old → older
+    than.'
+  - 'Spelling: CVC doubles the consonant: big → bigger. Silent -e: nice → nicer.'
+  - 'Long adjectives (2+ syllables): more + adjective + than. more expensive, more
+    comfortable.'
+  - '2-syllable adjectives ending in -y: change to -ier. happy → happier. easy → easier.'
+  - 'Irregular: good → better, bad → worse, far → farther/further.'
+  - 'Less + adjective + than for the opposite direction: less interesting than.'
+  - 'As + adjective + as for equality: She''s as tall as her brother.'
+  examples:
+  - target: The train is faster than the bus but more expensive.
+    gloss: El tren es más rápido que el autobús, pero más caro.
+  - target: This exercise is easier than the last one.
+    gloss: Este ejercicio es más fácil que el anterior.
+  - target: My new flat isn't as big as my old house.
+    gloss: Mi nuevo piso no es tan grande como mi antigua casa.
+  pitfalls:
+  - 'Never double the comparison: ''more faster'' is wrong — either ''faster'' or
+    ''more fast'' (but ''faster'' is correct).'
+  - 'Use ''than'', not ''that'' or ''then'': ''bigger than'', not ''bigger that''.'
+  - Spanish uses 'más … que'; the structure is the same — just remember the -er vs
+    more rule.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:9df6857cfa63f5a5
+- id: en.a2.g07
+  kind: grammar
+  level: A2
+  order: 7
+  title_target: Superlatives
+  title_l1: Superlativos
+  can_do: I can say which person or thing is the most or least of a group.
+  prereqs:
+  - en.a2.g06
+  skill: grammar
+  explain:
+  - Superlatives compare one thing to all others in a group.
+  - 'Short adjectives: the + -est. fast → the fastest. old → the oldest.'
+  - 'CVC doubles the consonant: big → the biggest. Silent -e: nice → the nicest.'
+  - 'Long adjectives: the most + adjective. the most expensive. the most comfortable.'
+  - '-y adjectives: -iest. happy → the happiest. easy → the easiest.'
+  - 'Irregular: good → the best, bad → the worst, far → the furthest/farthest.'
+  - Always use 'the' before a superlative — this is compulsory.
+  examples:
+  - target: That's the most beautiful place I've ever visited.
+    gloss: Es el lugar más bonito que he visitado jamás.
+  - target: He's the tallest player on the team.
+    gloss: Es el jugador más alto del equipo.
+  - target: What's the worst film you've ever seen?
+    gloss: ¿Cuál es la peor película que has visto en tu vida?
+  pitfalls:
+  - 'Never omit ''the'': ''She is tallest girl'' is wrong — ''She is the tallest girl''.'
+  - 'Don''t add both -est AND ''most'': ''the most fastest'' is wrong.'
+  - After a superlative, use 'in' for places/groups ('in the class') and 'of' for
+    time ('of all time').
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:911e77c4d5ffec6c
+- id: en.a2.g08
+  kind: grammar
+  level: A2
+  order: 8
+  title_target: Must / mustn't — obligation and prohibition
+  title_l1: Must / mustn't — obligación y prohibición
+  can_do: I can say what is necessary and what is not allowed.
+  prereqs:
+  - en.a1.g09
+  skill: grammar
+  explain:
+  - Must + base verb for strong obligation or necessity (from the speaker's viewpoint).
+  - You must wear a seatbelt. I must call her today — it's urgent.
+  - 'Mustn''t = strong prohibition (not allowed): You mustn''t smoke in here.'
+  - Must has no past form — use 'had to' for past obligation.
+  - 'No third-person -s: She must, not she musts.'
+  - 'No ''to'' after must: ''You must to go'' is wrong — ''You must go''.'
+  examples:
+  - target: You must be quiet in the library.
+    gloss: Debes guardar silencio en la biblioteca.
+  - target: You mustn't use your phone during the exam.
+    gloss: No puedes usar el teléfono durante el examen.
+  - target: I must remember to buy a birthday card for her.
+    gloss: Tengo que acordarme de comprarle una tarjeta de cumpleaños.
+  pitfalls:
+  - Must (obligation) and mustn't (prohibition) are opposites — don't mix them up.
+  - 'Don''t have to ≠ mustn''t: ''You don''t have to come'' = optional; ''You mustn''t
+    come'' = forbidden.'
+  - 'Past: ''I must go'' → ''I had to go yesterday''. Must has no past form.'''
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:432536a3cfe65f4d
+- id: en.a2.g09
+  kind: grammar
+  level: A2
+  order: 9
+  title_target: Should / shouldn't — advice
+  title_l1: Should / shouldn't — dar consejos
+  can_do: I can give and ask for advice.
+  prereqs:
+  - en.a1.g09
+  skill: grammar
+  explain:
+  - Should + base verb = advice or recommendation.
+  - You should see a doctor — that cough sounds serious.
+  - 'Shouldn''t = advice against: You shouldn''t eat so much sugar.'
+  - Should is weaker than must — it's a suggestion, not a rule.
+  - 'No third-person -s: She should, not she shoulds. No ''to'' after should.'
+  - 'Question: Should I call him? What should I do?'
+  - '''Ought to'' has the same meaning — should is more common.'
+  examples:
+  - target: You should go to bed earlier — you look exhausted.
+    gloss: Deberías acostarte más temprano, pareces agotado.
+  - target: She shouldn't drive — she's had too much to drink.
+    gloss: No debería conducir — ha bebido demasiado.
+  - target: What should I wear to the interview?
+    gloss: ¿Qué debería ponerme para la entrevista?
+  pitfalls:
+  - Should ≠ must. Should is advice; must is obligation. Don't overuse must when giving
+    friendly advice.
+  - 'No ''to'' after should: ''You should to rest'' is wrong — ''You should rest''.'
+  - 'Asking for advice: ''What should I do?'' not ''What I should do?'' — auxiliary
+    before subject.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:e3f14dfc82d258c2
+- id: en.a2.g10
+  kind: grammar
+  level: A2
+  order: 10
+  title_target: Have to / don't have to — necessity and choice
+  title_l1: Have to / don't have to — necesidad y elección
+  can_do: I can say what is necessary and what is optional.
+  prereqs:
+  - en.a2.g08
+  skill: grammar
+  explain:
+  - Have to = external obligation (rules, circumstances). I have to wear a uniform
+    at work.
+  - Don't have to = no obligation — it's optional. You don't have to come if you're
+    busy.
+  - He/she/it → has to / doesn't have to. She has to work on Saturdays.
+  - 'Past: had to / didn''t have to. We had to wait for an hour.'
+  - 'Question: Do you have to work tomorrow? Does she have to attend?'
+  - 'Must vs have to: both express obligation. Have to is more common for external
+    rules.'
+  examples:
+  - target: I have to get up at six every day — my shift starts at seven.
+    gloss: Tengo que levantarme a las seis todos los días — mi turno empieza a las
+      siete.
+  - target: You don't have to bring anything — we have everything ready.
+    gloss: No tienes que traer nada — ya lo tenemos todo preparado.
+  - target: Did you have to pay extra for the luggage?
+    gloss: ¿Tuviste que pagar extra por el equipaje?
+  pitfalls:
+  - Don't have to ≠ mustn't. 'You don't have to eat' = optional. 'You mustn't eat'
+    = forbidden.
+  - 'Use do/does for questions and negatives: ''She don''t have to'' is wrong — ''She
+    doesn''t have to''.'
+  - 'Past: ''I had to stay'' NOT ''I must stayed''. Must has no past form.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:d195b085af37cacf
+- id: en.a2.g11
+  kind: grammar
+  level: A2
+  order: 11
+  title_target: Used to — past habits and states
+  title_l1: Used to — hábitos y estados del pasado
+  can_do: I can describe things that were true in the past but are not now.
+  prereqs:
+  - en.a1.g17
+  skill: grammar
+  explain:
+  - '''Used to + base verb'' describes past habits or states that no longer exist.'
+  - I used to play football every week. (I don't anymore.)
+  - 'Negative: I didn''t use to like coffee. (Note: ''use to'', not ''used to'', after
+    didn''t.)'
+  - 'Question: Did you use to live here? — Yes, I used to.'
+  - 'Don''t confuse with ''be used to + -ing'' (be accustomed to): I''m used to waking
+    up early.'
+  - It has no present form — for present habits, use the present simple + always/usually.
+  examples:
+  - target: She used to be very shy, but she's very confident now.
+    gloss: Ella era muy tímida antes, pero ahora es muy segura de sí misma.
+  - target: We didn't use to have a car — we always took the bus.
+    gloss: Antes no teníamos carro — siempre cogíamos el autobús.
+  - target: Did you use to play an instrument when you were young?
+    gloss: ¿Tocabas algún instrumento cuando eras joven?
+  pitfalls:
+  - 'In negatives/questions: ''didn''t use to'' — NOT ''didn''t used to''. The -d
+    is dropped after ''didn''t''.'
+  - 'Don''t confuse with ''usually'': ''I used to go'' = past only. ''I usually go''
+    = present habit.'
+  - '''Be used to'' (= accustomed to) is completely different: ''I''m used to the
+    noise'' means I''m accustomed to it.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:ad7ea07a2fcbb7c2
+- id: en.a2.g12
+  kind: grammar
+  level: A2
+  order: 12
+  title_target: 'Verb + infinitive: want, need, decide, hope, plan'
+  title_l1: 'Verbo + infinitivo: want, need, decide, hope, plan'
+  can_do: I can talk about intentions, wishes and decisions.
+  prereqs:
+  - en.a1.g03
+  - en.a2.g04
+  skill: grammar
+  explain:
+  - Some verbs are followed by to + infinitive (the base verb with 'to').
+  - 'Common verbs: want, need, hope, plan, decide, forget, learn, try, offer, refuse,
+    agree.'
+  - I want to see you. She needs to rest. They decided to leave early.
+  - 'Negative: I don''t want to go. She refused to answer.'
+  - After these verbs, always use 'to + base form', not -ing.
+  - '''Would like to'' is a polite form of ''want to'': I''d like to book a table.'
+  examples:
+  - target: I hope to travel to Japan next year.
+    gloss: Espero viajar a Japón el año que viene.
+  - target: She decided not to take the job.
+    gloss: Decidió no aceptar el trabajo.
+  - target: We're planning to move to a bigger flat.
+    gloss: Planeamos mudarnos a un piso más grande.
+  pitfalls:
+  - 'After want/need/hope/decide, use to + base form, NOT -ing: ''I want going'' is
+    wrong.'
+  - 'Negative infinitive: decide NOT to go (not ''decide to not go'').'
+  - 'Different from like/enjoy/hate, which take -ing. Compare: ''I like to swim''
+    AND ''I like swimming'' both work for ''like''; ''I enjoy swimming'' (never ''enjoy
+    to swim'').'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:aacceab17081e3bb
+- id: en.a2.g13
+  kind: grammar
+  level: A2
+  order: 13
+  title_target: 'Relative clauses: who, which, that'
+  title_l1: 'Oraciones de relativo: who, which, that'
+  can_do: I can give information about people and things within a sentence.
+  prereqs:
+  - en.a1.g04
+  skill: grammar
+  explain:
+  - Relative clauses add information about a noun using who, which, or that.
+  - Who = for people. The woman who called was my teacher.
+  - Which = for things and animals. The book which I bought is very good.
+  - That = for people or things (less formal). The man that helped me was very kind.
+  - That can often replace who/which in defining (essential) clauses.
+  - 'When the relative pronoun is the object, it can be omitted: The book (which)
+    I read was great.'
+  examples:
+  - target: The student who got the highest mark was very surprised.
+    gloss: El estudiante que sacó la nota más alta estaba muy sorprendido.
+  - target: Is this the bus that goes to the city centre?
+    gloss: ¿Es este el autobús que va al centro?
+  - target: The restaurant which we went to last night was excellent.
+    gloss: El restaurante al que fuimos anoche era excelente.
+  pitfalls:
+  - In Spanish, 'que' works for both people and things. In English, who (people) and
+    which (things) are different.
+  - 'Don''t add a pronoun after the relative: ''The man who he helped me'' is wrong
+    — ''The man who helped me''.'
+  - In writing, prefer 'who' for people and 'which' for things; 'that' is common in
+    speech.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:b7c2bff64be271e5
+- id: en.a2.g14
+  kind: grammar
+  level: A2
+  order: 14
+  title_target: 'Conjunctions: because, so, although, however'
+  title_l1: 'Conjunciones: because, so, although, however'
+  can_do: I can connect ideas and give reasons, contrasts and results.
+  prereqs:
+  - en.a1.g03
+  skill: grammar
+  explain:
+  - because = reason. I stayed home because I was sick.
+  - so = result/consequence. It was raining, so I took an umbrella.
+  - although / even though = contrast within one sentence. Although it was cold, we
+    went out.
+  - however = contrast between two sentences (add comma after however). It was raining.
+    However, we went out.
+  - because answers 'Why?'; so answers 'What happened next?'
+  - 'Note: although and even though are interchangeable. ''But'' is less formal.'
+  examples:
+  - target: She passed the exam although she hadn't studied much.
+    gloss: Aprobó el examen aunque no había estudiado mucho.
+  - target: I was tired, so I went to bed early.
+    gloss: Estaba cansada, así que me fui a dormir temprano.
+  - target: The hotel was expensive. However, it was in a perfect location.
+    gloss: El hotel era caro. Sin embargo, estaba en una ubicación perfecta.
+  pitfalls:
+  - 'Don''t start a sentence with ''Because'' alone in formal writing: ''Because I
+    was sick, I stayed home'' is fine; ending with ''Because I was sick.'' is a fragment.'
+  - 'So (result) ≠ so (degree: ''so tired''). Context makes it clear.'
+  - 'However needs a full stop or semicolon before it, not a comma: ''…raining. However,…''
+    not ''…raining, however,…'' (common error).'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:540fbf9fecb1b600
+- id: en.a2.g15
+  kind: grammar
+  level: A2
+  order: 15
+  title_target: Too and enough
+  title_l1: Too y enough
+  can_do: I can say when there is too much or not enough of something.
+  prereqs:
+  - en.a2.g06
+  skill: grammar
+  explain:
+  - Too + adjective/adverb = more than wanted or needed (negative meaning).
+  - It's too hot to go outside. She drove too fast.
+  - Not + adjective/adverb + enough = less than wanted (negative meaning).
+  - The coffee isn't hot enough. He didn't run fast enough.
+  - Enough + noun = sufficient quantity. We have enough time.
+  - Not enough + noun = insufficient. There aren't enough chairs.
+  - 'Too/enough + to + infinitive: too tired to walk; old enough to vote.'
+  examples:
+  - target: The suitcase is too heavy to carry alone.
+    gloss: La maleta es demasiado pesada para llevarla sola.
+  - target: She isn't old enough to drive.
+    gloss: No tiene edad suficiente para conducir.
+  - target: I don't have enough money to buy it.
+    gloss: No tengo suficiente dinero para comprarlo.
+  pitfalls:
+  - '''Too'' is always negative — it means more than acceptable. Don''t use it to
+    mean ''very'': ''It''s too good'' means there''s a problem (too good to believe,
+    etc.).'
+  - 'Position of ''enough'': after adjectives (tall enough) but before nouns (enough
+    money).'
+  - Spanish 'demasiado' = too. 'Suficiente' = enough. Both are commonly confused in
+    placement.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:3863517ed8393170
+- id: en.a2.g16
+  kind: grammar
+  level: A2
+  order: 16
+  title_target: 'First conditional: real and possible situations'
+  title_l1: 'Primera condicional: situaciones reales y posibles'
+  can_do: I can talk about possible future situations and their results.
+  prereqs:
+  - en.a2.g05
+  skill: grammar
+  explain:
+  - First conditional = a real possibility and its likely result.
+  - 'Form: If + present simple, will + base verb.'
+  - If it rains tomorrow, I'll stay at home.
+  - 'The if-clause can come second: I''ll stay at home if it rains.'
+  - When the if-clause comes first, use a comma. No comma when it comes second.
+  - 'You can also use: if + present, can/may/might + base verb.'
+  - 'Unless = if not: Unless you hurry, we''ll be late. (= If you don''t hurry, we''ll
+    be late.)'
+  examples:
+  - target: If you study hard, you'll pass the exam.
+    gloss: Si estudias mucho, aprobarás el examen.
+  - target: I'll call you if there's a problem.
+    gloss: Te llamo si hay algún problema.
+  - target: Unless we leave now, we'll miss the bus.
+    gloss: Si no salimos ahora, perderemos el autobús.
+  pitfalls:
+  - 'NEVER use ''will'' in the if-clause: ''If it will rain'' is wrong — ''If it rains''.'
+  - 'Spanish often uses the future in both clauses: ''Si llueve, me quedaré.'' English
+    uses present simple after ''if''.'
+  - Unless = if not. Don't write 'Unless you don't hurry' — that's a double negative.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:89813843c513967e
+- id: en.a2.g17
+  kind: grammar
+  level: A2
+  order: 17
+  title_target: Question tags
+  title_l1: Preguntas de confirmación (question tags)
+  can_do: I can check information or start conversations using question tags.
+  prereqs:
+  - en.a1.g04
+  - en.a2.g05
+  skill: grammar
+  explain:
+  - Question tags are short questions added to the end of a statement.
+  - 'Positive statement + negative tag: It''s cold today, isn''t it?'
+  - 'Negative statement + positive tag: She isn''t here, is she?'
+  - The tag uses the same auxiliary as the main clause.
+  - 'With main verbs (no auxiliary): use do/does/did. You like coffee, don''t you?'
+  - I am → aren't I? (exception). Let's go, shall we? (invitation).
+  - Rising intonation = genuine question. Falling intonation = expecting agreement.
+  examples:
+  - target: You've met her before, haven't you?
+    gloss: Ya la conoces, ¿verdad?
+  - target: They didn't call, did they?
+    gloss: No llamaron, ¿verdad?
+  - target: Let's take a break, shall we?
+    gloss: Tomemos un descanso, ¿no?
+  pitfalls:
+  - Spanish uses 'verdad/no' for everything; English tags change with each auxiliary.
+  - Positive main clause → negative tag. Negative main clause → positive tag. Never
+    match them.
+  - '''I am right, aren''t I?'' — not ''amn''t I'' (which doesn''t exist in standard
+    English).'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:a842a728aec82629
+- id: en.a2.g18
+  kind: grammar
+  level: A2
+  order: 18
+  title_target: Reflexive pronouns
+  title_l1: Pronombres reflexivos
+  can_do: I can talk about actions people do to themselves.
+  prereqs:
+  - en.a1.g10
+  skill: grammar
+  explain:
+  - 'Reflexive pronouns: myself, yourself, himself, herself, itself, ourselves, yourselves,
+    themselves.'
+  - 'Use when the subject and object are the same person: He cut himself. She taught
+    herself English.'
+  - 'Use for emphasis: The president himself signed it. I did it myself.'
+  - 'By + reflexive = alone, without help: She lives by herself. Did you do it by
+    yourself?'
+  - 'Some verbs are naturally reflexive in Spanish but not in English: ''I feel tired''
+    (not ''I feel myself tired'').'
+  examples:
+  - target: Be careful — don't hurt yourself!
+    gloss: ¡Ten cuidado, no te hagas daño!
+  - target: She made all the food herself — no help from anyone.
+    gloss: Preparó toda la comida ella sola, sin ayuda de nadie.
+  - target: The children entertained themselves for hours.
+    gloss: Los niños se entretenían solos durante horas.
+  pitfalls:
+  - 'Don''t use reflexive pronouns after feel, meet, concentrate, relax: ''I feel
+    myself tired'' is wrong.'
+  - Yourself (one person) vs yourselves (more than one). 'Help yourselves' (buffet)
+    vs 'help yourself' (one guest).
+  - By myself = alone. Don't say 'I did it alone myself' — choose one.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:b237ef05ffaec06e
+- id: en.a2.g19
+  kind: grammar
+  level: A2
+  order: 19
+  title_target: Passive voice — present and past simple
+  title_l1: Voz pasiva — presente y pasado simple
+  can_do: I can describe processes and say what happens to things.
+  prereqs:
+  - en.a1.g17
+  - en.a2.g02
+  skill: grammar
+  explain:
+  - 'Active: The chef cooks the meal. Passive: The meal is cooked (by the chef).'
+  - 'Present simple passive: am/is/are + past participle. Milk is sold in litres.'
+  - 'Past simple passive: was/were + past participle. The window was broken.'
+  - Use the passive when the action is more important than who does it.
+  - 'The agent (doer) can be omitted or added with ''by'': The house was built in
+    1900 (by whom is unknown).'
+  - The past participle is the same as in the perfect tense (worked, seen, made, built).
+  examples:
+  - target: English is spoken in over 50 countries.
+    gloss: El inglés se habla en más de 50 países.
+  - target: The car was made in Japan.
+    gloss: El coche fue fabricado en Japón.
+  - target: Were all the tickets sold?
+    gloss: ¿Se vendieron todas las entradas?
+  pitfalls:
+  - 'The past participle doesn''t change: ''The cars were builded'' is wrong — ''were
+    built''.'
+  - 'Subject-verb agreement in passive: ''The results was announced'' is wrong — ''were
+    announced''.'
+  - Spanish 'se habla' (reflexive passive) corresponds to 'is spoken' — different
+    structure, same meaning.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:2142929b30cef8b9
+- id: en.a2.g20
+  kind: grammar
+  level: A2
+  order: 20
+  title_target: Indirect questions
+  title_l1: Preguntas indirectas
+  can_do: I can ask polite questions and report what someone asked.
+  prereqs:
+  - en.a1.g04
+  skill: grammar
+  explain:
+  - Indirect questions are more polite or formal than direct questions.
+  - 'Direct: Where is the station? → Indirect: Could you tell me where the station
+    is?'
+  - 'Key change: the word order goes back to statement order (no inversion) after
+    the question word.'
+  - 'With yes/no questions, use ''if'' or ''whether'': Do you know if she''s coming?'
+  - 'Common openings: Could you tell me…? Do you know…? Can you explain…? I was wondering…'
+  - 'No auxiliary do/does/did in the indirect part: ''Can you tell me where does she
+    live?'' is wrong.'
+  examples:
+  - target: Could you tell me what time the museum opens?
+    gloss: ¿Podría decirme a qué hora abre el museo?
+  - target: Do you know if there's a pharmacy near here?
+    gloss: ¿Sabe si hay una farmacia cerca?
+  - target: I'd like to know how much this costs.
+    gloss: Me gustaría saber cuánto cuesta esto.
+  pitfalls:
+  - 'Don''t invert after the question word: ''Could you tell me where is the bank?''
+    is wrong — ''where the bank is''.'
+  - 'Remove do/does/did: ''Do you know what time does it start?'' → ''Do you know
+    what time it starts?'''
+  - 'Use ''if/whether'' for yes/no indirect questions: ''Tell me if she''s coming'',
+    not ''Tell me is she coming''.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:b374cadb57f7fad2
+- id: en.a2.g21
+  kind: grammar
+  level: A2
+  order: 21
+  title_target: 'Time clauses: when, while, before, after, as soon as'
+  title_l1: 'Cláusulas temporales: when, while, before, after, as soon as'
+  can_do: I can describe sequences of events and simultaneous actions.
+  prereqs:
+  - en.a2.g01
+  - en.a2.g05
+  skill: grammar
+  explain:
+  - Time clauses connect two actions using when, while, before, after, as soon as.
+  - 'Future: Use present simple (not will) in the time clause. I''ll call you when
+    I arrive.'
+  - While = at the same time (often with continuous). While I was eating, she called.
+  - When = at the moment that (point in time or short action). When the phone rang,
+    I was sleeping.
+  - Before = earlier than. Finish your homework before you watch TV.
+  - After = later than. After the film ends, let's have dinner.
+  - As soon as = immediately when. Call me as soon as you get there.
+  examples:
+  - target: I'll text you as soon as I land.
+    gloss: Te mando un mensaje en cuanto aterrice.
+  - target: While he was cooking, she was setting the table.
+    gloss: Mientras él cocinaba, ella ponía la mesa.
+  - target: Please turn off the lights before you leave.
+    gloss: Por favor, apaga las luces antes de salir.
+  pitfalls:
+  - 'NEVER use will in a time clause: ''I''ll call you when I will arrive'' is wrong.'
+  - While + continuous; when + simple (generally). 'While I waited' sounds more abrupt
+    than 'while I was waiting'.
+  - As soon as is often confused with 'when' — 'as soon as' emphasises immediacy.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:1964d13a245e8b27
+- id: en.a2.g22
+  kind: grammar
+  level: A2
+  order: 22
+  title_target: So do I / Neither do I — agreeing
+  title_l1: 'Expresar acuerdo: so do I / neither do I'
+  can_do: I can agree with positive and negative statements naturally.
+  prereqs:
+  - en.a1.g04
+  - en.a2.g02
+  skill: grammar
+  explain:
+  - 'To agree with a positive statement: So + auxiliary + I/you/she/etc.'
+  - '''I love pizza.'' ''So do I.'' (= Me too.) / ''I''m tired.'' ''So am I.'''
+  - 'To agree with a negative statement: Neither/Nor + auxiliary + I/you/she/etc.'
+  - '''I don''t like horror films.'' ''Neither do I.'' / ''I haven''t seen it.'' ''Neither
+    have I.'''
+  - 'The auxiliary must match the original: was → so/neither was; can → so/neither
+    can.'
+  - 'Informal alternatives: ''Me too'' (positive) and ''Me neither'' (negative).'
+  examples:
+  - target: '''I''ve been to the Dominican Republic.'' ''So have I!'''
+    gloss: '''He estado en la República Dominicana.'' ''¡Yo también!'''
+  - target: '''She can''t come.'' ''Neither can we.'''
+    gloss: '''Ella no puede venir.'' ''Nosotros tampoco.'''
+  - target: '''I wasn''t ready.'' ''Neither was I.'''
+    gloss: '''Yo no estaba listo.'' ''Yo tampoco.'''
+  pitfalls:
+  - 'Neither is already negative — don''t add ''not'': ''Neither don''t I'' is wrong.'
+  - 'Match the auxiliary: ''I worked late.'' ''So did I.'' NOT ''So worked I'' or
+    ''So I did''.'
+  - 'Use ''neither'' (not ''nor'') at the start: ''Nor do I'' is also correct but
+    less common.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:83dada54f7da5326
+- id: en.a2.g23
+  kind: grammar
+  level: A2
+  order: 23
+  title_target: Both, neither, either — talking about two things
+  title_l1: Both, neither, either — hablar de dos cosas
+  can_do: I can talk about two options, people or things precisely.
+  prereqs:
+  - en.a1.g05
+  skill: grammar
+  explain:
+  - Both = the two, together. Both students passed. Both of them were late.
+  - Neither = not one and not the other. Neither film was good. Neither of us knew.
+  - Either = one or the other (choice), or in negatives = not one and not the other.
+  - '''Would you like tea or coffee?'' ''Either is fine.'' / ''I don''t like either.'''
+  - Both takes a plural verb. Neither and either take singular (formal) or plural
+    (informal).
+  - 'Both/neither/either + of + the/my/them: Both of them passed. Neither of the films
+    was good.'
+  examples:
+  - target: Both sisters are doctors — it runs in the family.
+    gloss: Ambas hermanas son médicas — es algo de familia.
+  - target: Neither answer is correct — try again.
+    gloss: Ninguna de las dos respuestas es correcta — inténtalo de nuevo.
+  - target: You can park on either side of the street.
+    gloss: Puedes aparcar en cualquiera de los dos lados de la calle.
+  pitfalls:
+  - 'Both is always positive (affirmative). For negatives, use neither: ''Both of
+    them didn''t come'' sounds wrong — ''Neither of them came''.'
+  - 'Neither is already negative — don''t add ''not'': ''Neither of them didn''t pass''
+    is wrong.'
+  - 'Either in negatives means ''too'' at the end: ''I don''t like it either.'' =
+    ''Yo tampoco.'''
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:a8f844d0bb4fcbb3
+- id: en.a2.g24
+  kind: grammar
+  level: A2
+  order: 24
+  title_target: Reported speech — say and tell
+  title_l1: Estilo indirecto — say y tell
+  can_do: I can report what someone said without quoting them directly.
+  prereqs:
+  - en.a2.g03
+  skill: grammar
+  explain:
+  - Reported speech reports what someone said, usually with a tense shift back.
+  - 'Direct: ''I''m tired,'' she said. → Reported: She said (that) she was tired.'
+  - Present simple → past simple. Will → would. Can → could. Am/is/are → was/were.
+  - Say = report words (no person after). She said she was tired.
+  - Tell = report to someone (person required after tell). She told me she was tired.
+  - 'Time and place words shift: now → then, today → that day, here → there, tomorrow
+    → the next day.'
+  examples:
+  - target: '''I love this city,'' he said. → He said he loved that city.'
+    gloss: '''Me encanta esta ciudad'', dijo. → Dijo que le encantaba esa ciudad.'
+  - target: She told me she couldn't come to the party.
+    gloss: Me dijo que no podía venir a la fiesta.
+  - target: He said he would call me the next day.
+    gloss: Dijo que me llamaría al día siguiente.
+  pitfalls:
+  - '''Tell'' always needs an object: ''She told that she was tired'' is wrong — ''She
+    told me that she was tired''.'
+  - '''Say'' doesn''t take a person: ''She said me she was tired'' is wrong — ''She
+    told me'' or ''She said she was tired''.'
+  - 'The tense shift is not always compulsory if the statement is still true: ''He
+    said he lives in Paris'' is acceptable.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:4fba440f09182212
