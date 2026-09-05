@@ -129,7 +129,8 @@ def set_correction_level(user_id: int, level: int) -> None:
     with get_session() as session:
         user = session.get(User, user_id)
         if user is not None:
-            user.correction_level = max(0, min(5, int(level)))
+            # Explicitly cast to Python int so SQLite stores numeric affinity.
+            user.correction_level = int(max(0, min(5, int(level))))
 
 
 def user_message_stats(user_id: int) -> tuple[int, datetime | None]:

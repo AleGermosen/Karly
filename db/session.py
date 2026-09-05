@@ -74,14 +74,21 @@ def _migrate_correction_level_to_int() -> None:
     """Convert old string correction_level values to the 0-5 integer scale.
 
     Mapping: 'off' → 0, 'relaxed' → 1 (gentle, the new default), 'strict' → 4.
-    Any row that is already an integer string ('0'..'5') is left alone.
+    Also re-writes any numeric string ('0'..'5') as a real INTEGER so that
+    SQLite stores them with numeric affinity and SQLAlchemy reads them back correctly.
     """
-    mapping = {"off": "0", "relaxed": "1", "strict": "4"}
+    mapping = {"off": 0, "relaxed": 1, "strict": 4}
     with engine.begin() as conn:
         for old, new in mapping.items():
             conn.execute(
                 text("UPDATE users SET correction_level = :new WHERE correction_level = :old"),
                 {"new": new, "old": old},
+            )
+        # Re-cast any remaining string digits to real integers.
+        for v in range(6):
+            conn.execute(
+                text("UPDATE users SET correction_level = :v WHERE correction_level = :s"),
+                {"v": v, "s": str(v)},
             )
 
 
