@@ -44,8 +44,8 @@ class User(Base):
     # Daily practice reminder time as "HH:MM" (local), or None if disabled.
     reminder_time: Mapped[str | None] = mapped_column(String, nullable=True)
     # Correction strictness on a 0-5 integer scale.
-    # 0=Off, 1=Gentle (default), 2=Light, 3=Balanced, 4=Thorough, 5=Exam.
-    correction_level: Mapped[int] = mapped_column(Integer, default=1)
+    # 0=Off, 1=Gentle, 2=Light, 3=Balanced (default), 4=Thorough, 5=Exam.
+    correction_level: Mapped[int] = mapped_column(Integer, default=3)
     # Which language the user is learning: "german" (default) or "english".
     # German mode: native English speaker learning German.
     # English mode: native Spanish speaker learning English.

@@ -199,7 +199,7 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     history = recent_history(user.id, limit=config.CONTEXT_WINDOW_MESSAGES)
-    level: int = user.correction_level if isinstance(user.correction_level, int) else 1
+    level: int = user.correction_level if isinstance(user.correction_level, int) else 3
     learning_mode = getattr(user, "learning_mode", "german") or "german"
     en = learning_mode == "english"
 
@@ -608,7 +608,7 @@ async def corrections(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if user is None:
         return
     en = getattr(user, "learning_mode", "german") == "english"
-    current: int = user.correction_level if isinstance(user.correction_level, int) else 1
+    current: int = user.correction_level if isinstance(user.correction_level, int) else 3
     arg = (context.args[0].lower() if context.args else "").strip()
 
     # Accept numeric or legacy-string argument.
