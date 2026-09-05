@@ -104,13 +104,13 @@ SESSION_CAP_SUBSCRIBER: int = int(os.getenv("SESSION_CAP_SUBSCRIBER", "40"))
 WEEK_CAP_FREE: int = int(os.getenv("WEEK_CAP_FREE", "40"))
 WEEK_CAP_SUBSCRIBER: int = int(os.getenv("WEEK_CAP_SUBSCRIBER", "200"))
 # Subscription pricing.
-# Stripe price in USD cents ($4.99 → 499). Set via STRIPE_TOKEN env var.
+# Card payment price in USD cents ($4.99 → 499). Requires PAYMENT_PROVIDER_TOKEN.
 SUBSCRIBE_PRICE_USD_CENTS: int = int(os.getenv("SUBSCRIBE_PRICE_USD_CENTS", "499"))
 # Telegram Stars price (250 ⭐ ≈ $6.50 — intentionally higher to signal card is better value).
 SUBSCRIBE_PRICE_STARS: int = int(os.getenv("SUBSCRIBE_PRICE_STARS", "250"))
 SUBSCRIBE_DAYS: int = int(os.getenv("SUBSCRIBE_DAYS", "30"))
-# Stripe provider token from BotFather (empty string = Stars only).
-STRIPE_TOKEN: str = os.getenv("STRIPE_TOKEN", "")
+# Payment provider token from BotFather → Payments → PayPal (empty = Stars only).
+PAYMENT_PROVIDER_TOKEN: str = os.getenv("PAYMENT_PROVIDER_TOKEN", "")
 # Top-up packs: (label, extra_messages, stars_price).
 TOPUP_PACKS: list[tuple[str, int, int]] = [
     ("Small",  10,  25),

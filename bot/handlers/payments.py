@@ -1,4 +1,4 @@
-"""Payment handlers for subscriptions (Stripe + Stars) and top-up packs (F-16, F-21)."""
+"""Payment handlers for subscriptions (PayPal + Stars) and top-up packs (F-16, F-21)."""
 from __future__ import annotations
 
 import logging
@@ -23,7 +23,7 @@ _PAYLOAD_TOPUP_PREFIX = "karly_topup_"  # + pack index (0/1/2)
 
 @require_auth
 async def subscribe_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/subscribe — show dual-payment choice (Card via Stripe or Telegram Stars)."""
+    """/subscribe — show dual-payment choice (PayPal card or Telegram Stars)."""
     user = get_user_by_telegram_id(update.effective_user.id)
     en = user and getattr(user, "learning_mode", "german") == "english"
 
@@ -47,7 +47,7 @@ async def subscribe_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     stars = config.SUBSCRIBE_PRICE_STARS
     usd = config.SUBSCRIBE_PRICE_USD_CENTS / 100  # e.g. 4.99
 
-    stripe_available = bool(config.STRIPE_TOKEN)
+    card_available = bool(config.PAYMENT_PROVIDER_TOKEN)
 
     if en:
         text = (
@@ -55,11 +55,11 @@ async def subscribe_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             f"Get *{config.SESSION_CAP_SUBSCRIBER} messages per session* "
             f"and *{config.WEEK_CAP_SUBSCRIBER} per week*.\n\n"
         )
-        if stripe_available:
+        if card_available:
             text += (
                 f"💳 *Card — ${usd:.2f}/month* ← better deal\n"
                 f"⭐ *Telegram Stars — {stars} ⭐/month*\n\n"
-                "Card payments go directly to your Stripe account and cost less in fees. "
+                "Card payments via PayPal cost less in fees. "
                 "Stars work too — the choice is yours."
             )
             buttons = [
@@ -77,11 +77,11 @@ async def subscribe_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             f"*{config.SESSION_CAP_SUBSCRIBER} Nachrichten pro Session* "
             f"und *{config.WEEK_CAP_SUBSCRIBER} pro Woche*.\n\n"
         )
-        if stripe_available:
+        if card_available:
             text += (
                 f"💳 *Karte — ${usd:.2f}/Monat* ← besser\n"
                 f"⭐ *Telegram Stars — {stars} ⭐/Monat*\n\n"
-                "Kartenzahlung geht direkt an dein Stripe-Konto und hat niedrigere Gebühren."
+                "Kartenzahlung via PayPal hat niedrigere Gebühren."
             )
             buttons = [
                 [InlineKeyboardButton(f"💳 {usd:.2f} $ per Karte zahlen", callback_data="subscribe:card")],
@@ -128,7 +128,7 @@ async def _send_stars_invoice(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 async def _send_card_invoice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a Stripe card subscription invoice."""
+    """Send a PayPal card subscription invoice."""
     user = get_user_by_telegram_id(update.effective_user.id)
     en = user and getattr(user, "learning_mode", "german") == "english"
     cents = config.SUBSCRIBE_PRICE_USD_CENTS
@@ -148,7 +148,7 @@ async def _send_card_invoice(update: Update, context: ContextTypes.DEFAULT_TYPE)
         title=title,
         description=description,
         payload=_PAYLOAD_SUBSCRIBE,
-        provider_token=config.STRIPE_TOKEN,
+        provider_token=config.PAYMENT_PROVIDER_TOKEN,
         currency="USD",
         prices=[LabeledPrice(label=title, amount=cents)],
     )
@@ -163,9 +163,9 @@ async def on_subscribe_stars(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 @require_auth
 async def on_subscribe_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Callback: user chose card (Stripe) payment."""
+    """Callback: user chose card (PayPal) payment."""
     await update.callback_query.answer()
-    if not config.STRIPE_TOKEN:
+    if not config.PAYMENT_PROVIDER_TOKEN:
         await update.callback_query.message.reply_text(
             "Card payments are not set up yet. Please use Stars for now."
         )
@@ -239,7 +239,7 @@ async def pre_checkout_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def payment_confirmed_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle successful_payment — works for both Stripe and Stars invoices."""
+    """Handle successful_payment — works for both PayPal and Stars invoices."""
     message = update.effective_message
     if message is None or message.successful_payment is None:
         return
