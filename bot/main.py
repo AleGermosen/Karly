@@ -197,12 +197,7 @@ def build_application() -> Application:
         CallbackQueryHandler(conversation.on_corrections_pick, pattern=r"^setcorr:")
     )
 
-    # Media task submission (checked before the catch-all tutor handler).
-    app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, media.task_submission)
-    )
-
-    # Any non-command text goes to the tutor conversation handler.
+    # Any non-command text: media task submission (if pending) then tutor chat.
     app.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, conversation.chat)
     )

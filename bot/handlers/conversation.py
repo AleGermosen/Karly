@@ -33,6 +33,7 @@ from db.repo import (
     set_correction_level,
     user_message_stats,
 )
+from bot.handlers import media as media_mod
 from llm import memory as memory_mod
 from llm import prompts
 from llm.errors import AllBackendsExhausted, LLMUnavailable, QuotaExceeded
@@ -185,8 +186,12 @@ def _parse_corrections(reply: str) -> list[dict]:
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     message = update.effective_message
     text = (message.text or "").strip()
-    logger.info("chat() called: uid=%s text=%r", update.effective_user.id if update.effective_user else None, text[:40])
     if not text:
+        return
+
+    # If a media task is pending for this user, hand off to that handler first.
+    if context.user_data.get("_pending_media_task"):
+        await media_mod.task_submission(update, context)
         return
 
     user = get_user_by_telegram_id(update.effective_user.id)
