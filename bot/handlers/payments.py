@@ -23,7 +23,7 @@ _PAYLOAD_TOPUP_PREFIX = "karly_topup_"  # + pack index (0/1/2)
 
 @require_auth
 async def subscribe_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/subscribe — show dual-payment choice (PayPal card or Telegram Stars)."""
+    """/subscribe — send a Stars invoice (or show card+Stars choice if PAYMENT_PROVIDER_TOKEN is set)."""
     user = get_user_by_telegram_id(update.effective_user.id)
     en = user and getattr(user, "learning_mode", "german") == "english"
 
@@ -43,61 +43,42 @@ async def subscribe_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             )
         return
 
-    days = config.SUBSCRIBE_DAYS
-    stars = config.SUBSCRIBE_PRICE_STARS
-    usd = config.SUBSCRIBE_PRICE_USD_CENTS / 100  # e.g. 4.99
-
-    card_available = bool(config.PAYMENT_PROVIDER_TOKEN)
-
-    if en:
-        text = (
-            f"🎓 *Karly subscription — {days} days*\n\n"
-            f"Get *{config.SESSION_CAP_SUBSCRIBER} messages per session* "
-            f"and *{config.WEEK_CAP_SUBSCRIBER} per week*.\n\n"
-        )
-        if card_available:
-            text += (
+    # If a card payment provider is configured, show a choice screen.
+    if config.PAYMENT_PROVIDER_TOKEN:
+        days = config.SUBSCRIBE_DAYS
+        stars = config.SUBSCRIBE_PRICE_STARS
+        usd = config.SUBSCRIBE_PRICE_USD_CENTS / 100
+        if en:
+            text = (
+                f"🎓 *Karly subscription — {days} days*\n\n"
+                f"Get *{config.SESSION_CAP_SUBSCRIBER} messages per session* "
+                f"and *{config.WEEK_CAP_SUBSCRIBER} per week*.\n\n"
                 f"💳 *Card — ${usd:.2f}/month* ← better deal\n"
-                f"⭐ *Telegram Stars — {stars} ⭐/month*\n\n"
-                "Card payments via PayPal cost less in fees. "
-                "Stars work too — the choice is yours."
+                f"⭐ *Telegram Stars — {stars} ⭐/month*"
             )
             buttons = [
                 [InlineKeyboardButton(f"💳 Pay ${usd:.2f} by card", callback_data="subscribe:card")],
                 [InlineKeyboardButton(f"⭐ Pay {stars} Stars", callback_data="subscribe:stars")],
             ]
         else:
-            text += f"⭐ *{stars} Telegram Stars* for {days} days."
-            buttons = [
-                [InlineKeyboardButton(f"⭐ Pay {stars} Stars", callback_data="subscribe:stars")],
-            ]
-    else:
-        text = (
-            f"🎓 *Karly-Abonnement — {days} Tage*\n\n"
-            f"*{config.SESSION_CAP_SUBSCRIBER} Nachrichten pro Session* "
-            f"und *{config.WEEK_CAP_SUBSCRIBER} pro Woche*.\n\n"
-        )
-        if card_available:
-            text += (
+            text = (
+                f"🎓 *Karly-Abonnement — {days} Tage*\n\n"
+                f"*{config.SESSION_CAP_SUBSCRIBER} Nachrichten pro Session* "
+                f"und *{config.WEEK_CAP_SUBSCRIBER} pro Woche*.\n\n"
                 f"💳 *Karte — ${usd:.2f}/Monat* ← besser\n"
-                f"⭐ *Telegram Stars — {stars} ⭐/Monat*\n\n"
-                "Kartenzahlung via PayPal hat niedrigere Gebühren."
+                f"⭐ *Telegram Stars — {stars} ⭐/Monat*"
             )
             buttons = [
                 [InlineKeyboardButton(f"💳 {usd:.2f} $ per Karte zahlen", callback_data="subscribe:card")],
                 [InlineKeyboardButton(f"⭐ {stars} Stars zahlen", callback_data="subscribe:stars")],
             ]
-        else:
-            text += f"⭐ *{stars} Telegram Stars* für {days} Tage."
-            buttons = [
-                [InlineKeyboardButton(f"⭐ {stars} Stars zahlen", callback_data="subscribe:stars")],
-            ]
+        await update.effective_message.reply_text(
+            text, reply_markup=InlineKeyboardMarkup(buttons), parse_mode="Markdown"
+        )
+        return
 
-    await update.effective_message.reply_text(
-        text,
-        reply_markup=InlineKeyboardMarkup(buttons),
-        parse_mode="Markdown",
-    )
+    # No card provider — send Stars invoice directly.
+    await _send_stars_invoice(update, context)
 
 
 async def _send_stars_invoice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
