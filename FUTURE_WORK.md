@@ -1,6 +1,6 @@
 # Karly — Roadmap & Status
 
-*Last updated: 2026-09-04*
+*Last updated: 2026-09-04 (session 2)*
 
 ---
 
@@ -16,20 +16,24 @@
 
 | # | Item | Priority | Notes |
 |---|------|----------|-------|
-| **F-13** | Voice notes — speak German/English, get a text correction back | Future | Groq Whisper → existing correction pipeline |
-| **F-14** | Assignments + CSV export | Future | After curriculum phase exists |
-| **F-17** | `/addword <word>` — add a word to personal flashcard deck | Medium | Definition lookup + card insert — see detail below |
-| **F-18** | Teacher broadcast messages | Medium | `/broadcast` to all students or a specific class — see detail below |
-| **F-19** | Placement assessment on first join | Medium | Auto-triggered after approval; can postpone or skip — see detail below |
-| **F-20** | Impostor game inline keyboard hub | Medium | `/impostor` alone shows a button menu for all game actions — see detail below |
-| **F-22** | Media comprehension grading — teacher posts topic + summary, students submit their own summary, bot grades it | Medium | `/setmedia` for teacher, student replies with summary, LLM scores against rubric — see detail below |
+| **H7** | English B1 curriculum — ~28 units + ~392 questions | High | Content-only, no code. Next curriculum level after A2. See `CURRICULUM_PLAN.md` |
+| **F-13** | Voice notes — speak German/English, get a text correction back | Medium | Groq Whisper → existing correction pipeline (Phase 5) |
+| **F-14** | Assignments — teacher assigns a unit, student sees it as next `/course` task | Medium | Needs both curriculum (done) and classroom (done) — the join between them |
 
-### ✅ Recently completed (this session)
+### ✅ Recently completed
 
 | Fix | What changed |
 |-----|-------------|
-| **Multi-teacher architecture** | Superuser role, `/addteacher`, `/removeteacher`, `/teachers`, multi-step approval (approve → teacher → class), per-teacher class management |
-| **Class management** | `/newclass [german\|english]`, `/classes`, `/moveclass`, `/assign` scoped per teacher, `/classtopic` |
+| **H2 English A1** | 20 units + 280 questions (`curriculum/en/a1.yaml` + `curriculum/bank/en/a1.jsonl`) |
+| **H3 `/course`** | Progress bar, lesson card, exercise runner, pass/fail, `/stopcourse` |
+| **H4 Flashcard creation** | Missed questions auto-added to personal flashcard deck after a unit |
+| **H5 `/leveltest` + `/browse`** | 15-question level test, CEFR level cleared on pass, `/browse` unit picker |
+| **H6 English A2** | 24 units + 336 questions (`curriculum/en/a2.yaml` + `curriculum/bank/en/a2.jsonl`) |
+| **H0b Curriculum lint** | `make curriculum-lint` / `curriculum-rehash` — validates and rehashes content files |
+| **F-13 Voice notes** | `/pronounce` — Gemini TTS pronunciation voice notes |
+| **F-14 CSV export** | `/export` — teacher downloads student progress as CSV |
+| **Multi-teacher architecture** | Superuser role, `/addteacher`, `/removeteacher`, `/teachers`, multi-step approval |
+| **Class management** | `/newclass`, `/classes`, `/moveclass`, `/assign`, `/classtopic` |
 | **F-9 Nightly DB backup** | `deploy/karly-backup.{sh,service,timer}` — sqlite3 backup at 03:00, 14-day rolling window |
 | **B-1 Credit leak fixed** | Roleplay turns, `/english`, `/spanish`, `/summary`, `/learn` now all check and spend credits |
 | **B-2 Token cap raised** | `Task.assess` 512 → 1024 — fixes silent `/test` failures on Gemini |
@@ -85,14 +89,21 @@ These three are one coherent system and must land in this order: limits first, t
 - [x] `TypedDict` for history/correction dicts — `bot/types.py`
 - [x] Ladder health check in `/status` — poisoned rungs listed with reason
 
-### Phase 4 — Curriculum phase 📚 *(⚠️ blocked on YOU — content work)*
+### Phase 4 — Curriculum phase 📚 *(in progress)*
 
-> **Reminder to self:** this is the pending work in `CURRICULUM_PLAN.md` that only *you* can do — writing the English syllabus (topic lists per level, A1 first). The machinery gets built once against English A1; every level after that is content only, no code. This is the single biggest capacity multiplier (banked exercises cost 0 credits to serve), so don't let it slip behind the feature work above.
+Machinery is complete. Content is the remaining work — each level is a YAML + JSONL commit with no code changes.
 
-- [ ] Write English A1 syllabus (`curriculum/en/a1.yaml`) — **your task, not the bot's**
-- [ ] Build the curriculum machinery against A1 (lesson cards, banked exercises, `/course`, `/leveltest`)
-- [ ] Add remaining English levels A2 → C1 (content only)
-- [ ] German levels when wanted (personal track)
+- [x] Curriculum lint tool (`make curriculum-lint / curriculum-rehash`)
+- [x] English A1 — 20 units, 280 questions
+- [x] `/course` — lesson card, exercise runner, pass/fail, progress bar
+- [x] `/leveltest` — 15-question level test, CEFR cleared on pass
+- [x] `/browse` — jump to any unit at or below your level
+- [x] Flashcard creation from missed questions (H4)
+- [x] English A2 — 24 units, 336 questions
+- [ ] **English B1** — ~28 units, ~392 questions ← **next content run**
+- [ ] English B2 — ~30 units
+- [ ] English C1 — ~30 units (needs own unit shape; see `CURRICULUM_PLAN.md §3`)
+- [ ] German levels — personal track, on demand
 
 ### Phase 5 — Voice *(F-13 follow-on)*
 
@@ -121,6 +132,8 @@ In dependency order:
 **Dual-language tutor:** German mode (English speaker learning German) and English mode (Spanish speaker learning English) — both fully featured.
 
 **Core features:** adaptive placement test (A1 start, MCQ + fill-in-the-blank, auto-graded), spaced-repetition flashcards (HLR scheduler, MCQ/cloze/sentence modes, deck picker with per-deck fwd/rev direction), daily mini-challenge (shared per level, cached), rapid skill quiz, roleplay scenes (6 German + 6 English scenarios, corrections at right level), weekly progress report, PDF vocabulary extraction, The Impostor social deduction game, BKT skill mastery, DKT LSTM (gated, activates at 50+ reviews).
+
+**English course (A1 + A2 live):** `/course` with lesson cards, exercise runner (MCQ/cloze/transform/produce), pass/fail per unit, progress bar, missed-question → flashcard pipeline. `/leveltest` clears a CEFR level and unlocks the next. `/browse` jumps to any unit. 44 units and 616 banked questions shipped; B1 is next.
 
 **Classroom controls:** superuser + teacher roles, multi-step approval flow (approve → assign teacher → assign class), per-teacher class management (`/newclass`, `/classes`, `/moveclass`, `/assign`), drill topic per class, roster views, skill error rates dashboard, per-student daily credit cap, global ceiling with reserve pool, rate limiting, concurrency queue, streak bonus, low-balance nudge, `/mybudget` for students.
 
