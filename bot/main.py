@@ -79,6 +79,7 @@ def build_application() -> Application:
     app.add_handler(CommandHandler("budget", classroom.budget))
     app.add_handler(CommandHandler("grant", classroom.grant))
     app.add_handler(CommandHandler("assign", classroom.assign))
+    app.add_handler(CommandHandler("assignunit", classroom.assignunit))
     app.add_handler(CommandHandler("classtopic", classroom.classtopic))
     app.add_handler(CommandHandler("newclass", classroom.newclass))
     app.add_handler(CommandHandler("classes", classroom.classes))

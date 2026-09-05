@@ -8,6 +8,7 @@ from sqlalchemy import func
 
 from db.models import (
     Assessment,
+    Assignment,
     Broadcast,
     Class,
     ClassSetting,
@@ -1472,3 +1473,116 @@ def mark_flashcard_created(user_id: int, unit_id: str, item_id: str) -> None:
             ItemAttempt.item_id == item_id,
             ItemAttempt.flashcard_created == False,  # noqa: E712
         ).update({"flashcard_created": True})
+
+
+# --- F-14: assignments -------------------------------------------------------
+
+def assign_unit(
+    unit_id: str,
+    assigned_by: int,  # users.id of the teacher
+    *,
+    student_id: int | None = None,
+    class_id: int | None = None,
+) -> None:
+    """Create (or replace) an active assignment for a student or class."""
+    with get_session() as session:
+        # Clear any previous active assignment for the same target.
+        q = session.query(Assignment).filter(
+            Assignment.unit_id != "",  # always true — just to get a query
+            Assignment.dismissed_at.is_(None),
+        )
+        if student_id is not None:
+            q = q.filter(Assignment.student_id == student_id, Assignment.class_id.is_(None))
+        else:
+            q = q.filter(Assignment.class_id == class_id, Assignment.student_id.is_(None))
+        q.update({"dismissed_at": datetime.utcnow()})
+
+        a = Assignment(
+            unit_id=unit_id,
+            assigned_by=assigned_by,
+            student_id=student_id,
+            class_id=class_id,
+        )
+        session.add(a)
+
+
+def clear_assignment(
+    *,
+    student_id: int | None = None,
+    class_id: int | None = None,
+) -> int:
+    """Dismiss all active assignments for a student or class. Returns count cleared."""
+    with get_session() as session:
+        q = session.query(Assignment).filter(Assignment.dismissed_at.is_(None))
+        if student_id is not None:
+            q = q.filter(Assignment.student_id == student_id, Assignment.class_id.is_(None))
+        else:
+            q = q.filter(Assignment.class_id == class_id, Assignment.student_id.is_(None))
+        count = q.count()
+        q.update({"dismissed_at": datetime.utcnow()})
+        return count
+
+
+def get_active_assignment(user: "User") -> str | None:
+    """Return the assigned unit_id for this student, or None.
+
+    Checks student-level assignment first, then falls back to class-level.
+    """
+    with get_session() as session:
+        # Student-specific assignment
+        row = (
+            session.query(Assignment)
+            .filter(
+                Assignment.student_id == user.id,
+                Assignment.dismissed_at.is_(None),
+            )
+            .order_by(Assignment.assigned_at.desc())
+            .first()
+        )
+        if row:
+            return row.unit_id
+
+        # Class-level assignment
+        if user.class_id is not None:
+            row = (
+                session.query(Assignment)
+                .filter(
+                    Assignment.class_id == user.class_id,
+                    Assignment.dismissed_at.is_(None),
+                )
+                .order_by(Assignment.assigned_at.desc())
+                .first()
+            )
+            if row:
+                return row.unit_id
+
+        return None
+
+
+def dismiss_assignment_for_student(user_id: int, unit_id: str) -> None:
+    """Dismiss a class-level (or student-level) assignment when the student passes."""
+    with get_session() as session:
+        session.query(Assignment).filter(
+            Assignment.student_id == user_id,
+            Assignment.unit_id == unit_id,
+            Assignment.dismissed_at.is_(None),
+        ).update({"dismissed_at": datetime.utcnow()})
+
+
+# --- Personalization memory --------------------------------------------------
+
+def update_user_memory(
+    user_id: int,
+    *,
+    profile_notes: str | None = None,
+    last_session_summary: str | None = None,
+) -> None:
+    """Persist profile notes and/or the last-session summary for a user."""
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if user is None:
+            return
+        if profile_notes is not None:
+            user.profile_notes = profile_notes
+        if last_session_summary is not None:
+            user.last_session_summary = last_session_summary

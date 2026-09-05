@@ -33,6 +33,7 @@ from db.repo import (
     set_correction_level,
     user_message_stats,
 )
+from llm import memory as memory_mod
 from llm import prompts
 from llm.errors import AllBackendsExhausted, LLMUnavailable, QuotaExceeded
 from llm.router import Task, ladder_status, route, route_result
@@ -215,6 +216,12 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     system += prompts.build_correction_block(effective_level, english=en)
     system += prompts.TONE_RULES
 
+    # Inject personalization memory so the conversation feels continuous.
+    system += prompts.build_memory_block(
+        getattr(user, "profile_notes", None),
+        getattr(user, "last_session_summary", None),
+    )
+
     topic = context.user_data.get("topic")
     if topic:
         system += f"\n- Current focus topic: steer toward '{topic}'."
@@ -258,6 +265,16 @@ async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     corrections = _parse_corrections(reply) if level > 0 else []
     add_message(user.id, "user", text)
     add_message(user.id, "assistant", reply, corrections=corrections or None)
+
+    # Every 10 user messages, fire a background session summarizer (F-14 memory).
+    msg_counter = context.user_data.get("_mem_counter", 0) + 1
+    context.user_data["_mem_counter"] = msg_counter
+    if msg_counter % 10 == 0:
+        asyncio.create_task(
+            memory_mod.run_session_summarizer(
+                user.id, getattr(user, "profile_notes", None)
+            )
+        )
     if corrections:
         add_vocab_items(user.id, corrections, source=VocabSource.conversation)
         # One-time nudge: first correction this session — tell them about /corrections.

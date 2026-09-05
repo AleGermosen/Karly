@@ -19,7 +19,7 @@
 | **H7** | English B1 curriculum — ~28 units + ~392 questions | High | Content-only, no code. Next curriculum level after A2. See `CURRICULUM_PLAN.md` |
 | **PAY** | Payment system end-to-end test + pricing decision | High | Code exists (F-15/F-16/F-21); needs live test + price calibration. See detail below. |
 | **F-13** | Voice notes — speak German/English, get a text correction back | Medium | Groq Whisper → existing correction pipeline (Phase 5) |
-| **F-14** | Assignments — teacher assigns a unit, student sees it as next `/course` task | Medium | Needs both curriculum (done) and classroom (done) — the join between them |
+| ~~**F-14**~~ | ~~Assignments — teacher assigns a unit, student sees it as next `/course` task~~ | ~~Medium~~ | ~~Done~~ |
 
 ### ✅ Recently completed
 
@@ -32,6 +32,7 @@
 | **H6 English A2** | 24 units + 336 questions (`curriculum/en/a2.yaml` + `curriculum/bank/en/a2.jsonl`) |
 | **H0b Curriculum lint** | `make curriculum-lint` / `curriculum-rehash` — validates and rehashes content files |
 | **F-13 Voice notes** | `/pronounce` — Gemini TTS pronunciation voice notes |
+| **F-14 Assignments** | `/assignunit` — teacher assigns a course unit; student sees it pinned in `/course`; auto-dismissed on pass |
 | **F-14 CSV export** | `/export` — teacher downloads student progress as CSV |
 | **Multi-teacher architecture** | Superuser role, `/addteacher`, `/removeteacher`, `/teachers`, multi-step approval |
 | **Class management** | `/newclass`, `/classes`, `/moveclass`, `/assign`, `/classtopic` |

@@ -897,3 +897,22 @@ meta sobre inglés (gramática, uso, vocabulario). Responde de forma clara y \
 concisa en ESPAÑOL, con ejemplos breves en inglés donde sea útil. Sé práctica \
 para un hablante de español de nivel A2-B1 aprendiendo inglés.
 """
+
+
+def build_memory_block(
+    profile_notes: str | None,
+    last_session_summary: str | None,
+) -> str:
+    """Build the memory injection block for the system prompt."""
+    parts: list[str] = []
+    if profile_notes:
+        parts.append(f"What you know about this student:\n{profile_notes}")
+    if last_session_summary:
+        parts.append(f"Last session topic: {last_session_summary}")
+    if not parts:
+        return ""
+    return (
+        "\n\n---\nStudent memory (use this to make conversation feel personal and "
+        "continuous — reference it naturally, never robotically):\n"
+        + "\n".join(parts)
+    )

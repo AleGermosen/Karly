@@ -57,6 +57,8 @@ from db.repo import (
     set_placement_status,
     set_user_role,
     set_user_status,
+    assign_unit,
+    clear_assignment,
     student_last_active,
     top_credit_consumers,
     vocab_count,
@@ -544,6 +546,145 @@ async def assign(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             f"✅ Topic set for all your classes: *{topic}*\n"
             "Students will drill this on /drill."
         )
+
+
+# ---------------------------------------------------------------------------
+# /assignunit — teacher assigns a specific course unit to a student or class
+# ---------------------------------------------------------------------------
+
+@require_auth
+async def assignunit(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Usage:
+      /assignunit <unit_id>                 → assign to all students in your classes
+      /assignunit <unit_id> @username       → assign to one student
+      /assignunit <unit_id> <class name>    → assign to a whole class
+      /assignunit clear @username           → clear student assignment
+      /assignunit clear <class name>        → clear class assignment
+    """
+    caller = _caller(update)
+    if not _is_teacher_or_above(caller):
+        await update.effective_message.reply_text("🚫 Teacher only.")
+        return
+
+    args = context.args or []
+    if not args:
+        await update.effective_message.reply_text(
+            "Usage:\n"
+            "`/assignunit <unit_id>` — assign to all students in your classes\n"
+            "`/assignunit <unit_id> @username` — assign to one student\n"
+            "`/assignunit <unit_id> ClassName` — assign to a whole class\n"
+            "`/assignunit clear @username` — clear assignment for a student\n"
+            "`/assignunit clear ClassName` — clear assignment for a class",
+            parse_mode="Markdown",
+        )
+        return
+
+    unit_id = args[0].lower()
+    target_str = " ".join(args[1:]).strip() if len(args) > 1 else ""
+
+    # --- clear ---
+    if unit_id == "clear":
+        if not target_str:
+            await update.effective_message.reply_text(
+                "Specify a target: `/assignunit clear @username` or `/assignunit clear ClassName`",
+                parse_mode="Markdown",
+            )
+            return
+        if target_str.startswith("@"):
+            handle = target_str.lstrip("@")
+            student = get_user_by_telegram_id(
+                next(
+                    (s.telegram_id for s in list_students_for_teacher(caller.id)
+                     if s.name and s.name.lower() == handle.lower()),
+                    -1,
+                )
+            )
+            if not student:
+                # Try matching by name fragment
+                matches = [s for s in list_students_for_teacher(caller.id)
+                           if handle.lower() in (s.name or "").lower()]
+                student = matches[0] if len(matches) == 1 else None
+            if not student:
+                await update.effective_message.reply_text("Student not found.")
+                return
+            n = clear_assignment(student_id=student.id)
+            await update.effective_message.reply_text(f"✅ Assignment cleared for {student.name} ({n} removed).")
+        else:
+            my_classes = list_classes(caller.id)
+            matches = [c for c in my_classes if target_str.lower() in c.name.lower()]
+            if not matches:
+                await update.effective_message.reply_text("Class not found.")
+                return
+            if len(matches) > 1:
+                await update.effective_message.reply_text("Multiple class matches — be more specific.")
+                return
+            n = clear_assignment(class_id=matches[0].id)
+            await update.effective_message.reply_text(f"✅ Assignment cleared for *{matches[0].name}* ({n} removed).", parse_mode="Markdown")
+        return
+
+    # --- validate unit exists ---
+    from curriculum import loader as _loader
+    unit = _loader.get_unit(unit_id)
+    if unit is None:
+        await update.effective_message.reply_text(
+            f"Unit `{unit_id}` not found. Check spelling (e.g. `en.a1.g01`).",
+            parse_mode="Markdown",
+        )
+        return
+
+    # --- assign ---
+    if not target_str:
+        # Assign to all classes
+        my_classes = list_classes(caller.id)
+        if not my_classes:
+            await update.effective_message.reply_text("You have no classes.")
+            return
+        for cls in my_classes:
+            assign_unit(unit_id, caller.id, class_id=cls.id)
+        names = ", ".join(c.name for c in my_classes)
+        await update.effective_message.reply_text(
+            f"✅ *{unit.title_target}* assigned to all your classes ({names}).\n"
+            "Students will see it pinned at the top of `/course`.",
+            parse_mode="Markdown",
+        )
+        return
+
+    if target_str.startswith("@"):
+        handle = target_str.lstrip("@")
+        my_students = list_students_for_teacher(caller.id)
+        matches = [s for s in my_students if handle.lower() in (s.name or "").lower()]
+        if not matches:
+            await update.effective_message.reply_text("Student not found.")
+            return
+        if len(matches) > 1:
+            names = ", ".join(s.name for s in matches)
+            await update.effective_message.reply_text(f"Multiple matches: {names}. Be more specific.")
+            return
+        student = matches[0]
+        assign_unit(unit_id, caller.id, student_id=student.id)
+        await update.effective_message.reply_text(
+            f"✅ *{unit.title_target}* assigned to *{student.name}*.\n"
+            "They'll see it pinned at the top of `/course`.",
+            parse_mode="Markdown",
+        )
+        return
+
+    # Class name
+    my_classes = list_classes(caller.id)
+    matches = [c for c in my_classes if target_str.lower() in c.name.lower()]
+    if not matches:
+        await update.effective_message.reply_text("Class not found.")
+        return
+    if len(matches) > 1:
+        await update.effective_message.reply_text("Multiple class matches — be more specific.")
+        return
+    cls = matches[0]
+    assign_unit(unit_id, caller.id, class_id=cls.id)
+    await update.effective_message.reply_text(
+        f"✅ *{unit.title_target}* assigned to *{cls.name}*.\n"
+        "Students will see it pinned at the top of `/course`.",
+        parse_mode="Markdown",
+    )
 
 
 # ---------------------------------------------------------------------------

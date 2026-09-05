@@ -83,6 +83,11 @@ class User(Base):
     topup_credits: Mapped[int] = mapped_column(Integer, default=0)
     # F-19 — placement quiz status: "pending" | "completed" | "skipped" | None
     placement_status: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Memory (F-14 personalization) — updated every ~10 messages by the summarizer.
+    # profile_notes: free-text facts about the user (interests, job, goals, etc.)
+    # last_session_summary: one-sentence description of what the last session covered.
+    profile_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_session_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     @property
     def corrections_on(self) -> bool:
@@ -360,3 +365,22 @@ class ItemAttempt(Base):
     answer_given: Mapped[str | None] = mapped_column(Text, nullable=True)
     flashcard_created: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+
+
+class Assignment(Base):
+    """Teacher assigns a specific unit to a student or an entire class (F-14).
+
+    Either student_id or class_id is set — never both.
+    dismissed_at: set when the student completes the unit or a teacher clears it.
+    """
+
+    __tablename__ = "assignments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    unit_id: Mapped[str] = mapped_column(String)  # e.g. "en.a1.g01"
+    # One of these two is set:
+    student_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    class_id: Mapped[int | None] = mapped_column(ForeignKey("classes.id"), nullable=True, index=True)
+    assigned_by: Mapped[int] = mapped_column(Integer)  # users.id of the teacher
+    assigned_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    dismissed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

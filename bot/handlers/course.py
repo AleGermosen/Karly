@@ -134,13 +134,33 @@ async def course_overview(
         f"📚 *English {level} — Your course*",
         f"`{bar}` {passed_count}/{len(units)} units passed\n",
     ]
+
+    # Check for teacher assignment (F-14)
+    assigned_unit_id = repo.get_active_assignment(user)
+    assigned_unit = loader.get_unit(assigned_unit_id) if assigned_unit_id else None
+
+    if assigned_unit:
+        p = progress.get(assigned_unit.id)
+        status = "✅ Passed" if (p and p.passed) else (f"🔄 {round(p.best_score * 100)}%" if (p and p.attempts) else "⬜ Not started")
+        lines.append(f"📌 *Teacher assignment:* {assigned_unit.title_target} — _{assigned_unit.title_l1}_ ({status})")
+        lines.append("")
+
     for unit in units:
         lines.append(_unit_status_line(unit, progress))
 
-    # "Continue" button → first unpassed unit
-    next_unit = loader.first_unpassed_unit(lang, level, passed_ids)
     keyboard_rows = []
-    if next_unit:
+    # Teacher assignment button takes priority over "Continue"
+    if assigned_unit:
+        keyboard_rows.append([
+            InlineKeyboardButton(
+                f"📌 Do assignment — {assigned_unit.title_target}",
+                callback_data=f"course:start:{assigned_unit.id}",
+            )
+        ])
+
+    # "Continue" button → first unpassed unit (always show, even alongside assignment)
+    next_unit = loader.first_unpassed_unit(lang, level, passed_ids)
+    if next_unit and (not assigned_unit or next_unit.id != assigned_unit.id):
         keyboard_rows.append([
             InlineKeyboardButton(
                 f"▶️ Continue — {next_unit.title_target}",
@@ -539,6 +559,10 @@ async def _finish_unit(
         parse_mode="Markdown",
         reply_markup=keyboard,
     )
+
+    # F-14: dismiss the assignment once the student passes
+    if passed:
+        repo.dismiss_assignment_for_student(user.id, unit_id)
 
     # Clear course state
     context.user_data.pop("_course", None)
