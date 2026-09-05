@@ -204,11 +204,11 @@ in English, then nudge back to German.
 # Correction block builder — 0-5 scale
 # ---------------------------------------------------------------------------
 # 0 Off      — complete silence; never show ❌/✅
-# 1 Gentle   — only meaning-breaking errors; most messages get nothing (default)
-# 2 Light    — level 1 + errors that recur as a pattern
-# 3 Balanced — clear grammar errors even when meaning survives; cap 2
-# 4 Thorough — level 3 + word choice / naturalness; cap 3-4
-# 5 Exam     — everything: typos, punctuation, style; no cap
+# 1 Gentle   — meaning-breaking errors + misspellings/wrong-word; cap 1
+# 2 Light    — level 1 + recurring patterns; cap 1
+# 3 Balanced — grammar + spelling + wrong-word errors; cap 2
+# 4 Thorough — level 3 + naturalness/word-choice; cap 3-4
+# 5 Exam     — everything: grammar, spelling, punctuation, style; no cap
 
 LEVEL_NAMES = {0: "Off", 1: "Gentle", 2: "Light", 3: "Balanced", 4: "Thorough", 5: "Exam"}
 
@@ -247,44 +247,45 @@ def build_correction_block(level: int, english: bool = False) -> str:
     if level == 1:
         if english:
             return (
-                "\n- Correct ONLY mistakes that genuinely break meaning — a "
-                "sentence a native speaker would misread or not understand at all. "
+                "\n- Correct ONLY mistakes that genuinely break meaning OR clear "
+                "misspellings/typos (a word that is not a real English word, or "
+                "the wrong real word used by mistake — e.g. 'their' vs 'there'). "
                 "**Returning no corrections is the expected outcome for most "
-                "messages.** Ignore grammar slips, wrong tense, missing articles, "
-                "or word-choice issues unless meaning collapses. Cap: 1 correction "
-                "maximum. Ignore slang, typos, and punctuation entirely.\n"
+                "messages.** Ignore grammar slips, wrong tense, missing articles. "
+                "Cap: 1 correction maximum. Ignore punctuation and slang.\n"
                 + fmt
-                + "- If the message is understandable (even if imperfect), do not correct it.\n"
+                + "- If the message is understandable and has no typos or meaning-breaking errors, do not correct it.\n"
             )
         return (
-            "\n- Correct ONLY mistakes that genuinely break meaning — a sentence "
-            "a native speaker would misread or not understand at all. "
+            "\n- Correct ONLY mistakes that genuinely break meaning OR clear "
+            "misspellings/typos (a word that is not a real German word, or the "
+            "wrong real word used by mistake). "
             "**Returning no corrections is the expected outcome for most messages.** "
-            "Ignore grammar slips, wrong tense, missing articles, or word-choice "
-            "issues unless meaning collapses. Cap: 1 correction maximum. "
-            "Ignore slang, typos, and punctuation entirely.\n"
+            "Ignore grammar slips, wrong tense, missing articles. "
+            "Cap: 1 correction maximum. Ignore punctuation and slang.\n"
             + fmt
-            + "- If the message is understandable (even if imperfect), do not correct it.\n"
+            + "- If the message is understandable and has no typos or meaning-breaking errors, do not correct it.\n"
         )
 
     if level == 2:
         if english:
             return (
-                "\n- Correct mistakes that break meaning AND mistakes the user "
-                "keeps repeating — a pattern earns a mention even when meaning "
-                "was clear. **Most individual messages should still get no "
-                "corrections.** Cap: 1 correction maximum. "
-                "Ignore slang, typos, and punctuation.\n"
+                "\n- Correct: (1) mistakes that break meaning, (2) misspellings "
+                "and typos — including using the wrong real word (e.g. 'their/there', "
+                "'its/it's', 'affect/effect'), and (3) mistakes the user keeps "
+                "repeating. **Most messages should still get no corrections.** "
+                "Cap: 1 correction maximum. Ignore punctuation and slang.\n"
                 + fmt
-                + "- If the message has no meaning-breaking or repeated errors, skip corrections.\n"
+                + "- If the message has none of the above errors, skip corrections.\n"
             )
         return (
-            "\n- Correct mistakes that break meaning AND mistakes the user keeps "
-            "repeating — a pattern earns a mention even when meaning was clear. "
-            "**Most individual messages should still get no corrections.** "
-            "Cap: 1 correction maximum. Ignore slang, typos, and punctuation.\n"
+            "\n- Correct: (1) mistakes that break meaning, (2) misspellings and "
+            "typos — including using the wrong real word by mistake, and "
+            "(3) mistakes the user keeps repeating. "
+            "**Most messages should still get no corrections.** "
+            "Cap: 1 correction maximum. Ignore punctuation and slang.\n"
             + fmt
-            + "- If the message has no meaning-breaking or repeated errors, skip corrections.\n"
+            + "- If the message has none of the above errors, skip corrections.\n"
         )
 
     if level == 3:
@@ -294,22 +295,23 @@ def build_correction_block(level: int, english: bool = False) -> str:
         )
         if english:
             return (
-                "\n- Correct clear grammar errors even when meaning survives: "
-                "wrong tense, wrong preposition, missing article, "
-                "bad verb conjugation. Cap: 2 corrections maximum. "
-                "Ignore typos and punctuation.\n"
+                "\n- Correct: grammar errors (wrong tense, wrong preposition, "
+                "missing article, bad verb conjugation), misspellings, typos, "
+                "and wrong-word errors (a correctly spelled word used in the "
+                "wrong context — e.g. 'borrow' vs 'lend', 'make' vs 'do'). "
+                "Cap: 2 corrections maximum. Ignore punctuation.\n"
                 + fmt
                 + slang_note
-                + "- If the message has no grammar errors, do not invent corrections.\n"
+                + "- If the message has no grammar, spelling, or word-choice errors, do not invent corrections.\n"
             )
         return (
-            "\n- Correct clear grammar errors even when meaning survives: "
-            "wrong verb conjugation, broken case agreement, wrong article gender, "
-            "bad word order, wrong preposition. Cap: 2 corrections maximum. "
-            "Ignore typos and punctuation.\n"
+            "\n- Correct: grammar errors (wrong verb conjugation, broken case "
+            "agreement, wrong article gender, bad word order, wrong preposition), "
+            "misspellings, typos, and wrong-word errors (a real word used in the "
+            "wrong context). Cap: 2 corrections maximum. Ignore punctuation.\n"
             + fmt
             + slang_note
-            + "- If the message has no grammar errors, do not invent corrections.\n"
+            + "- If the message has no grammar, spelling, or word-choice errors, do not invent corrections.\n"
         )
 
     if level == 4:
@@ -319,37 +321,40 @@ def build_correction_block(level: int, english: bool = False) -> str:
         )
         if english:
             return (
-                "\n- Correct grammar errors AND word choice / naturalness issues: "
-                "understandable but a native speaker wouldn't say it, register "
-                "mismatch, imprecise vocabulary. Cap: 3-4 corrections maximum. "
-                "Ignore typos and punctuation.\n"
+                "\n- Correct grammar errors, misspellings, typos, wrong-word "
+                "errors (correct spelling but wrong word for the context), AND "
+                "naturalness issues: understandable but a native speaker wouldn't "
+                "say it, register mismatch, imprecise vocabulary. "
+                "Cap: 3-4 corrections maximum. Ignore punctuation.\n"
                 + fmt
                 + slang_note
-                + "- If the message is grammatically clean and natural, do not correct it.\n"
+                + "- If the message is grammatically clean, spelled correctly, and natural, do not correct it.\n"
             )
         return (
-            "\n- Correct grammar errors AND word choice / naturalness: "
-            "understandable but a native speaker wouldn't say it, awkward "
+            "\n- Correct grammar errors, misspellings, typos, wrong-word errors "
+            "(correct spelling but wrong word for the context), AND naturalness "
+            "issues: understandable but a native speaker wouldn't say it, awkward "
             "phrasing, register mismatch, imprecise vocabulary. "
-            "Cap: 3-4 corrections maximum. Ignore typos and punctuation.\n"
+            "Cap: 3-4 corrections maximum. Ignore punctuation.\n"
             + fmt
             + slang_note
-            + "- If the message is grammatically clean and natural, do not correct it.\n"
+            + "- If the message is grammatically clean, spelled correctly, and natural, do not correct it.\n"
         )
 
     # level == 5: Exam
     if english:
         return (
-            "\n- Correct EVERYTHING: grammar, word choice, register, typos, "
-            "capitalisation, punctuation, and suggest better phrasing where "
-            "relevant. No cap on corrections. Flag slang as a register issue.\n"
+            "\n- Correct EVERYTHING: grammar, word choice, wrong-word errors, "
+            "register, misspellings, typos, capitalisation, punctuation, and "
+            "suggest better phrasing where relevant. No cap on corrections. "
+            "Flag slang as a register issue.\n"
             + fmt
         )
     return (
         "\n- Correct EVERYTHING: grammar, word order, cases, article gender, "
-        "word choice, register, typos, capitalisation, punctuation, and suggest "
-        "better phrasing where relevant. No cap on corrections. "
-        "Flag slang as a register issue.\n"
+        "word choice, wrong-word errors, register, misspellings, typos, "
+        "capitalisation, punctuation, and suggest better phrasing where relevant. "
+        "No cap on corrections. Flag slang as a register issue.\n"
         + fmt
     )
 
