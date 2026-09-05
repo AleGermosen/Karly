@@ -1115,7 +1115,7 @@ def record_payment(
     user_id: int,
     *,
     kind: str,
-    stars_amount: int,
+    stars_amount: int | None = None,
     credits_purchased: int | None = None,
     telegram_charge_id: str | None = None,
 ) -> None:

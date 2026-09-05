@@ -160,6 +160,13 @@ def build_application() -> Application:
     # Subscription and top-up payments (F-16, F-21).
     app.add_handler(CommandHandler("subscribe", payments.subscribe_handler))
     app.add_handler(CommandHandler("topup", payments.topup_handler))
+    # Dual-payment choice buttons (subscribe:stars / subscribe:card).
+    app.add_handler(
+        CallbackQueryHandler(payments.on_subscribe_stars, pattern=r"^subscribe:stars$")
+    )
+    app.add_handler(
+        CallbackQueryHandler(payments.on_subscribe_card, pattern=r"^subscribe:card$")
+    )
     app.add_handler(
         CallbackQueryHandler(payments.on_topup_pack_pick, pattern=r"^topup:")
     )

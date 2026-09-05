@@ -1,4 +1,4 @@
-"""Payment handlers for Telegram Stars subscriptions and top-up packs (F-16, F-21)."""
+"""Payment handlers for subscriptions (Stripe + Stars) and top-up packs (F-16, F-21)."""
 from __future__ import annotations
 
 import logging
@@ -17,53 +17,160 @@ from db.repo import (
 
 logger = logging.getLogger(__name__)
 
-# Payload prefixes used to distinguish invoice types in pre-checkout/confirmed.
 _PAYLOAD_SUBSCRIBE = "karly_subscribe_30d"
 _PAYLOAD_TOPUP_PREFIX = "karly_topup_"  # + pack index (0/1/2)
 
 
 @require_auth
 async def subscribe_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/subscribe — send a Telegram Stars invoice for a 30-day subscription."""
+    """/subscribe — show dual-payment choice (Card via Stripe or Telegram Stars)."""
     user = get_user_by_telegram_id(update.effective_user.id)
     en = user and getattr(user, "learning_mode", "german") == "english"
 
     if user and user.subscribed:
+        expires = (
+            user.subscription_expires_at.strftime("%Y-%m-%d")
+            if user.subscription_expires_at
+            else "?"
+        )
         if en:
             await update.effective_message.reply_text(
-                "✅ You already have an active subscription! "
-                f"It runs until {user.subscription_expires_at.strftime('%Y-%m-%d') if user.subscription_expires_at else 'unknown'}."
+                f"✅ You already have an active subscription (until {expires})."
             )
         else:
             await update.effective_message.reply_text(
-                "✅ Du hast schon ein aktives Abonnement! "
-                f"Es läuft bis {user.subscription_expires_at.strftime('%Y-%m-%d') if user.subscription_expires_at else 'unbekannt'}."
+                f"✅ Du hast schon ein aktives Abonnement (bis {expires})."
             )
         return
 
+    days = config.SUBSCRIBE_DAYS
+    stars = config.SUBSCRIBE_PRICE_STARS
+    usd = config.SUBSCRIBE_PRICE_USD_CENTS / 100  # e.g. 4.99
+
+    stripe_available = bool(config.STRIPE_TOKEN)
+
+    if en:
+        text = (
+            f"🎓 *Karly subscription — {days} days*\n\n"
+            f"Get *{config.SESSION_CAP_SUBSCRIBER} messages per session* "
+            f"and *{config.WEEK_CAP_SUBSCRIBER} per week*.\n\n"
+        )
+        if stripe_available:
+            text += (
+                f"💳 *Card — ${usd:.2f}/month* ← better deal\n"
+                f"⭐ *Telegram Stars — {stars} ⭐/month*\n\n"
+                "Card payments go directly to your Stripe account and cost less in fees. "
+                "Stars work too — the choice is yours."
+            )
+            buttons = [
+                [InlineKeyboardButton(f"💳 Pay ${usd:.2f} by card", callback_data="subscribe:card")],
+                [InlineKeyboardButton(f"⭐ Pay {stars} Stars", callback_data="subscribe:stars")],
+            ]
+        else:
+            text += f"⭐ *{stars} Telegram Stars* for {days} days."
+            buttons = [
+                [InlineKeyboardButton(f"⭐ Pay {stars} Stars", callback_data="subscribe:stars")],
+            ]
+    else:
+        text = (
+            f"🎓 *Karly-Abonnement — {days} Tage*\n\n"
+            f"*{config.SESSION_CAP_SUBSCRIBER} Nachrichten pro Session* "
+            f"und *{config.WEEK_CAP_SUBSCRIBER} pro Woche*.\n\n"
+        )
+        if stripe_available:
+            text += (
+                f"💳 *Karte — ${usd:.2f}/Monat* ← besser\n"
+                f"⭐ *Telegram Stars — {stars} ⭐/Monat*\n\n"
+                "Kartenzahlung geht direkt an dein Stripe-Konto und hat niedrigere Gebühren."
+            )
+            buttons = [
+                [InlineKeyboardButton(f"💳 {usd:.2f} $ per Karte zahlen", callback_data="subscribe:card")],
+                [InlineKeyboardButton(f"⭐ {stars} Stars zahlen", callback_data="subscribe:stars")],
+            ]
+        else:
+            text += f"⭐ *{stars} Telegram Stars* für {days} Tage."
+            buttons = [
+                [InlineKeyboardButton(f"⭐ {stars} Stars zahlen", callback_data="subscribe:stars")],
+            ]
+
+    await update.effective_message.reply_text(
+        text,
+        reply_markup=InlineKeyboardMarkup(buttons),
+        parse_mode="Markdown",
+    )
+
+
+async def _send_stars_invoice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a Telegram Stars subscription invoice."""
+    user = get_user_by_telegram_id(update.effective_user.id)
+    en = user and getattr(user, "learning_mode", "german") == "english"
     stars = config.SUBSCRIBE_PRICE_STARS
     days = config.SUBSCRIBE_DAYS
-    if en:
-        title = "Karly Subscription"
-        description = (
-            f"{days}-day subscription — {config.SESSION_CAP_SUBSCRIBER} messages per session, "
-            f"{config.WEEK_CAP_SUBSCRIBER} per week."
-        )
-    else:
-        title = "Karly Abonnement"
-        description = (
-            f"{days}-Tage-Abo — {config.SESSION_CAP_SUBSCRIBER} Nachrichten pro Session, "
-            f"{config.WEEK_CAP_SUBSCRIBER} pro Woche."
-        )
 
-    await update.effective_message.reply_invoice(
+    title = "Karly Subscription" if en else "Karly Abonnement"
+    description = (
+        f"{days}-day subscription — {config.SESSION_CAP_SUBSCRIBER} messages/session, "
+        f"{config.WEEK_CAP_SUBSCRIBER}/week."
+        if en else
+        f"{days}-Tage-Abo — {config.SESSION_CAP_SUBSCRIBER} Nachrichten/Session, "
+        f"{config.WEEK_CAP_SUBSCRIBER}/Woche."
+    )
+
+    msg = update.callback_query.message if update.callback_query else update.effective_message
+    await msg.reply_invoice(
         title=title,
         description=description,
         payload=_PAYLOAD_SUBSCRIBE,
-        provider_token="",  # Stars require an empty token.
+        provider_token="",  # Stars require an empty token
         currency="XTR",
         prices=[LabeledPrice(label=title, amount=stars)],
     )
+
+
+async def _send_card_invoice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send a Stripe card subscription invoice."""
+    user = get_user_by_telegram_id(update.effective_user.id)
+    en = user and getattr(user, "learning_mode", "german") == "english"
+    cents = config.SUBSCRIBE_PRICE_USD_CENTS
+    days = config.SUBSCRIBE_DAYS
+
+    title = "Karly Subscription" if en else "Karly Abonnement"
+    description = (
+        f"{days}-day subscription — {config.SESSION_CAP_SUBSCRIBER} messages/session, "
+        f"{config.WEEK_CAP_SUBSCRIBER}/week."
+        if en else
+        f"{days}-Tage-Abo — {config.SESSION_CAP_SUBSCRIBER} Nachrichten/Session, "
+        f"{config.WEEK_CAP_SUBSCRIBER}/Woche."
+    )
+
+    msg = update.callback_query.message if update.callback_query else update.effective_message
+    await msg.reply_invoice(
+        title=title,
+        description=description,
+        payload=_PAYLOAD_SUBSCRIBE,
+        provider_token=config.STRIPE_TOKEN,
+        currency="USD",
+        prices=[LabeledPrice(label=title, amount=cents)],
+    )
+
+
+@require_auth
+async def on_subscribe_stars(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Callback: user chose Stars payment."""
+    await update.callback_query.answer()
+    await _send_stars_invoice(update, context)
+
+
+@require_auth
+async def on_subscribe_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Callback: user chose card (Stripe) payment."""
+    await update.callback_query.answer()
+    if not config.STRIPE_TOKEN:
+        await update.callback_query.message.reply_text(
+            "Card payments are not set up yet. Please use Stars for now."
+        )
+        return
+    await _send_card_invoice(update, context)
 
 
 @require_auth
@@ -93,7 +200,7 @@ async def topup_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
             "Top-up-Credits verfallen nie und werden erst genutzt, wenn dein Session-/Wochenkontingent aufgebraucht ist.\n\n"
             "Pack auswählen:"
         )
-    await update.effective_message.reply_text(text, reply_markup=kb)
+    await update.effective_message.reply_text(text, reply_markup=kb, parse_mode="Markdown")
 
 
 @require_auth
@@ -127,13 +234,12 @@ async def on_topup_pack_pick(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 async def pre_checkout_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Answer all pre-checkout queries with ok (validation already done at send time)."""
-    query = update.pre_checkout_query
-    await query.answer(ok=True)
+    """Answer all pre-checkout queries with ok."""
+    await update.pre_checkout_query.answer(ok=True)
 
 
 async def payment_confirmed_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle successful_payment — activate subscription or add top-up credits."""
+    """Handle successful_payment — works for both Stripe and Stars invoices."""
     message = update.effective_message
     if message is None or message.successful_payment is None:
         return
@@ -146,24 +252,36 @@ async def payment_confirmed_handler(update: Update, context: ContextTypes.DEFAUL
     en = getattr(user, "learning_mode", "german") == "english"
     charge_id = payment.telegram_payment_charge_id
     payload = payment.invoice_payload
-    stars = payment.total_amount
+    amount = payment.total_amount
+    currency = payment.currency  # "XTR" or "USD"
 
     if payload == _PAYLOAD_SUBSCRIBE:
         days = config.SUBSCRIBE_DAYS
         set_subscribed(user.id, days=days)
-        record_payment(user.id, kind="subscription", stars_amount=stars, telegram_charge_id=charge_id)
-        logger.info("Subscription activated for user_id=%s (%d Stars)", user.id, stars)
+        stars_amount = amount if currency == "XTR" else None
+        record_payment(
+            user.id,
+            kind="subscription",
+            stars_amount=stars_amount,
+            telegram_charge_id=charge_id,
+        )
+        logger.info(
+            "Subscription activated user_id=%s currency=%s amount=%d",
+            user.id, currency, amount,
+        )
         if en:
             await message.reply_text(
                 f"🎉 *Subscribed!* You now have *{config.SESSION_CAP_SUBSCRIBER} messages per session* "
                 f"and *{config.WEEK_CAP_SUBSCRIBER} per week* for the next {days} days.\n\n"
-                "Thank you for supporting Karly! 🙏"
+                "Thank you for supporting Karly! 🙏",
+                parse_mode="Markdown",
             )
         else:
             await message.reply_text(
                 f"🎉 *Abonniert!* Du hast jetzt *{config.SESSION_CAP_SUBSCRIBER} Nachrichten pro Session* "
                 f"und *{config.WEEK_CAP_SUBSCRIBER} pro Woche* für die nächsten {days} Tage.\n\n"
-                "Danke, dass du Karly unterstützt! 🙏"
+                "Danke, dass du Karly unterstützt! 🙏",
+                parse_mode="Markdown",
             )
 
     elif payload.startswith(_PAYLOAD_TOPUP_PREFIX):
@@ -171,15 +289,21 @@ async def payment_confirmed_handler(update: Update, context: ContextTypes.DEFAUL
         if pack_idx < len(config.TOPUP_PACKS):
             pack_label, msgs, _ = config.TOPUP_PACKS[pack_idx]
             add_topup_credits(user.id, msgs)
-            record_payment(user.id, kind="topup", stars_amount=stars, credits_purchased=msgs, telegram_charge_id=charge_id)
-            logger.info("Top-up %d messages for user_id=%s (%d Stars)", msgs, user.id, stars)
+            record_payment(
+                user.id,
+                kind="topup",
+                stars_amount=amount if currency == "XTR" else None,
+                credits_purchased=msgs,
+                telegram_charge_id=charge_id,
+            )
+            logger.info("Top-up %d messages user_id=%s", msgs, user.id)
             if en:
                 await message.reply_text(
-                    f"✅ *{msgs} extra messages added* to your account. They never expire. "
-                    "They'll kick in once your session/weekly allowance runs out."
+                    f"✅ *{msgs} extra messages added* to your account. They never expire.",
+                    parse_mode="Markdown",
                 )
             else:
                 await message.reply_text(
-                    f"✅ *{msgs} extra Nachrichten* wurden deinem Konto gutgeschrieben. "
-                    "Sie verfallen nie und werden genutzt, wenn dein Session-/Wochenkontingent erschöpft ist."
+                    f"✅ *{msgs} extra Nachrichten* wurden deinem Konto gutgeschrieben.",
+                    parse_mode="Markdown",
                 )

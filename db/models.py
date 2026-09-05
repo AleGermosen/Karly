@@ -298,7 +298,7 @@ class Payment(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     kind: Mapped[str] = mapped_column(String)  # "subscription" | "topup"
-    stars_amount: Mapped[int] = mapped_column(Integer)
+    stars_amount: Mapped[int | None] = mapped_column(Integer, nullable=True)  # None for Stripe payments
     credits_purchased: Mapped[int | None] = mapped_column(Integer, nullable=True)
     telegram_charge_id: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
