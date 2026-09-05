@@ -1,0 +1,1305 @@
+- id: en.b1.g01
+  kind: grammar
+  level: B1
+  order: 1
+  title_target: Past perfect simple
+  title_l1: Pasado perfecto simple
+  can_do: I can describe events that happened before another past event.
+  prereqs:
+  - en.a2.g03
+  skill: grammar
+  explain:
+  - 'Form: had + past participle. I had eaten. She had left. They hadn''t arrived.'
+  - 'Use it for an event that happened BEFORE another past event: ''When I arrived,
+    the film had already started.'''
+  - The past perfect is the 'past of the past' — it pushes one event further back.
+  - 'Key time words: already, just, never, before, after, by the time, when.'
+  - '''By the time'' is very common: ''By the time we got there, they had left.'''
+  - 'Negative: hadn''t + past participle. She hadn''t seen him before.'
+  - 'Question: Had you eaten before you arrived?'
+  examples:
+  - target: When I called her, she had already left the office.
+    gloss: Cuando la llamé, ya había salido de la oficina.
+  - target: He felt sick because he had eaten too much.
+    gloss: Se sentía mal porque había comido demasiado.
+  - target: I had never tried Thai food before that trip.
+    gloss: Nunca había probado la comida tailandesa antes de ese viaje.
+  pitfalls:
+  - 'Don''t use past perfect for both actions — one must be simple past: ''After he
+    had eaten, he slept'' (not ''had slept'').'
+  - Spanish 'había comido' maps directly to 'had eaten'. The structure is identical.
+  - Don't confuse with present perfect (have eaten). Past perfect needs a second past
+    reference point.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:127f941237e5e659
+- id: en.b1.g02
+  kind: grammar
+  level: B1
+  order: 2
+  title_target: Present perfect continuous
+  title_l1: Pretérito perfecto continuo
+  can_do: I can explain how long something has been happening up to now.
+  prereqs:
+  - en.a2.g02
+  - en.a2.g03
+  skill: grammar
+  explain:
+  - 'Form: have/has + been + verb-ing. I have been working. She has been running.'
+  - Use for an activity that started in the past and is still continuing, or just
+    stopped.
+  - '''How long have you been studying English?'' — focus is on the duration, not
+    the result.'
+  - 'Compare with present perfect simple: ''I''ve read 3 chapters'' (result) vs ''I''ve
+    been reading'' (activity).'
+  - 'Evidence of the activity is often visible: ''You''re sweating — have you been
+    running?'''
+  - 'With ''for'' and ''since'': I''ve been living here for 5 years / since 2019.'
+  - Stative verbs (know, like, want) don't use continuous — use present perfect simple
+    instead.
+  examples:
+  - target: I've been studying for this exam all week and I'm exhausted.
+    gloss: Llevo toda la semana estudiando para este examen y estoy agotado.
+  - target: She's been working at that company since she graduated.
+    gloss: Lleva trabajando en esa empresa desde que se graduó.
+  - target: It has been raining all morning — the streets are flooded.
+    gloss: Ha estado lloviendo toda la mañana — las calles están inundadas.
+  pitfalls:
+  - Spanish uses 'llevar + gerundio' (llevo estudiando dos horas). English uses 'I've
+    been studying for two hours' — don't translate word for word.
+  - 'Don''t use continuous with stative verbs: ''I''ve been knowing her'' is wrong.
+    Say ''I''ve known her for years.'''
+  - The result matters for simple; the activity matters for continuous. Both can be
+    correct — choose based on what you want to emphasise.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:9b969ed450e4d7ae
+- id: en.b1.g03
+  kind: grammar
+  level: B1
+  order: 3
+  title_target: Narrative tenses
+  title_l1: Tiempos narrativos
+  can_do: I can tell a story using past simple, past continuous, and past perfect
+    together.
+  prereqs:
+  - en.a2.g01
+  - en.b1.g01
+  skill: grammar
+  explain:
+  - Three tenses work together when telling a story in the past.
+  - 'Past simple: the main events in the story, in order. ''She walked in and sat
+    down.'''
+  - 'Past continuous: the background — what was already happening. ''The music was
+    playing.'''
+  - 'Past perfect: events that happened before the story began. ''He had already eaten.'''
+  - 'All three in one: ''She arrived (simple) / the party was in full swing (continuous)
+    / most had already left (perfect).'''
+  - '''While'' and ''as'' introduce continuous background. ''When'' introduces the
+    interrupting simple action.'
+  - The past perfect gives the backstory — use it sparingly to explain causes, not
+    for every event.
+  examples:
+  - target: I was walking home when I saw an accident. A car had jumped a red light.
+    gloss: Iba caminando a casa cuando vi un accidente. Un coche se había saltado
+      un semáforo en rojo.
+  - target: When the guests arrived, she had been cooking for three hours and was
+      exhausted.
+    gloss: Cuando llegaron los invitados, llevaba tres horas cocinando y estaba agotada.
+  - target: He didn't recognise her at first because she had changed her hair.
+    gloss: Al principio no la reconoció porque se había cambiado el peinado.
+  pitfalls:
+  - Don't overuse past perfect. Only use it when the order of events would be unclear
+    without it.
+  - 'Don''t mix up ''while'' (continuous) and ''when'' (point in time): ''While I
+    was sleeping'' / ''When I woke up.'''
+  - The story backbone is past simple — continuous and perfect are supporting, not
+    leading.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:bb632d7a38e15048
+- id: en.b1.g04
+  kind: grammar
+  level: B1
+  order: 4
+  title_target: Second conditional
+  title_l1: Segundo condicional
+  can_do: I can talk about imaginary or unlikely present and future situations.
+  prereqs:
+  - en.a2.g16
+  skill: grammar
+  explain:
+  - 'Form: If + past simple, would + base verb.'
+  - Use for hypothetical situations — things that are imaginary, unlikely, or impossible
+    now.
+  - '''If I had a million dollars, I would travel the world.'' (I don''t have it —
+    imaginary)'
+  - 'Compare with first conditional: ''If it rains, I''ll stay in'' (real/possible)
+    vs ''If it snowed, I''d stay in'' (very unlikely here).'
+  - '''Would'' can be contracted to ''d: I''d, she''d, they''d.'
+  - 'Negative: If I didn''t have to work, I would sleep all day.'
+  - The past simple in the if-clause is NOT referring to past time — it signals hypothetical
+    meaning.
+  - 'Special case: ''If I were you, I would...'' — ''were'' is used for all subjects
+    (not ''was'') in formal/written English.'
+  examples:
+  - target: If I spoke better English, I would apply for that job.
+    gloss: Si hablara mejor inglés, solicitaría ese trabajo.
+  - target: What would you do if you won the lottery?
+    gloss: ¿Qué harías si ganaras la lotería?
+  - target: If I were you, I wouldn't say that.
+    gloss: Si yo fuera tú, no diría eso.
+  pitfalls:
+  - Spanish subjunctive ('si hablara') maps to English past simple in the if-clause
+    — don't use 'would' in the if-clause.
+  - '''If I would have'' is a very common error: WRONG. The if-clause is always past
+    simple.'
+  - Don't confuse with first conditional. Second = imaginary/unlikely; First = real/possible.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:61f78706786c0a74
+- id: en.b1.g05
+  kind: grammar
+  level: B1
+  order: 5
+  title_target: Third conditional
+  title_l1: Tercer condicional
+  can_do: I can talk about imaginary past situations and their consequences.
+  prereqs:
+  - en.b1.g04
+  skill: grammar
+  explain:
+  - 'Form: If + past perfect, would have + past participle.'
+  - Use for situations in the PAST that didn't happen — imagining a different outcome.
+  - '''If I had studied harder, I would have passed the exam.'' (I didn''t study —
+    I didn''t pass)'
+  - It's the grammar of regret and speculation about the past.
+  - 'Contractions: ''If I''d known, I''d have told you.'' (I''d = I had / I would)'
+  - 'Negative main clause: ''If she had left earlier, she wouldn''t have missed the
+    train.'''
+  - 'Negative if-clause: ''If it hadn''t rained, we would have had a picnic.'''
+  - 'The if-clause can come second: ''I would have called you if I had had your number.'''
+  examples:
+  - target: If you had told me, I would have helped you.
+    gloss: Si me lo hubieras dicho, te habría ayudado.
+  - target: She wouldn't have been late if she had left on time.
+    gloss: No habría llegado tarde si hubiera salido a tiempo.
+  - target: What would you have done if you hadn't got that job?
+    gloss: ¿Qué habrías hecho si no hubieras conseguido ese trabajo?
+  pitfalls:
+  - Spanish 'hubiera + participio' (si hubiera estudiado) = if + past perfect. The
+    structure matches closely.
+  - 'The most common error: ''If I would have'' — WRONG. Always ''If I had'' in the
+    if-clause.'
+  - 'Don''t confuse ''d as short for ''had'' (if-clause) vs ''would'' (main clause):
+    ''If I''d known, I''d have called'' — first ''d = had, second ''d = would.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:eec2761c258338a0
+- id: en.b1.g06
+  kind: grammar
+  level: B1
+  order: 6
+  title_target: Mixed conditionals
+  title_l1: Condicionales mixtos
+  can_do: I can mix past and present in conditional sentences to show real consequences.
+  prereqs:
+  - en.b1.g04
+  - en.b1.g05
+  skill: grammar
+  explain:
+  - Mixed conditionals combine time frames — the if-clause and the main clause refer
+    to different times.
+  - 'Type 1 — Past condition, present result: If + past perfect → would + base verb.'
+  - '''If I had studied medicine, I would be a doctor now.'' (Past decision → present
+    state)'
+  - 'Type 2 — Present condition, past result: If + past simple → would have + past
+    participle.'
+  - '''If I weren''t so busy, I would have called you yesterday.'' (Present state
+    → past consequence)'
+  - The key signal is a time word or context making clear the two clauses are in different
+    times.
+  - These are less common than pure 2nd or 3rd conditionals — use them when the mismatch
+    is real.
+  examples:
+  - target: If I had saved more money, I wouldn't be in debt now.
+    gloss: Si hubiera ahorrado más dinero, no estaría endeudado ahora.
+  - target: If he weren't so stubborn, he would have apologised by now.
+    gloss: Si no fuera tan terco, ya se habría disculpado.
+  - target: She would be much happier today if she had made a different choice.
+    gloss: Sería mucho más feliz hoy si hubiera tomado una decisión diferente.
+  pitfalls:
+  - Only use mixed when the time frames genuinely differ. If both are past, use 3rd;
+    if both are present/future, use 2nd.
+  - The 'now' or a present time expression in the main clause is the giveaway for
+    Type 1 mixed.
+  - These are advanced — getting pure 2nd and 3rd right first is more important.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:be2d8f6d4a177d62
+- id: en.b1.g07
+  kind: grammar
+  level: B1
+  order: 7
+  title_target: Passive voice — extended tenses
+  title_l1: Voz pasiva — tiempos extendidos
+  can_do: I can use the passive in present perfect, past perfect, and future forms.
+  prereqs:
+  - en.a2.g19
+  skill: grammar
+  explain:
+  - 'All tenses can be made passive: be + past participle, with ''be'' in the right
+    tense.'
+  - 'Present perfect passive: has/have been + past participle. ''The report has been
+    sent.'''
+  - 'Past perfect passive: had been + past participle. ''The window had been broken
+    before we arrived.'''
+  - 'Future passive: will be + past participle. ''The results will be announced tomorrow.'''
+  - 'Going to passive: is/are going to be + past participle. ''The building is going
+    to be demolished.'''
+  - 'Present continuous passive: is/are being + past participle. ''The road is being
+    repaired.'''
+  - By + agent is optional — only include it when it adds new or important information.
+  examples:
+  - target: The suspect has been arrested by the police.
+    gloss: El sospechoso ha sido detenido por la policía.
+  - target: By the time the inspector arrived, the evidence had been destroyed.
+    gloss: Para cuando llegó el inspector, las pruebas habían sido destruidas.
+  - target: The new hospital will be opened next year.
+    gloss: El nuevo hospital se inaugurará el año que viene.
+  pitfalls:
+  - 'A very common error: ''It was builded'' — irregular past participles don''t change:
+    built, written, stolen.'
+  - 'Don''t add the agent unnecessarily: ''The letter was sent by someone'' adds nothing.
+    Just ''The letter was sent.'''
+  - Spanish uses 'se' passives ('se vendió') — English rarely does this; the full
+    passive is more common.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:21ab927c2d53f1f8
+- id: en.b1.g08
+  kind: grammar
+  level: B1
+  order: 8
+  title_target: Modal passives
+  title_l1: Pasiva con verbos modales
+  can_do: I can say what should, must, or can be done using the passive.
+  prereqs:
+  - en.b1.g07
+  - en.a2.g08
+  - en.a2.g09
+  skill: grammar
+  explain:
+  - 'Form: modal + be + past participle. ''It must be signed. It should be checked.'''
+  - 'Any modal works: can, could, should, must, might, will, would + be + past participle.'
+  - Use when the focus is on what needs to happen to something, not on who does it.
+  - '''This form must be completed in full.'' — who completes it isn''t important.'
+  - 'Past modal passive: modal + have been + past participle. ''It should have been
+    fixed sooner.'''
+  - 'Questions: ''Can this be repaired?'' ''Should it have been reported?'''
+  - Very common in rules, instructions, notices, and formal writing.
+  examples:
+  - target: All luggage must be checked in at the desk.
+    gloss: Todo el equipaje debe facturarse en el mostrador.
+  - target: This problem could have been avoided.
+    gloss: Este problema podría haberse evitado.
+  - target: The contract should be read carefully before signing.
+    gloss: El contrato debe leerse con atención antes de firmarlo.
+  pitfalls:
+  - 'Don''t put ''to'' after the modal: ''It must to be done'' is wrong. Modal + be
+    + past participle, no ''to''.'
+  - 'Past modal passive is tricky: ''should have been told'' not ''should have been
+    tell''.'
+  - A formal and useful structure in professional English — worth mastering for work
+    contexts.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:214b03740a47fa3c
+- id: en.b1.g09
+  kind: grammar
+  level: B1
+  order: 9
+  title_target: Reported speech — statements
+  title_l1: Estilo indirecto — afirmaciones
+  can_do: I can report what someone said, shifting tenses and pronouns correctly.
+  prereqs:
+  - en.a2.g24
+  skill: grammar
+  explain:
+  - When we report speech, the tense usually shifts one step back into the past.
+  - 'present simple → past simple: ''I work here.'' → She said she worked there.'
+  - 'present continuous → past continuous: ''I''m leaving.'' → He said he was leaving.'
+  - 'present perfect → past perfect: ''I''ve finished.'' → She said she had finished.'
+  - 'past simple → past perfect: ''I saw him.'' → She said she had seen him.'
+  - will → would; can → could; may → might; must → had to.
+  - 'Time and place expressions also shift: now → then, today → that day, here → there,
+    tomorrow → the next day.'
+  - 'Pronouns shift to match the reporting context: ''I'' → he/she, ''we'' → they,
+    ''you'' → I/he/she.'
+  examples:
+  - target: '''I''m tired,'' she said. → She said she was tired.'
+    gloss: '''Estoy cansada'', dijo. → Dijo que estaba cansada.'
+  - target: '''We have already eaten,'' they told us. → They told us they had already
+      eaten.'
+    gloss: '''Ya hemos comido'', nos dijeron. → Nos dijeron que ya habían comido.'
+  - target: '''I''ll call you tomorrow,'' he promised. → He promised he would call
+      me the next day.'
+    gloss: '''Te llamaré mañana'', prometió. → Prometió que me llamaría al día siguiente.'
+  pitfalls:
+  - Spanish also backshifts but the rules feel more flexible. English backshift is
+    more consistent — apply it every time.
+  - Don't forget pronoun and time expression changes. 'He said he will call me tomorrow'
+    misses three shifts.
+  - '''Say'' vs ''tell'': say + (that); tell + person + (that). ''She said she was
+    tired'' / ''She told me she was tired.'''
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:80b92cd8b0494f42
+- id: en.b1.g10
+  kind: grammar
+  level: B1
+  order: 10
+  title_target: Reported speech — questions and commands
+  title_l1: Estilo indirecto — preguntas y órdenes
+  can_do: I can report questions and instructions someone gave.
+  prereqs:
+  - en.b1.g09
+  skill: grammar
+  explain:
+  - Reported questions use statement word order — no inversion, no question mark.
+  - 'Yes/no questions: asked + if/whether + statement order. ''Are you ready?'' →
+    He asked if I was ready.'
+  - 'Wh- questions: asked + wh-word + statement order. ''Where do you live?'' → She
+    asked where I lived.'
+  - The same tense backshift and pronoun rules apply as for reported statements.
+  - 'Reported commands/requests: told/asked + object + to + infinitive.'
+  - '''Close the door!'' → He told me to close the door.'
+  - '''Please don''t be late.'' → She asked us not to be late.'
+  - 'Negative command: told + object + not + to + infinitive.'
+  examples:
+  - target: '''Do you speak Spanish?'' she asked. → She asked if I spoke Spanish.'
+    gloss: '''¿Hablas español?'', preguntó. → Preguntó si hablaba español.'
+  - target: '''Where have you been?'' he demanded. → He demanded to know where I had
+      been.'
+    gloss: '''¿Dónde has estado?'', exigió. → Exigió saber dónde había estado.'
+  - target: '''Don''t touch that!'' she warned. → She warned me not to touch it.'
+    gloss: '''¡No toques eso!'', advirtió. → Me advirtió que no lo tocara.'
+  pitfalls:
+  - 'The most common error: keeping question word order. ''He asked where was I''
+    — WRONG. ''He asked where I was.'''
+  - 'Don''t use ''do/does/did'' in reported questions: ''She asked what did I want''
+    → ''She asked what I wanted.'''
+  - For commands, 'tell' is stronger (instruction/order); 'ask' is politer (request).
+    Choose accordingly.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:98acb378de5f993f
+- id: en.b1.g11
+  kind: grammar
+  level: B1
+  order: 11
+  title_target: Reporting verbs
+  title_l1: Verbos de reporte
+  can_do: I can use a variety of reporting verbs to add meaning and nuance.
+  prereqs:
+  - en.b1.g09
+  - en.b1.g10
+  skill: grammar
+  explain:
+  - Instead of always using 'said', choose a verb that captures the speaker's attitude.
+  - 'Verb + (that): admit, agree, claim, complain, deny, explain, insist, promise,
+    suggest.'
+  - 'Verb + to-infinitive: agree, offer, promise, refuse, threaten.'
+  - 'Verb + object + to-infinitive: advise, ask, beg, encourage, invite, remind, warn,
+    tell.'
+  - 'Verb + -ing: admit, deny, recommend, suggest.'
+  - '''He admitted stealing the money.'' / ''She suggested going out for dinner.'''
+  - 'Some verbs can follow multiple patterns with different meanings: ''I remember
+    doing it'' vs ''Remember to do it.'''
+  examples:
+  - target: He denied taking the money. (= said he hadn't taken it)
+    gloss: Negó haber tomado el dinero.
+  - target: She warned us not to be late. (= told us with urgency)
+    gloss: Nos advirtió que no llegáramos tarde.
+  - target: They suggested visiting the museum. (= proposed the idea)
+    gloss: Sugirieron visitar el museo.
+  pitfalls:
+  - 'Each verb has a fixed pattern — ''suggest'' takes -ing, not to-infinitive: ''She
+    suggested to go'' is wrong.'
+  - 'Deny + -ing (not that + simple past): ''He denied that he stole it'' is less
+    natural than ''He denied stealing it.'''
+  - These verbs carry attitude — choosing the right one makes your English sound far
+    more natural.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:5d29e0ded700690d
+- id: en.b1.g12
+  kind: grammar
+  level: B1
+  order: 12
+  title_target: Non-defining relative clauses
+  title_l1: Oraciones de relativo explicativas
+  can_do: I can add extra information to a sentence using commas and relative pronouns.
+  prereqs:
+  - en.a2.g13
+  skill: grammar
+  explain:
+  - Non-defining clauses add EXTRA information — the sentence makes sense without
+    them.
+  - They are separated by commas. Remove them and the main meaning is unchanged.
+  - '''My brother, who lives in London, is a doctor.'' — we already know which brother.'
+  - 'Compare with defining: ''The man who called you is here.'' — identifies which
+    man (no commas).'
+  - Use who (people), which (things), whose (possession) — NEVER 'that' in non-defining
+    clauses.
+  - 'Which can refer to a whole clause: ''She passed the exam, which surprised everyone.'''
+  - 'Where and when can also introduce non-defining clauses: ''Madrid, where I was
+    born, is beautiful.'''
+  examples:
+  - target: My car, which I bought last year, has already broken down.
+    gloss: Mi coche, que compré el año pasado, ya se ha estropeado.
+  - target: Dr. García, who taught me Spanish, has retired.
+    gloss: La doctora García, que me enseñó español, se ha jubilado.
+  - target: She got the promotion, which was great news for the whole team.
+    gloss: Consiguió el ascenso, lo cual fue una gran noticia para todo el equipo.
+  pitfalls:
+  - 'Never use ''that'' in non-defining clauses: ''My sister, that lives in Paris...''
+    is wrong.'
+  - The commas are not optional — without them the clause becomes defining and changes
+    the meaning.
+  - Spanish 'lo cual' (= which referring to a clause) is common. English 'which' works
+    the same way.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:32b33f990c3f23c5
+- id: en.b1.g13
+  kind: grammar
+  level: B1
+  order: 13
+  title_target: Modal deduction — present
+  title_l1: Deducción modal — presente
+  can_do: I can express how certain I am about something happening now.
+  prereqs:
+  - en.a2.g08
+  - en.a2.g09
+  skill: grammar
+  explain:
+  - Use modals to show how certain you are about a present situation.
+  - 'must be: almost certain (positive). ''She''s always tired — she must be working
+    too hard.'''
+  - 'can''t/couldn''t be: almost certain (negative). ''He can''t be at home — the
+    lights are off.'''
+  - 'might/may/could be: possible but not certain. ''She might be in a meeting.'''
+  - 'These are different from obligation/permission: ''must be'' here is deduction,
+    not instruction.'
+  - 'Form: must/can''t/might/may/could + be + adjective/noun/verb-ing.'
+  - '''She must be tired.'' / ''He can''t be serious.'' / ''They might be waiting
+    outside.'''
+  examples:
+  - target: You've been travelling all day — you must be exhausted.
+    gloss: Has estado viajando todo el día — debes de estar agotado.
+  - target: That can't be right. The figures don't add up.
+    gloss: Eso no puede ser correcto. Los números no cuadran.
+  - target: She's not answering — she might be asleep or she could be busy.
+    gloss: No contesta — puede que esté dormida o puede que esté ocupada.
+  pitfalls:
+  - Spanish 'debe de ser' = English 'must be' (deduction). 'Debe ser' (without 'de')
+    implies obligation in Spanish — don't confuse the two uses.
+  - 'Can''t is stronger than might not: ''He can''t be home'' = I''m almost certain
+    he isn''t. ''He might not be home'' = it''s possible he isn''t.'
+  - '''Must not be'' is rarely used for deduction — use ''can''t be'' instead.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:ab118a1cc6ee07ff
+- id: en.b1.g14
+  kind: grammar
+  level: B1
+  order: 14
+  title_target: Modal deduction — past
+  title_l1: Deducción modal — pasado
+  can_do: I can speculate about what happened in the past using modal verbs.
+  prereqs:
+  - en.b1.g13
+  skill: grammar
+  explain:
+  - 'For past deduction: modal + have + past participle.'
+  - 'must have + pp: almost certain (positive past). ''She must have missed the bus.'''
+  - 'can''t have + pp: almost certain (negative past). ''He can''t have read it —
+    he just got it.'''
+  - 'might/may/could have + pp: possible past. ''They might have taken a different
+    route.'''
+  - 'These are used to reason about evidence: ''The door was open — someone must have
+    forgotten to lock it.'''
+  - Could have + pp can also mean something was possible but didn't happen (different
+    use).
+  - 'Questions: ''Could she have known about this?'' ''What might have happened?'''
+  examples:
+  - target: She wasn't at the party — she must have forgotten about it.
+    gloss: No estaba en la fiesta — debe de haberse olvidado.
+  - target: He scored 100% — he can't have found it difficult.
+    gloss: Sacó 100% — no puede haberlo encontrado difícil.
+  - target: They might have taken a wrong turn somewhere.
+    gloss: Puede que se hayan equivocado de camino en algún punto.
+  pitfalls:
+  - 'A very common error: ''He must have went'' — always use past participle: ''must
+    have gone.'''
+  - Don't confuse 'could have done' (past possibility/deduction) with 'could do' (present
+    ability).
+  - 'The structure is fixed: modal + have + past participle. Nothing changes between
+    must/might/can''t in terms of form.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:7cc89b7da993738c
+- id: en.b1.g15
+  kind: grammar
+  level: B1
+  order: 15
+  title_target: 'Perfect modals: regret and criticism'
+  title_l1: 'Modales perfectos: arrepentimiento y crítica'
+  can_do: I can express regret about past actions and criticise past decisions.
+  prereqs:
+  - en.b1.g14
+  skill: grammar
+  explain:
+  - 'should have + past participle: the right thing to do (but didn''t). ''I should
+    have called her.'''
+  - 'shouldn''t have + past participle: the wrong thing to do (but did). ''You shouldn''t
+    have said that.'''
+  - 'could have + past participle: a missed opportunity. ''We could have taken a taxi
+    — it would have been faster.'''
+  - 'needn''t have + past participle: did something that wasn''t necessary. ''You
+    needn''t have cooked — we already ate.'''
+  - These all express a gap between what happened and what would have been better.
+  - Used for self-criticism, regret, or criticising others (carefully — it can sound
+    accusatory).
+  - 'Tone matters: ''You should have told me'' can be gentle or harsh depending on
+    context.'
+  examples:
+  - target: I should have studied more — I only got 60%.
+    gloss: Debería haber estudiado más — saqué solo un 60%.
+  - target: You shouldn't have spent so much money on that.
+    gloss: No deberías haber gastado tanto dinero en eso.
+  - target: We could have walked — parking was a nightmare.
+    gloss: Podríamos haber ido a pie — aparcar fue un infierno.
+  pitfalls:
+  - '''Should have'' in English = ''debería haber'' in Spanish. The structures are
+    parallel — this makes it easier.'
+  - 'Don''t say ''should have went'' — always past participle: ''should have gone.'''
+  - '''Needn''t have done'' (did it unnecessarily) vs ''didn''t need to do'' (didn''t
+    do it because it wasn''t necessary).'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:4d782589de923bb9
+- id: en.b1.g16
+  kind: grammar
+  level: B1
+  order: 16
+  title_target: Wish — present and future
+  title_l1: Wish — presente y futuro
+  can_do: I can express wishes and regrets about the present using wish.
+  prereqs:
+  - en.b1.g04
+  skill: grammar
+  explain:
+  - 'Wish + past simple: a wish about a present situation you want to be different.'
+  - '''I wish I spoke better English.'' (I don''t speak it well — I wish I did)'
+  - '''She wishes she lived closer to work.'' (She lives far — she wants to be nearer)'
+  - 'Wish + could: wish for an ability. ''I wish I could play the piano.'''
+  - 'Wish + would: wish for someone else to change their behaviour (often frustration).'
+  - '''I wish you would stop interrupting me.'' (a repeated action that annoys you)'
+  - Don't use 'wish + would' for yourself — use 'I wish I could' or 'I wish I + past
+    simple'.
+  - If only = wish with more emphasis. 'If only I had more time!'
+  examples:
+  - target: I wish I had more free time — I'm always working.
+    gloss: Ojalá tuviera más tiempo libre — siempre estoy trabajando.
+  - target: She wishes she could drive — it would make life so much easier.
+    gloss: Ojalá pudiera conducir — le facilitaría mucho la vida.
+  - target: I wish you would listen — I've explained this three times.
+    gloss: Ojalá escucharas — lo he explicado tres veces.
+  pitfalls:
+  - Spanish 'ojalá' + subjunctive maps directly to 'wish + past simple'. The feeling
+    is the same.
+  - 'Don''t use present simple after wish: ''I wish I have more time'' is wrong. Always
+    past simple.'
+  - '''Wish + would'' is for others'' repeated behaviour. For your own abilities use
+    ''could''.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:2a1ec412c9a0a47a
+- id: en.b1.g17
+  kind: grammar
+  level: B1
+  order: 17
+  title_target: Wish — past regrets
+  title_l1: Wish — arrepentimiento en el pasado
+  can_do: I can express regret about things that happened or didn't happen in the
+    past.
+  prereqs:
+  - en.b1.g16
+  - en.b1.g05
+  skill: grammar
+  explain:
+  - 'Wish + past perfect: regret about a past situation that can no longer be changed.'
+  - '''I wish I had studied harder.'' (I didn''t — now it''s too late to change that)'
+  - '''She wishes she hadn''t quit her job.'' (She did — she regrets it now)'
+  - 'If only + past perfect for stronger regret: ''If only I had listened to you!'''
+  - These are the grammar of hindsight — looking back at what could or should have
+    been different.
+  - 'Negative: ''I wish I hadn''t said that.'' (I said it — I regret it)'
+  - '''I wish I had studied'' = pure regret. ''If I had studied, I would have passed''
+    = regret + consequence.'
+  examples:
+  - target: I wish I had taken that job offer — it was a great opportunity.
+    gloss: Ojalá hubiera aceptado esa oferta de trabajo — era una gran oportunidad.
+  - target: He wishes he hadn't argued with her before she left.
+    gloss: Ojalá no hubiera discutido con ella antes de que se fuera.
+  - target: If only we had booked earlier — there are no seats left.
+    gloss: Ojalá hubiéramos reservado antes — no quedan asientos.
+  pitfalls:
+  - Spanish 'ojalá hubiera hecho' = English 'I wish I had done'. Parallel structure,
+    good anchor.
+  - 'Don''t mix up: ''I wish I studied'' (present — I study but want to study more)
+    vs ''I wish I had studied'' (past — I didn''t study and I regret it).'
+  - The feeling is different from 'should have' — wish is pure regret; should have
+    is self-criticism or criticism.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:3c22cfe76ffe8803
+- id: en.b1.g18
+  kind: grammar
+  level: B1
+  order: 18
+  title_target: Gerunds and infinitives — meaning change
+  title_l1: Gerundios e infinitivos — cambio de significado
+  can_do: I can use stop, remember, try, forget, and regret with the correct form
+    to express the right meaning.
+  prereqs:
+  - en.a2.g12
+  skill: grammar
+  explain:
+  - Some verbs change meaning depending on whether they take -ing or to-infinitive.
+  - 'stop + -ing: the action ends. ''He stopped smoking.'' (no longer smokes)'
+  - 'stop + to-infinitive: pauses to do something else. ''He stopped to smoke.'' (paused
+    in order to smoke)'
+  - 'remember + -ing: recalls a past event. ''I remember meeting her once.'''
+  - 'remember + to-infinitive: doesn''t forget to do a future task. ''Remember to
+    call her!'''
+  - 'forget + -ing: a past event slips from memory. ''I''ll never forget visiting
+    Rome.'''
+  - 'forget + to-infinitive: fails to do something. ''She forgot to lock the door.'''
+  - 'try + -ing: experiment to see if it helps. ''Try turning it off and on again.'''
+  - 'try + to-infinitive: make an effort (but may fail). ''I tried to lift it but
+    it was too heavy.'''
+  - 'regret + -ing: feel sorry about a past action. ''I regret saying that.'''
+  - 'regret + to-infinitive: sorry to announce (formal). ''We regret to inform you...'''
+  examples:
+  - target: I remember locking the door — I'm sure I did it.
+    gloss: Recuerdo haber cerrado la puerta — estoy seguro de que lo hice.
+  - target: Remember to lock the door when you leave!
+    gloss: ¡Acuérdate de cerrar la puerta cuando salgas!
+  - target: She stopped to read the sign, then carried on walking.
+    gloss: Se paró a leer el letrero y luego siguió caminando.
+  pitfalls:
+  - These pairs are high-frequency error sources. Memorise each pair as two distinct
+    meanings.
+  - Spanish doesn't have this grammatical contrast — 'recuerdo haberlo hecho' and
+    'recuerda hacerlo' are different constructions in Spanish too, just not as consistently
+    patterned.
+  - 'When unsure, ask: is the -ing action in the past or experimental? Is the infinitive
+    action in the future or effortful?'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:737c196ef851de70
+- id: en.b1.g19
+  kind: grammar
+  level: B1
+  order: 19
+  title_target: Gerunds after prepositions and adjectives
+  title_l1: Gerundios tras preposiciones y adjetivos
+  can_do: I can use gerunds correctly after common prepositions and adjective phrases.
+  prereqs:
+  - en.a2.g12
+  skill: grammar
+  explain:
+  - A verb after a preposition always takes -ing form, never to-infinitive.
+  - 'Common patterns: interested in doing, good at doing, afraid of doing, keen on
+    doing.'
+  - 'After prepositions: without doing, before doing, after doing, by doing, instead
+    of doing.'
+  - '''She left without saying goodbye.'' / ''He improved by practising every day.'''
+  - 'Fixed phrases: look forward to + -ing (NOT to-infinitive! ''to'' is a preposition
+    here).'
+  - '''I look forward to hearing from you.'' — ''to'' is part of the phrase, not a
+    verb marker.'
+  - 'Other phrases: be used to + -ing, get used to + -ing, object to + -ing.'
+  examples:
+  - target: She's very good at explaining things clearly.
+    gloss: Se le da muy bien explicar las cosas con claridad.
+  - target: Instead of taking the bus, we decided to walk.
+    gloss: En lugar de tomar el autobús, decidimos ir a pie.
+  - target: I'm really looking forward to visiting you next month.
+    gloss: Tengo muchas ganas de visitarte el mes que viene.
+  pitfalls:
+  - '''Look forward to doing'' — the most tested structure. Never ''look forward to
+    do''.'
+  - '''Be used to doing'' (accustomed) is different from ''used to do'' (past habit).
+    The ''to'' in ''be used to'' is a preposition — always followed by -ing.'
+  - After 'without', 'before', 'after', 'by', 'instead of' — always -ing. No exceptions.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:41dd0e5f6e18a737
+- id: en.b1.g20
+  kind: grammar
+  level: B1
+  order: 20
+  title_target: Causative have and get
+  title_l1: Causativa con have y get
+  can_do: I can say that I arranged for someone else to do something for me.
+  prereqs:
+  - en.a2.g19
+  skill: grammar
+  explain:
+  - 'Causative: you don''t do the action yourself — you arrange for someone else to
+    do it.'
+  - 'have + object + past participle: ''I had my car repaired.'' (a mechanic did it)'
+  - 'get + object + past participle: ''I got my hair cut.'' (at a salon) — more informal
+    than have.'
+  - The object comes before the past participle. 'I had repaired my car' = wrong order.
+  - 'All tenses work: ''She''s having her house painted.'' / ''We had the roof fixed
+    last year.'''
+  - 'Also used for negative events (something done TO you): ''He had his wallet stolen.''
+    (he didn''t arrange this — it happened to him)'
+  - 'get + someone + to-infinitive: arranged for someone specific. ''I got my brother
+    to help me.'''
+  examples:
+  - target: I need to have my eyes tested — I can't read the board.
+    gloss: Necesito hacerme revisar la vista — no puedo leer la pizarra.
+  - target: She got her nails done before the wedding.
+    gloss: Se hizo las uñas antes de la boda.
+  - target: He had his bike stolen outside the supermarket.
+    gloss: Le robaron la bici delante del supermercado.
+  pitfalls:
+  - Spanish 'hacerse + infinitive' (me hice cortar el pelo) maps onto the causative.
+    The idea is the same.
+  - 'Word order is fixed: have/get + OBJECT + PAST PARTICIPLE. Never move the object
+    after the participle.'
+  - Don't confuse 'have something done' (causative) with 'have done something' (present
+    perfect).
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:3d0320413d9ab902
+- id: en.b1.g21
+  kind: grammar
+  level: B1
+  order: 21
+  title_target: 'Linkers of contrast: however, despite, although'
+  title_l1: 'Conectores de contraste: however, despite, although'
+  can_do: I can connect contrasting ideas using a range of linking words.
+  prereqs:
+  - en.a2.g14
+  skill: grammar
+  explain:
+  - All of these express contrast, but they connect differently to the sentence.
+  - 'although/even though + clause: ''Although it was cold, we went outside.'''
+  - 'however: connects two separate sentences (written with a comma after). ''It was
+    cold. However, we went outside.'''
+  - 'despite / in spite of + noun or -ing: ''Despite the cold, we went outside.''
+    / ''Despite feeling cold, we went.'''
+  - 'whereas / while: direct comparison. ''She loves spicy food, whereas I can''t
+    stand it.'''
+  - 'nevertheless / nonetheless: more formal, similar to however. ''It was difficult;
+    nevertheless, we succeeded.'''
+  - 'Key rule: although/even though → full clause. Despite/in spite of → noun or -ing
+    (NOT a full clause).'
+  examples:
+  - target: Despite working long hours, she always finds time to exercise.
+    gloss: A pesar de trabajar muchas horas, siempre encuentra tiempo para hacer ejercicio.
+  - target: The film got bad reviews. However, it was a huge box-office success.
+    gloss: La película recibió malas críticas. Sin embargo, fue un gran éxito de taquilla.
+  - target: He speaks four languages, whereas his sister never learned a second one.
+    gloss: Habla cuatro idiomas, mientras que su hermana nunca aprendió una segunda.
+  pitfalls:
+  - '''Despite that he was tired'' is wrong — despite is followed by a noun or -ing,
+    never ''that + clause''. Use ''although'' for clauses.'
+  - '''However'' at the start of a sentence needs a comma after it. In the middle
+    it needs commas on both sides.'
+  - Although and even though are interchangeable; even though is slightly more emphatic.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:df257964241d96b7
+- id: en.b1.g22
+  kind: grammar
+  level: B1
+  order: 22
+  title_target: 'Linkers of reason and result: therefore, consequently, as a result'
+  title_l1: 'Conectores de causa y consecuencia: therefore, consequently, as a result'
+  can_do: I can use formal and informal connectors to express cause and effect.
+  prereqs:
+  - en.a2.g14
+  skill: grammar
+  explain:
+  - These link a cause to its result — more formal and varied than 'so' and 'because'.
+  - 'therefore / consequently / as a result: introduce the result. More formal.'
+  - '''The road was flooded; therefore, we took a different route.'''
+  - 'owing to / due to + noun/-ing: introduce the reason (more formal than ''because
+    of'').'
+  - '''The match was cancelled owing to bad weather.'''
+  - 'since / as: introduce a reason in a clause (less common than ''because'', slightly
+    formal).'
+  - '''Since she had already eaten, she ordered just a coffee.'''
+  - 'As a result of + noun/-ing: ''As a result of the storm, the power went out.'''
+  - 'thus: very formal, used in written English. ''The experiment failed; thus, the
+    theory was rejected.'''
+  examples:
+  - target: She had prepared thoroughly; consequently, the presentation went smoothly.
+    gloss: Se había preparado a fondo; en consecuencia, la presentación fue bien.
+  - target: The event was cancelled due to a lack of funding.
+    gloss: El evento fue cancelado por falta de financiación.
+  - target: As traffic was heavy, we arrived an hour late.
+    gloss: Como había mucho tráfico, llegamos una hora tarde.
+  pitfalls:
+  - '''Due to'' and ''owing to'' are followed by nouns/-ing, not clauses. ''Due to
+    it rained'' is wrong — use ''because it rained''.'
+  - Therefore and consequently connect sentences — don't put them inside a single
+    clause with no punctuation.
+  - 'Register matters: ''so'' in spoken English; ''therefore''/''consequently'' in
+    formal writing or presentations.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:98b72aec741e2947
+- id: en.b1.g23
+  kind: grammar
+  level: B1
+  order: 23
+  title_target: 'Quantifiers: few, little, a great deal, plenty'
+  title_l1: 'Cuantificadores: few, little, a great deal, plenty'
+  can_do: I can use a wide range of quantifiers correctly with countable and uncountable
+    nouns.
+  prereqs:
+  - en.a2.g23
+  skill: grammar
+  explain:
+  - 'few (no ''a''): a disappointingly small number. ''Few people came.'' (almost
+    none — negative)'
+  - 'a few: a small but sufficient number. ''A few people came.'' (some — positive)'
+  - 'little (no ''a''): a disappointingly small amount. ''There''s little hope.''
+    (almost none)'
+  - 'a little: a small but sufficient amount. ''There''s a little milk left.'' (some
+    — fine)'
+  - 'plenty of: more than enough. Works with both countable and uncountable.'
+  - 'a great deal of / a large amount of: formal, used with uncountable. ''A great
+    deal of effort.'''
+  - 'a large number of: formal, used with countable. ''A large number of students.'''
+  - 'The key distinction: few/little (without ''a'') are pessimistic; a few/a little
+    are optimistic.'
+  examples:
+  - target: Few students passed the exam — most failed. (almost none)
+    gloss: Pocos estudiantes aprobaron el examen — la mayoría suspendió.
+  - target: A few students passed the exam — more than I expected.
+    gloss: Unos pocos estudiantes aprobaron el examen — más de lo que esperaba.
+  - target: There's plenty of time — don't rush.
+    gloss: Hay tiempo de sobra — no te apresures.
+  pitfalls:
+  - '''Few'' without ''a'' often translates as ''pocos'' with a pessimistic connotation;
+    ''a few'' = ''unos pocos'' (neutral/positive). The article makes all the difference.'
+  - '''Much'' and ''many'' are formal in positives — prefer ''a lot of'' in speech.
+    ''Much/many'' in negatives and questions is fine: ''not much time'', ''how many
+    people?'''
+  - '''A great deal of'' is uncountable only: ''a great deal of work'' (not ''students'').'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:bf3c2ecb70a1bb57
+- id: en.b1.g24
+  kind: grammar
+  level: B1
+  order: 24
+  title_target: 'Conditionals: unless, provided that, as long as, in case'
+  title_l1: 'Condicionales: unless, provided that, as long as, in case'
+  can_do: I can use a variety of conditional linking words beyond if.
+  prereqs:
+  - en.a2.g16
+  - en.b1.g04
+  skill: grammar
+  explain:
+  - unless = if not. 'Unless you study, you'll fail.' = 'If you don't study, you'll
+    fail.'
+  - 'provided (that) / as long as: if and only if (a condition that must be met).'
+  - '''You can borrow my car as long as you fill it up.'' — conditional permission.'
+  - 'in case: a precaution against something that might happen. NOT the same as ''if''.'
+  - '''Take an umbrella in case it rains.'' = in case it might rain (precaution).'
+  - '''Take an umbrella if it rains.'' = only take one when rain is certain. Very
+    different meaning.'
+  - 'in case + present tense (NOT ''will''): ''in case it rains'' not ''in case it
+    will rain''.'
+  - 'supposing / imagine (that): used in hypotheticals. ''Supposing you won the lottery,
+    what would you do?'''
+  examples:
+  - target: I won't go unless you come with me.
+    gloss: No iré a menos que vengas conmigo.
+  - target: You can stay out late, provided that you call me when you arrive.
+    gloss: Puedes quedarte hasta tarde, siempre que me llames cuando llegues.
+  - target: I always keep some cash in case the card machine is broken.
+    gloss: Siempre llevo algo de efectivo por si acaso el datáfono no funciona.
+  pitfalls:
+  - '''Unless'' already contains ''not'' — don''t add another negative: ''Unless you
+    don''t come'' is a double negative and wrong.'
+  - '''In case'' is a common Spanish-speaker trap: ''en caso de que'' ≠ ''if''. In
+    English too, ''in case'' is about precaution, not condition.'
+  - '''As long as'' sounds informal; ''provided that'' is more formal — they mean
+    the same thing.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:f0ef0f392c81eeb9
+- id: en.b1.g25
+  kind: grammar
+  level: B1
+  order: 25
+  title_target: Be used to and get used to
+  title_l1: Be used to y get used to
+  can_do: I can talk about habits and the process of adapting to new situations.
+  prereqs:
+  - en.a2.g11
+  skill: grammar
+  explain:
+  - 'be used to + -ing/noun: accustomed to something (it''s normal for you now).'
+  - '''I''m used to waking up early — I''ve done it for years.'''
+  - 'get used to + -ing/noun: the process of becoming accustomed (it takes time).'
+  - '''It took me months to get used to driving on the left.'''
+  - Both are followed by -ing or a noun — NOT to-infinitive. The 'to' is a preposition
+    here.
+  - 'Compare with ''used to do'' (A2 — past habit, no longer true): ''I used to wake
+    up late.'''
+  - '''I''m not used to the noise yet — I just moved here.'' (still adapting)'
+  - '''Don''t worry, you''ll get used to it.'' (you will adapt)'
+  examples:
+  - target: She's used to working long hours — she's been doing it for years.
+    gloss: Está acostumbrada a trabajar muchas horas — lleva años haciéndolo.
+  - target: It's hard at first, but you'll get used to the cold weather.
+    gloss: Al principio es difícil, pero te acostumbrarás al frío.
+  - target: I'm not used to eating so late — in my country we eat at 7.
+    gloss: No estoy acostumbrado a cenar tan tarde — en mi país cenamos a las 7.
+  pitfalls:
+  - 'Three similar forms, three different meanings: ''used to do'' (past habit), ''be
+    used to doing'' (currently accustomed), ''get used to doing'' (becoming accustomed).'
+  - The 'to' in 'be/get used to' is ALWAYS followed by -ing or a noun — never a base
+    verb.
+  - 'Common error: ''I am used to wake up early'' — wrong. Always ''I am used to waking
+    up early.'''
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:64b332ed0cb6bd7d
+- id: en.b1.g26
+  kind: grammar
+  level: B1
+  order: 26
+  title_target: So and such
+  title_l1: So y such
+  can_do: I can use so and such to add emphasis and express strong reactions.
+  prereqs:
+  - en.a2.g15
+  skill: grammar
+  explain:
+  - 'so + adjective/adverb: ''The food was so good!'' / ''She speaks so clearly.'''
+  - 'such + (a/an) + (adjective) + noun: ''It was such a good film!'' / ''They''re
+    such nice people!'''
+  - 'so...that / such...that: expresses a result. ''It was so cold that we stayed
+    inside.'''
+  - '''She''s such a good teacher that everyone loves her class.'''
+  - 'so much / so many: ''There was so much food!'' / ''There were so many people!'''
+  - 'such a lot of: ''There was such a lot of noise.'' (informal alternative)'
+  - 'Rule: so before adjectives and adverbs; such before nouns (with or without adjective).'
+  examples:
+  - target: The exam was so difficult that half the class failed.
+    gloss: El examen era tan difícil que la mitad de la clase suspendió.
+  - target: She has such talent — everything she makes is beautiful.
+    gloss: Tiene tanto talento — todo lo que hace es hermoso.
+  - target: I had so much fun at the party — I didn't want to leave.
+    gloss: Me lo pasé tan bien en la fiesta que no quería irme.
+  pitfalls:
+  - 'Don''t mix so/such: ''She is so a nice person'' — wrong. Before nouns, use ''such'':
+    ''such a nice person.'''
+  - '''Such'' needs ''a/an'' before singular countable nouns: ''such a good idea''
+    not ''such good idea''.'
+  - 'Plurals and uncountables drop the article: ''such nice people'', ''such good
+    advice''.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:c902eb76a4a12cbb
+- id: en.b1.g27
+  kind: grammar
+  level: B1
+  order: 27
+  title_target: Adjective and noun patterns
+  title_l1: Patrones con adjetivos y sustantivos
+  can_do: I can use common adjective and noun collocations correctly with the right
+    preposition.
+  prereqs:
+  - en.a2.g12
+  skill: grammar
+  explain:
+  - Many adjectives and nouns are followed by fixed prepositions — these must be memorised.
+  - 'Key adjective + preposition pairs: afraid of, good at, interested in, proud of,
+    responsible for, tired of, excited about, famous for.'
+  - 'More pairs: angry about/with, bored with/by, fond of, keen on, satisfied with,
+    surprised at/by, worried about.'
+  - 'Noun + preposition: advantage of, belief in, cause of, demand for, effect on,
+    improvement in, interest in, lack of, reason for, solution to.'
+  - 'When a verb follows, it takes -ing: ''She''s afraid of flying.'' / ''I''m interested
+    in learning.'''
+  - These are fixed phrases — the preposition doesn't change based on logic, only
+    convention.
+  - Learning them in context (sentences, not lists) is more effective.
+  examples:
+  - target: She's very good at maths but she's not interested in languages.
+    gloss: Se le dan muy bien las matemáticas, pero no le interesan los idiomas.
+  - target: He's been worried about losing his job for months.
+    gloss: Lleva meses preocupado por perder su trabajo.
+  - target: There's no easy solution to the problem of traffic in the city.
+    gloss: No hay una solución fácil al problema del tráfico en la ciudad.
+  pitfalls:
+  - Prepositions don't translate — 'good at' is 'bueno en' in Spanish but 'bueno para'
+    could also work. Always learn the English preposition directly.
+  - 'Don''t add extra prepositions: ''interested in to learn'' — wrong. ''interested
+    in learning.'''
+  - 'A few adjectives take different prepositions with different meanings: ''angry
+    about something'' (situation) vs ''angry with someone'' (person).'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:c6ae1e4657f18f4c
+- id: en.b1.g28
+  kind: grammar
+  level: B1
+  order: 28
+  title_target: Emphasis — do/does/did and cleft sentences
+  title_l1: Énfasis — do/does/did y oraciones escindidas
+  can_do: I can add emphasis to a statement using emphatic do and cleft structures.
+  prereqs:
+  - en.b1.g21
+  - en.b1.g22
+  skill: grammar
+  explain:
+  - 'Emphatic do/does/did: add stress to contradict or insist. ''I DO like it!'' /
+    ''She DID call you.'''
+  - 'Used to contradict a negative assumption: ''You never listen!'' — ''I DO listen!'''
+  - 'Cleft sentences beginning with ''It'': ''It was Maria who called.'' (not someone
+    else)'
+  - 'Structure: It + be + emphasised element + who/that + rest of sentence.'
+  - '''It was the noise that woke me up.'' (not the light, not the alarm — the noise)'
+  - 'What-clefts: ''What I need is a holiday.'' / ''What surprised me was her reaction.'''
+  - 'Structure: What + clause + be + emphasised element.'
+  - All of these are about highlighting one element of a sentence — they imply a contrast
+    with other possibilities.
+  examples:
+  - target: I do understand your point — I just disagree with it.
+    gloss: Sí entiendo tu punto — simplemente no estoy de acuerdo.
+  - target: It was the manager who made the final decision, not me.
+    gloss: Fue el gerente quien tomó la decisión final, no yo.
+  - target: What I enjoy most about this job is the variety.
+    gloss: Lo que más me gusta de este trabajo es la variedad.
+  pitfalls:
+  - Emphatic 'do' only works in the present simple (do/does) and past simple (did).
+    Not with other auxiliaries.
+  - Cleft sentences sound unnatural if overused — save them for genuine emphasis or
+    contrast.
+  - Spanish uses intonation for emphasis where English uses these structures. Learning
+    to use them makes your English sound more natural and less flat.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:8341089814829246
