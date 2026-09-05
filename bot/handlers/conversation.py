@@ -185,6 +185,7 @@ def _parse_corrections(reply: str) -> list[dict]:
 async def chat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     message = update.effective_message
     text = (message.text or "").strip()
+    logger.info("chat() called: uid=%s text=%r", update.effective_user.id if update.effective_user else None, text[:40])
     if not text:
         return
 
