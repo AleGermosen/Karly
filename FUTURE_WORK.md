@@ -144,121 +144,122 @@ In dependency order:
 
 ## Planned feature detail
 
-### PAY — Payment system verification + pricing
+### PAY — Payment system verification + dual-payment design
 
-> The payment code (F-15 / F-16 / F-21) is already written. This item is the end-to-end live test, the pricing decision, and understanding what you actually receive.
+> The payment code (F-15 / F-16 / F-21) is already written. This item is the end-to-end live test and the dual-payment UI. Pricing is decided — see below.
 
 ---
 
-#### Step 1 — Enable Stars in BotFather (one-time, 2 minutes)
+#### Decided: pricing
 
-1. Open `@BotFather` → `/mybots` → select Karly → **Payments**.
-2. Choose **Telegram Stars** — free, no paperwork, no external processor.
-3. Done. The bot can now send invoices in Stars (`currency="XTR"`).
+| Product | Stripe (card) | Telegram Stars | Notes |
+|---|---|---|---|
+| Monthly subscription | **$4.99** | **250 ⭐** (~$6.50) | Stars priced higher — visual signal that card is better value |
+| Small top-up — 15 msgs | $0.99 | 75 ⭐ | Impulse buy |
+| Medium top-up — 40 msgs | $1.99 | 150 ⭐ | Best value per message — most buyers pick this |
+| Large top-up — 100 msgs | $3.99 | 300 ⭐ | Power users |
 
-#### Step 2 — End-to-end smoke test
+**What you actually receive per subscriber per month:**
 
-Send yourself a test invoice before charging real students:
+| Method | Student pays | You receive | Notes |
+|---|---|---|---|
+| Stripe — iOS/Android | $4.99 | ~$4.54 | 2.9% + $0.30 Stripe fee only |
+| Stars — iOS/Android | 250 ⭐ (~$6.50) | ~$3.12 | ~48% after Apple/Google + Telegram + exchange fees |
+| Stars — desktop | 250 ⭐ (~$6.50) | ~$4.49 | ~69% — no Apple/Google cut |
 
-```python
-# Run once in a throwaway script or your own chat
-await bot.send_invoice(
-    chat_id=YOUR_TELEGRAM_ID,
-    title="Karly — test subscription",
-    description="This is a test. The Stars will be refunded.",
-    payload="test_subscribe",
-    currency="XTR",
-    prices=[LabeledPrice("1 month", 100)],  # 100 Stars
-)
+The $1.50+ gap between Stars shown price and Stars payout is why the Stars price is set higher. It doesn't close the gap — it just makes the choice visible to the student.
+
+---
+
+#### The dual-payment UI
+
+When a student sends `/subscribe`, instead of going straight to an invoice, the bot shows a choice:
+
+```
+Choose how to pay:
+
+💳  Card / Google Pay / Apple Pay
+    $4.99 / month
+    Simple checkout · More goes to your teacher
+
+⭐  Telegram Stars
+    250 ⭐ / month
+    One tap · No card needed
 ```
 
-Checklist:
-- [ ] Invoice appears in your chat
+The framing is honest: card is the better deal and you say so directly. Students who genuinely prefer one-tap Stars will still pick it — that's a real preference worth serving.
+
+**Both paths land on the same `successful_payment` handler** — no difference in what the bot does after payment. Only the invoice sent beforehand differs:
+- Card path: `currency="USD"`, Stripe provider token, opens a webview
+- Stars path: `currency="XTR"`, empty provider token, native Stars checkout
+
+The card webview is a one-time friction point. After the student enters their card once, Google Pay / Apple Pay remembers it and subsequent re-subscriptions feel identical to Stars.
+
+---
+
+#### Step 1 — Set up both payment providers (one-time)
+
+**Stars (2 minutes):**
+1. `@BotFather` → `/mybots` → Karly → **Payments** → choose **Telegram Stars**
+2. Done. No account, no paperwork.
+
+**Stripe (15 minutes):**
+1. Create a free account at stripe.com — needs your ID and a bank account
+2. Get your **test** secret key from the Stripe dashboard
+3. `@BotFather` → `/mybots` → Karly → **Payments** → choose **Stripe** → paste test key
+4. Test with Stripe's test card: `4242 4242 4242 4242`, any future expiry, any CVV
+5. When ready to go live, swap test key for live key in BotFather
+
+---
+
+#### Step 2 — End-to-end smoke test checklist
+
+Run both paths yourself before showing students:
+
+**Stars path:**
+- [ ] `/subscribe` shows the dual-payment choice screen
+- [ ] Tapping Stars sends an invoice for 250 ⭐
 - [ ] Checkout screen shows correct amount
 - [ ] `pre_checkout_handler` fires (check logs)
-- [ ] `successful_payment` fires and `users.subscribed` flips to `True` in the DB
-- [ ] Expiry timestamp is written correctly (30 days from now)
-- [ ] Bot sends you a confirmation message
+- [ ] `successful_payment` fires and `users.subscribed` flips to `True` in DB
+- [ ] Subscription expiry is set 30 days from now
+- [ ] Bot sends confirmation message
 
-Repeat for `/topup` packs. Then test the limit-hit flow: exhaust your session credits, confirm the "buy more" button appears, buy the small pack, and confirm `topup_credits` increments.
+**Stripe path:**
+- [ ] Tapping Card opens Stripe webview
+- [ ] Test card `4242 4242 4242 4242` completes successfully
+- [ ] Same DB and confirmation checks as above
+- [ ] Google Pay / Apple Pay appear as options in the webview (on mobile)
 
----
-
-#### Step 3 — Pricing
-
-Stars are priced by Telegram — **you set the number of Stars, not the dollar amount.** The dollar equivalent fluctuates slightly but is roughly **$0.013–0.020 per Star** depending on platform (iOS is more expensive because Apple takes a cut before the user even sees the price).
-
-**Recommended starting prices (tune after first month):**
-
-| Product | Stars | Approx. user cost | What you actually receive |
-|---------|-------|-------------------|--------------------------|
-| Monthly subscription | 200 ⭐ | ~$3.00–4.00 | ~$1.80–2.80 after fees |
-| Small top-up (10 msgs) | 30 ⭐ | ~$0.45–0.60 | ~$0.27–0.42 after fees |
-| Medium top-up (30 msgs) | 75 ⭐ | ~$1.10–1.50 | ~$0.66–1.05 after fees |
-| Large top-up (75 msgs) | 150 ⭐ | ~$2.25–3.00 | ~$1.35–2.10 after fees |
-
-These are starting points — Telegram Stars is a new market and users have limited price reference. Start slightly lower than you think is right; you can raise prices after you see what converts.
-
-> **Note:** the minimum invoice amount is 1 XTR. Telegram may impose a minimum higher than this in practice — test with 1 XTR to confirm.
+**Top-up path (both methods):**
+- [ ] `/topup` shows three pack options
+- [ ] Buying medium pack increments `topup_credits` by 40
+- [ ] Limit-hit message shows the "buy more" button and it opens `/topup`
 
 ---
 
-#### Step 4 — How you get paid (the full chain)
+#### Step 3 — How Stars payouts work
 
-Stars do not deposit to a bank account directly. The path is:
+Stars do not go to your bank directly. The chain is:
 
 ```
-Stars in Karly → Fragment.com → TON (cryptocurrency) → Exchange → USD/EUR → Bank
+250 Stars charged → Fragment.com → TON (crypto) → Exchange → USD/EUR → Bank
 ```
 
-**Step by step:**
+1. Stars accumulate in your bot balance (`@BotFather` → Payments shows the balance)
+2. Go to [fragment.com](https://fragment.com), connect your Telegram account, withdraw Stars as TON — Telegram takes ~30% here
+3. Sell TON on any exchange that lists it (Binance, OKX, Kraken) → withdraw USD/EUR
+4. Bank transfer — 1–3 business days
 
-1. **Accumulate Stars.** They sit in your bot's Stars balance, visible at `@BotFather` → Payments, or via the Telegram API.
-2. **Withdraw to TON via Fragment.** Go to [fragment.com](https://fragment.com) and connect your Telegram account. Convert your Stars balance to TON (Toncoin) — this is where Telegram takes its cut.
-3. **Sell TON for fiat.** Use any crypto exchange that lists TON: Binance, OKX, or Kraken. Withdraw USD/EUR to your bank.
-4. **Bank transfer.** Standard wire or SEPA, depending on your exchange and country.
-
-Timeline: Fragment withdrawal is near-instant; exchange → bank is 1–3 business days.
+Stripe deposits directly to your bank account on a 2-day rolling basis. No crypto involved.
 
 ---
 
-#### Step 5 — How much you lose (the fee breakdown)
+#### Step 4 — Refund policy to communicate to students
 
-This is the honest math. Three layers of fees eat into your revenue:
-
-| Layer | Who takes it | Rate | Notes |
-|-------|-------------|------|-------|
-| **Platform cut** | Apple (iOS) or Google (Android) | ~30% | Taken when the *user* buys Stars, before you ever see them. Desktop/web purchases avoid this — the same 100 Stars costs less to produce. You can't control this. |
-| **Telegram commission** | Telegram (via Fragment) | ~30% | Taken when you convert your Stars to TON. This is Telegram's revenue. |
-| **Exchange + withdrawal** | Crypto exchange + bank | ~1–3% | Varies by exchange and withdrawal method. |
-
-**Effective take rate — what lands in your bank per 100 Stars charged:**
-
-| User buys on | Stars charged | Platform cut | Telegram cut (30% of remainder) | Exchange fees | You receive |
-|---|---|---|---|---|---|
-| iOS / Android | 100 ⭐ | ~30 ⭐ | ~21 ⭐ (30% of 70) | ~1 ⭐ | **~48 ⭐ worth (~48%)** |
-| Desktop / web | 100 ⭐ | 0 ⭐ | ~30 ⭐ | ~1 ⭐ | **~69 ⭐ worth (~69%)** |
-
-In dollar terms, if you charge 200 Stars (~$3.00 user cost on iOS):
-- iOS user: you receive roughly **$1.44** (~48%)
-- Desktop user: you receive roughly **$2.07** (~69%)
-
-Most of your students will be on mobile, so **budget on ~50% effective rate** — for every $3 a student pays, about $1.50 reaches your bank.
-
-**This is not unusual.** The App Store / Play Store 30% cut applies to all digital subscriptions sold through apps (Spotify, Duolingo, every language app). Telegram's additional 30% is higher than typical payment processors (~3%) but buys you the frictionless in-app checkout — no credit card, no signup, no failed payments.
-
----
-
-#### Step 6 — What to decide before going live
-
-| Question | Recommendation |
-|---|---|
-| What price for the subscription? | Start at 200 ⭐/month (~$3 for the student, ~$1.50 to you). Raise to 300 ⭐ if conversion is strong. |
-| What price for top-ups? | Small 30 ⭐, Medium 75 ⭐, Large 150 ⭐. Middle pack is best value — most buyers will pick it. |
-| Free tier limit? | 10 messages/session, 40/week. Enough to try the bot seriously; not enough for daily study. |
-| Currency? | `XTR` (Stars) — hardcoded by Telegram for the Stars system. You cannot use USD or EUR. |
-| Refund policy? | You cannot refund Stars yourself — Telegram handles disputes. State this clearly in `/subscribe`. |
-| Minimum viable test? | One paying subscriber (yourself) completing the full flow before showing it to students. |
+- **Stripe:** you can issue refunds from the Stripe dashboard within 30 days
+- **Stars:** you cannot refund Stars yourself — Telegram handles disputes
+- State this clearly in the `/subscribe` message so there are no surprises
 
 ---
 
