@@ -22,6 +22,7 @@ from bot.handlers import (
     conversation,
     course,
     daily,
+    leveltest,
     documents,
     drill,
     export,
@@ -117,8 +118,10 @@ def build_application() -> Application:
         CallbackQueryHandler(classroom.on_placement_level_pick, pattern=r"^placement_level:")
     )
 
-    # Course handlers (H3/H4) — registered before the catch-all text handler.
+    # Course handlers (H3/H4/H5) — registered before the catch-all text handler.
     for handler in course.build_handlers():
+        app.add_handler(handler)
+    for handler in leveltest.build_handlers():
         app.add_handler(handler)
 
     # Conversation flows (registered before the catch-all handler).
@@ -204,6 +207,8 @@ def build_application() -> Application:
 # omitted. Order is static for now; usage-sorted ordering is future work.
 MENU_COMMANDS = [
     BotCommand("course", "📚 English course — lesson + exercises"),
+    BotCommand("browse", "Browse all course units"),
+    BotCommand("leveltest", "Test yourself on an entire level"),
     BotCommand("practice", "Vokabeln üben (Spaced Repetition)"),
     BotCommand("flashcards", "Karteikarten üben (wie /practice)"),
     BotCommand("daily", "Tägliche Mini-Challenge (3 Aufgaben)"),

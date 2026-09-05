@@ -220,3 +220,639 @@
   - type: produce
     n: 2
   spine_hash: sha256:510e31937473c198
+- id: en.a1.g06
+  kind: grammar
+  level: A1
+  order: 6
+  title_target: Present continuous
+  title_l1: Presente continuo
+  can_do: I can say what is happening right now.
+  prereqs:
+  - en.a1.g03
+  skill: grammar
+  explain:
+  - Use the present continuous for actions happening right now, at this moment.
+  - 'Form: subject + am/is/are + verb-ing. I am working. She is reading.'
+  - 'Spelling: most verbs just add -ing (work → working, study → studying).'
+  - 'Drop silent -e before adding -ing: write → writing, come → coming.'
+  - 'Double the final consonant for short stressed verbs: sit → sitting, run → running.'
+  - 'Negative: am/is/are + not + -ing. He isn''t sleeping.'
+  - 'Question: move am/is/are before the subject. Are you listening?'
+  - 'Time markers: now, at the moment, right now, today, this week.'
+  examples:
+  - target: I'm studying English right now.
+    gloss: Estoy estudiando inglés ahora mismo.
+  - target: She isn't watching TV — she's reading.
+    gloss: No está viendo la televisión, está leyendo.
+  - target: What are you doing at the moment?
+    gloss: ¿Qué estás haciendo en este momento?
+  pitfalls:
+  - Spanish uses the present simple more broadly; English uses the continuous for
+    right-now actions.
+  - 'Some verbs rarely take -ing: know, want, like, love, need, understand. Say ''I
+    know'' not ''I am knowing''.'
+  - 'Don''t forget the auxiliary: ''She reading'' is wrong — ''She is reading''.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:4e6256a71a5e7580
+- id: en.a1.g07
+  kind: grammar
+  level: A1
+  order: 7
+  title_target: There is / There are
+  title_l1: Hay — there is / there are
+  can_do: I can describe a place and say what is in it.
+  prereqs:
+  - en.a1.g05
+  skill: grammar
+  explain:
+  - '''There is'' describes one thing; ''There are'' describes two or more.'
+  - There is a cat on the sofa. There are three books on the table.
+  - 'Negative: There isn''t a cat. / There aren''t any chairs.'
+  - 'Question: Is there a bank near here? / Are there any students?'
+  - '''Any'' is used in negatives and questions with countable plurals: Are there
+    any questions?'
+  - '''Some'' is used in affirmative sentences: There are some apples.'
+  - Both Spanish 'hay' and English 'there is/are' introduce new information.
+  examples:
+  - target: There's a supermarket on this street.
+    gloss: Hay un supermercado en esta calle.
+  - target: There aren't any chairs in the room.
+    gloss: No hay sillas en la habitación.
+  - target: Is there a bus stop near here? — Yes, there is.
+    gloss: ¿Hay una parada de autobús cerca? — Sí.
+  pitfalls:
+  - Spanish 'hay' works for both singular and plural; English requires is/are to match
+    the noun.
+  - Don't confuse 'There is' (existence) with 'It is' (description of something already
+    known).
+  - In fast speech 'There is' contracts to 'There's', but 'There are' rarely contracts
+    in writing.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:578924377f7c821d
+- id: en.a1.g08
+  kind: grammar
+  level: A1
+  order: 8
+  title_target: Have got / have
+  title_l1: Tener — have got / have
+  can_do: I can talk about what I own and what I possess.
+  prereqs:
+  - en.a1.g03
+  skill: grammar
+  explain:
+  - '''Have got'' and ''have'' both mean tener. ''Have got'' is more common in spoken
+    British English.'
+  - 'Affirmative: I have got / I''ve got a car. OR I have a car.'
+  - 'Negative: I haven''t got a car. / I don''t have a car.'
+  - 'Question: Have you got a pen? / Do you have a pen?'
+  - 'With he/she/it: She has got / She''s got a dog. / She has a dog.'
+  - 'Negative (he/she/it): She hasn''t got / She doesn''t have.'
+  - 'Never mix the two: say ''Have you got?'' OR ''Do you have?'' — not ''Do you have
+    got?'''
+  examples:
+  - target: I've got two sisters and a brother.
+    gloss: Tengo dos hermanas y un hermano.
+  - target: He hasn't got a car — he takes the bus.
+    gloss: No tiene carro, toma el autobús.
+  - target: Do you have the time? — Yes, it's three o'clock.
+    gloss: ¿Tienes la hora? — Sí, son las tres.
+  pitfalls:
+  - 'Spanish ''tener'' = English ''have/have got''. Don''t translate as ''to be'':
+    ''I am hungry'' not ''I have hunger''.'
+  - '''Have got'' doesn''t have a past tense — use ''had'': ''Yesterday I had a cold'',
+    not ''I had got''.'
+  - 'In questions: ''Have you got?'' (British) and ''Do you have?'' (American/International)
+    are both correct.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:ddb850971709ae15
+- id: en.a1.g09
+  kind: grammar
+  level: A1
+  order: 9
+  title_target: Can / can't — ability and permission
+  title_l1: Can / can't — habilidad y permiso
+  can_do: I can say what I am able to do and ask for permission.
+  prereqs:
+  - en.a1.g01
+  skill: grammar
+  explain:
+  - '''Can'' expresses ability (being able to do something) and permission (being
+    allowed to).'
+  - 'Form: subject + can + base verb (no -s, no to). She can swim. NOT She cans swim.'
+  - 'Negative: can''t (cannot). I can''t drive. He can''t come today.'
+  - 'Question: Can you cook? — Yes, I can. / No, I can''t.'
+  - 'Permission: Can I open the window? — Yes, of course. / Sorry, you can''t.'
+  - 'There is no do/does in can sentences: ''Does she can?'' is wrong — ''Can she?'''
+  examples:
+  - target: I can speak Spanish and English.
+    gloss: Puedo hablar español e inglés.
+  - target: She can't drive — she's only sixteen.
+    gloss: No puede manejar, solo tiene dieciséis años.
+  - target: Can I use your phone? — Sure!
+    gloss: ¿Puedo usar tu teléfono? — ¡Claro!
+  pitfalls:
+  - 'Never add -s: ''She can'', not ''She cans''. Modal verbs have no third-person
+    ending.'
+  - 'Never add ''to'': ''I can swim'', not ''I can to swim''.'
+  - 'Ability past tense: ''could''. Permission past (story): ''could'' or ''was allowed
+    to''.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:5fd24f6d71bda63b
+- id: en.a1.g10
+  kind: grammar
+  level: A1
+  order: 10
+  title_target: Object pronouns
+  title_l1: Pronombres de objeto
+  can_do: I can refer to people and things without repeating their name.
+  prereqs:
+  - en.a1.g01
+  skill: grammar
+  explain:
+  - 'Object pronouns replace nouns that receive the action: me, you, him, her, it,
+    us, them.'
+  - 'Subject → Object: I → me, he → him, she → her, we → us, they → them.'
+  - '''You'' and ''it'' are the same as subject forms.'
+  - 'Object pronouns come after verbs: I like her. She called me. Can you help us?'
+  - 'They also come after prepositions: This is for you. He sat next to her. Come
+    with us.'
+  - 'Spanish speakers: ''him'' and ''her'' are the same word ''lo/la'' in Spanish
+    but different in English.'
+  examples:
+  - target: I called her but she didn't answer me.
+    gloss: La llamé pero no me contestó.
+  - target: This gift is for them — please give it to them.
+    gloss: Este regalo es para ellos, por favor dáselo.
+  - target: Can you help us? We don't understand it.
+    gloss: ¿Nos pueden ayudar? No lo entendemos.
+  pitfalls:
+  - 'After ''between'': always use object pronouns. ''Between you and me'' (not ''between
+    you and I'').'
+  - 'Don''t use subject pronouns after verbs: ''Call he'' is wrong — ''Call him''.'
+  - '''Him'' = male person; ''her'' = female person; ''it'' = thing or animal (usually).
+    Don''t mix them up.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:915151d05c39d9ce
+- id: en.a1.g11
+  kind: grammar
+  level: A1
+  order: 11
+  title_target: 'Possessives: adjectives and ''s'
+  title_l1: 'Posesivos: adjetivos y apóstrofo s'
+  can_do: I can say who things belong to.
+  prereqs:
+  - en.a1.g10
+  skill: grammar
+  explain:
+  - 'Possessive adjectives show belonging: my, your, his, her, its, our, their.'
+  - 'They come before a noun and never change: my book, my books (not mys books).'
+  - 'Possessive ''s: add apostrophe + s to a name or noun. María''s bag. The teacher''s
+    desk.'
+  - 'If the noun ends in -s, add just the apostrophe or ''s: James'' car OR James''s
+    car.'
+  - 'Don''t confuse ''its'' (possessive) and ''it''s'' (it is): The cat licked its
+    paw. It''s cold today.'
+  - '''Whose'' asks about possession: Whose bag is this? — It''s mine.'
+  - 'Independent possessives (no noun): mine, yours, his, hers, ours, theirs.'
+  examples:
+  - target: This is my phone. Is that yours?
+    gloss: Este es mi teléfono. ¿Es el tuyo?
+  - target: Pedro's sister is a doctor.
+    gloss: La hermana de Pedro es médica.
+  - target: The dog wagged its tail.
+    gloss: El perro movió la cola.
+  pitfalls:
+  - 'Its (possessive) vs it''s (it is): the apostrophe REMOVES a letter, it doesn''t
+    show possession.'
+  - 'Their / there / they''re — three different words: their (possessive), there (place),
+    they''re (they are).'
+  - 'Don''t add a noun after mine/yours/his/hers: ''It''s mine'' not ''It''s my''
+    or ''It''s mine book''.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:7880b60e681b74e9
+- id: en.a1.g12
+  kind: grammar
+  level: A1
+  order: 12
+  title_target: Prepositions of place
+  title_l1: Preposiciones de lugar
+  can_do: I can describe where things are.
+  prereqs:
+  - en.a1.g07
+  skill: grammar
+  explain:
+  - 'in — inside a space: in the box, in the bag, in the room, in Spain.'
+  - 'on — on a surface: on the table, on the wall, on the floor, on the bus.'
+  - 'at — at a specific point or place: at the bus stop, at school, at home, at work.'
+  - 'next to / beside — touching or very close: next to the door.'
+  - 'between — in the middle of two things: between the bank and the café.'
+  - 'in front of / behind: the park is in front of the hotel. The car is behind the
+    house.'
+  - above / below / under / over are also common at A1.
+  examples:
+  - target: My keys are on the table, next to the phone.
+    gloss: Mis llaves están sobre la mesa, al lado del teléfono.
+  - target: The school is between the park and the supermarket.
+    gloss: La escuela está entre el parque y el supermercado.
+  - target: She's at home — not at work today.
+    gloss: Está en casa, no en el trabajo hoy.
+  pitfalls:
+  - Spanish uses 'en' for in/on/at; English uses three different prepositions depending
+    on context.
+  - '''In'' for enclosed spaces and countries/cities; ''on'' for surfaces and transport
+    (on the bus).'
+  - '''At'' for specific points or institutions: at school, at the station, at the
+    corner.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:7021230693ee678e
+- id: en.a1.g13
+  kind: grammar
+  level: A1
+  order: 13
+  title_target: Prepositions of time
+  title_l1: Preposiciones de tiempo
+  can_do: I can say when things happen.
+  prereqs:
+  - en.a1.g04
+  skill: grammar
+  explain:
+  - 'at — for clock times and fixed points: at 8 o''clock, at noon, at night, at the
+    weekend.'
+  - 'in — for months, years, seasons, and parts of the day: in July, in 2020, in the
+    morning.'
+  - 'on — for days and dates: on Monday, on my birthday, on 15th March.'
+  - 'A simple rule: at (clock) → in (longer period) → on (specific day).'
+  - 'No preposition with ''last'', ''next'', ''this'', ''every'': last week, next
+    Monday, every day.'
+  - 'For / since: for + duration (for two hours); since + start point (since 9 o''clock).'
+  examples:
+  - target: The class starts at nine on Monday mornings.
+    gloss: La clase empieza a las nueve los lunes por la mañana.
+  - target: She was born in July, in 1998.
+    gloss: Nació en julio de 1998.
+  - target: I'll see you next Friday — not this week.
+    gloss: Te veo el próximo viernes, no esta semana.
+  pitfalls:
+  - Spanish uses 'el lunes / los lunes' but English uses 'on Monday' or 'on Mondays'.
+  - 'No preposition before ''last/next/this/every'': ''on next Monday'' is wrong —
+    just ''next Monday''.'
+  - '''In the morning'' but ''at night'' — English is inconsistent here. Both must
+    be memorised.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:5f83dee40fbc62af
+- id: en.a1.g14
+  kind: grammar
+  level: A1
+  order: 14
+  title_target: Adverbs of frequency
+  title_l1: Adverbios de frecuencia
+  can_do: I can say how often I do things.
+  prereqs:
+  - en.a1.g03
+  skill: grammar
+  explain:
+  - 'Adverbs of frequency: always (100%), usually, often, sometimes, rarely, never
+    (0%).'
+  - 'Position: they go BEFORE the main verb. I always eat breakfast. She never drinks
+    coffee.'
+  - 'Exception: with ''to be'', adverbs of frequency go AFTER the verb. He is always
+    late.'
+  - 'You can also use: every day, once a week, twice a month, three times a year —
+    at the end.'
+  - '''How often?'' asks about frequency. ''How often do you exercise? — Three times
+    a week.'''
+  examples:
+  - target: I usually wake up at seven, but on Sundays I always sleep late.
+    gloss: Normalmente me despierto a las siete, pero los domingos siempre duermo
+      hasta tarde.
+  - target: She is rarely late for class.
+    gloss: Rara vez llega tarde a clase.
+  - target: How often do you visit your family? — Once a month.
+    gloss: ¿Con qué frecuencia visitas a tu familia? — Una vez al mes.
+  pitfalls:
+  - 'Don''t put the adverb at the end with main verbs: ''I eat always breakfast''
+    is wrong.'
+  - 'With ''to be'' the adverb comes after: ''He is always tired'', not ''He always
+    is tired''.'
+  - '''Rarely'' and ''seldom'' are already negative — don''t add ''not'': ''She rarely
+    doesn''t come'' is wrong.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:29eb10369e3f41ad
+- id: en.a1.g15
+  kind: grammar
+  level: A1
+  order: 15
+  title_target: Imperatives
+  title_l1: Imperativos
+  can_do: I can give instructions and directions.
+  prereqs:
+  - en.a1.g03
+  skill: grammar
+  explain:
+  - Imperatives give orders, instructions, directions, or advice.
+  - 'Form: just use the base verb — no subject. Open the door. Sit down. Be quiet.'
+  - 'Negative: Don''t + base verb. Don''t run. Don''t be late.'
+  - 'Polite forms: add ''please'' at the start or end. Please sit down. / Sit down,
+    please.'
+  - 'Inclusive ''Let''s'': Let''s go! Let''s eat! — invites the speaker too.'
+  - 'Negative Let''s: Let''s not be late.'
+  examples:
+  - target: Turn left at the traffic light, then go straight on.
+    gloss: Gira a la izquierda en el semáforo, luego sigue recto.
+  - target: Don't touch that — it's hot!
+    gloss: ¡No toques eso, está caliente!
+  - target: Let's take a break — we've been studying for two hours.
+    gloss: Tomemos un descanso, llevamos dos horas estudiando.
+  pitfalls:
+  - Spanish imperatives change form for tú/usted/ustedes; English has only one form
+    for everyone.
+  - 'Don''t add a subject: ''You open the door'' is a statement; ''Open the door''
+    is an order.'
+  - '''Let''s'' = ''Let us'' — it always includes the speaker. For someone else: ''Let
+    him go.'''
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:3ed6d1c1c3df87b6
+- id: en.a1.g16
+  kind: grammar
+  level: A1
+  order: 16
+  title_target: Past simple — to be (was / were)
+  title_l1: Pasado simple — to be (was / were)
+  can_do: I can talk about the past state of people and things.
+  prereqs:
+  - en.a1.g01
+  skill: grammar
+  explain:
+  - 'Past of ''to be'': was (I / he / she / it) and were (you / we / they).'
+  - 'Affirmative: I was tired. She was at home. They were happy.'
+  - 'Negative: I wasn''t hungry. We weren''t late. (was not / were not)'
+  - 'Question: Was he at school? Were you there? — Yes, I was. / No, we weren''t.'
+  - 'Time markers for past: yesterday, last night, last week, in 2020, ago.'
+  examples:
+  - target: I was born in 1995 in Santiago.
+    gloss: Nací en 1995 en Santiago.
+  - target: The film wasn't very good — it was boring.
+    gloss: La película no fue muy buena, fue aburrida.
+  - target: Were you and Carlos at the party? — Yes, we were.
+    gloss: ¿Tú y Carlos estuvieron en la fiesta? — Sí.
+  pitfalls:
+  - '''Was'' is only for I/he/she/it. A common error: ''They was late'' — should be
+    ''They were late''.'
+  - 'Question word order: ''Was he…?'' not ''He was…?'' with a question mark.'
+  - Spanish uses 'era/estuvo' for was/were; English just uses was/were for both ser
+    and estar.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:7548a6ae10f1b49b
+- id: en.a1.g17
+  kind: grammar
+  level: A1
+  order: 17
+  title_target: Past simple — regular verbs
+  title_l1: Pasado simple — verbos regulares
+  can_do: I can tell a simple story about the past.
+  prereqs:
+  - en.a1.g16
+  skill: grammar
+  explain:
+  - 'Regular past tense: add -ed to the base verb. work → worked. play → played.'
+  - 'Spelling rules: silent -e → just add -d (live → lived). Consonant + y → -ied
+    (study → studied).'
+  - 'Double the final consonant for short stressed CVC verbs: stop → stopped, plan
+    → planned.'
+  - 'Negative: didn''t + base verb. She didn''t work yesterday. (NOT didn''t worked)'
+  - 'Question: Did + subject + base verb. Did you call him? — Yes, I did. / No, I
+    didn''t.'
+  - All persons use the same -ed form — no third-person -s in the past.
+  examples:
+  - target: I worked all morning and finished the report.
+    gloss: Trabajé toda la mañana y terminé el informe.
+  - target: She didn't study last night — she watched a film.
+    gloss: No estudió anoche, vio una película.
+  - target: Did they arrive on time? — Yes, they arrived at nine.
+    gloss: ¿Llegaron a tiempo? — Sí, llegaron a las nueve.
+  pitfalls:
+  - 'After ''didn''t'' the verb must be in base form: ''She didn''t worked'' is wrong.'
+  - 'No ''s'' in past questions: ''Did she works?'' is wrong — ''Did she work?'''
+  - '-ed is not always pronounced the same: worked = /t/, played = /d/, wanted = /ɪd/.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:9f8203194c46a86e
+- id: en.a1.g18
+  kind: grammar
+  level: A1
+  order: 18
+  title_target: Past simple — common irregular verbs
+  title_l1: Pasado simple — verbos irregulares comunes
+  can_do: I can talk about past events using common irregular verbs.
+  prereqs:
+  - en.a1.g17
+  skill: grammar
+  explain:
+  - Irregular verbs don't add -ed. Each one has its own past form to memorise.
+  - 'Essential A1 irregulars: go → went, have → had, do → did, say → said, get → got.'
+  - 'More: come → came, see → saw, know → knew, give → gave, take → took, eat → ate.'
+  - 'These forms are only for affirmative: She went home. They had lunch.'
+  - In negatives and questions, use 'didn't/did' + base form (as with regular verbs).
+  - She didn't go. (NOT didn't went) / Did you see it? (NOT Did you saw it?)
+  examples:
+  - target: We went to the beach and had a great time.
+    gloss: Fuimos a la playa y lo pasamos muy bien.
+  - target: I didn't see him — did you?
+    gloss: Yo no lo vi, ¿tú sí?
+  - target: She gave me her number but I lost it.
+    gloss: Me dio su número pero lo perdí.
+  pitfalls:
+  - 'Never use the past form after ''didn''t'': ''I didn''t went'' is wrong — ''I
+    didn''t go''.'
+  - '''Did you saw?'' is wrong — ''Did you see?'' The question auxiliary carries the
+    tense.'
+  - The past form is only for affirmatives. Memorise affirmatives, then negatives/questions
+    follow the rule.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:70123fb8d4566726
+- id: en.a1.g19
+  kind: grammar
+  level: A1
+  order: 19
+  title_target: Like / love / hate + -ing
+  title_l1: Like / love / hate + infinitivo o gerundio
+  can_do: I can say what activities I enjoy or dislike.
+  prereqs:
+  - en.a1.g03
+  skill: grammar
+  explain:
+  - After 'like', 'love', 'hate', 'enjoy', and 'don't mind', use the -ing form of
+    a verb.
+  - I like reading. She loves dancing. He hates waiting.
+  - You can also use 'like + to + infinitive' for habit/preference, but -ing is more
+    common.
+  - 'Negative: I don''t like cooking. She doesn''t enjoy travelling.'
+  - 'Question: Do you like swimming? — Yes, I love it. / No, I can''t stand it.'
+  - '''Can''t stand'' and ''don''t mind'' also take -ing: I can''t stand waiting.
+    I don''t mind helping.'
+  examples:
+  - target: I love watching films but I hate cleaning the house.
+    gloss: Me encanta ver películas pero odio limpiar la casa.
+  - target: Does she enjoy cooking? — Yes, she loves it.
+    gloss: ¿Le gusta cocinar? — Sí, le encanta.
+  - target: I don't mind working late if it's necessary.
+    gloss: No me importa trabajar hasta tarde si es necesario.
+  pitfalls:
+  - 'Spanish often uses the infinitive after gustar/amar: ''Me gusta estudiar'' →
+    English needs -ing: ''I like studying''.'
+  - 'Don''t use the base verb: ''I like swim'' is wrong — ''I like swimming''.'
+  - '''Enjoy'' always takes -ing; ''enjoy to swim'' is wrong in standard English.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:ee77de3efe2c44df
+- id: en.a1.g20
+  kind: grammar
+  level: A1
+  order: 20
+  title_target: 'Countable and uncountable nouns: some, any, much, many'
+  title_l1: 'Sustantivos contables e incontables: some, any, much, many'
+  can_do: I can talk about quantities of things.
+  prereqs:
+  - en.a1.g05
+  skill: grammar
+  explain:
+  - 'Countable nouns have a plural: an apple / apples, a chair / chairs.'
+  - 'Uncountable nouns have no plural and need no article: water, money, rice, information,
+    advice.'
+  - '''Some'' (affirmative) and ''any'' (negatives and questions) work for both types.'
+  - 'For countable plurals: many, not many, a lot of. How many students are there?'
+  - 'For uncountable: much, not much, a lot of. How much water do you drink?'
+  - '''A few'' = a small number (countable). ''A little'' = a small amount (uncountable).'
+  examples:
+  - target: There's some milk in the fridge but there isn't any bread.
+    gloss: Hay leche en el refrigerador pero no hay pan.
+  - target: How many students are in your class? — About twenty.
+    gloss: ¿Cuántos estudiantes hay en tu clase? — Unos veinte.
+  - target: I have a little money but not much time.
+    gloss: Tengo algo de dinero pero no mucho tiempo.
+  pitfalls:
+  - Spanish 'información' is countable; English 'information' is not. No 'informations'.
+  - Use 'how many' with countable, 'how much' with uncountable — mixing them sounds
+    very wrong.
+  - '''Some'' in questions makes an offer or request: ''Would you like some coffee?''
+    sounds polite; ''Do you have any coffee?'' is a neutral question.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:7c33c03b73b60816
