@@ -1,0 +1,17 @@
+[Unit]
+Description=Karly — English tutor Telegram bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Karly
+# EnvironmentFile sets vars before Python starts; dotenv won't overwrite them.
+EnvironmentFile=%h/Karly/.env.english
+ExecStart=%h/Karly/.venv/bin/python -m bot.main
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+
+[Install]
+WantedBy=default.target

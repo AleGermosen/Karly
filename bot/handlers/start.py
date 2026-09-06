@@ -184,6 +184,24 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         en = getattr(user, "learning_mode", "german") == "english"
         await update.effective_message.reply_text(WELCOME_ENGLISH if en else WELCOME_GERMAN)
         return
+    # If the bot is locked to a language, skip the picker and auto-assign.
+    if config.BOT_LANGUAGE in ("german", "english"):
+        if user is None:
+            return
+        set_learning_mode(user.id, config.BOT_LANGUAGE)
+        set_language_chosen(user.id)
+        if config.BOT_LANGUAGE == "english":
+            welcome = WELCOME_ENGLISH + (
+                "\n\n👉 *Start here:* do /test to find your level, "
+                "then just write to me in English!"
+            )
+        else:
+            welcome = WELCOME_GERMAN + (
+                "\n\n👉 *Start here:* do /test to find your level, "
+                "then just write to me in German!"
+            )
+        await update.effective_message.reply_text(welcome)
+        return
     await update.effective_message.reply_text(LANGUAGE_PICKER, reply_markup=_PICKER_KB)
 
 
@@ -263,6 +281,16 @@ async def language_pick(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 @require_auth
 async def language_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/language — show the language picker to switch modes."""
+    if config.BOT_LANGUAGE == "english":
+        await update.effective_message.reply_text(
+            "This bot is dedicated to English. Use the German bot to learn German."
+        )
+        return
+    if config.BOT_LANGUAGE == "german":
+        await update.effective_message.reply_text(
+            "Dieser Bot ist auf Deutsch festgelegt. Benutze den Englisch-Bot für Englisch."
+        )
+        return
     await update.effective_message.reply_text(LANGUAGE_PICKER, reply_markup=_PICKER_KB)
 
 

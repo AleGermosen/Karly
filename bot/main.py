@@ -208,10 +208,10 @@ def build_application() -> Application:
 # The native Telegram command menu (the ≡ button), curated and ordered by
 # expected frequency. Debug commands (/status, /backend) are intentionally
 # omitted. Order is static for now; usage-sorted ordering is future work.
-MENU_COMMANDS = [
-    BotCommand("course", "📚 English course — lesson + exercises"),
-    BotCommand("browse", "Browse all course units"),
-    BotCommand("leveltest", "Test yourself on an entire level"),
+MENU_COMMANDS_GERMAN = [
+    BotCommand("course", "📚 Englisch-Kurs — Lektion + Übungen"),
+    BotCommand("browse", "Alle Kurseinheiten durchsuchen"),
+    BotCommand("leveltest", "Ganzes Level testen"),
     BotCommand("practice", "Vokabeln üben (Spaced Repetition)"),
     BotCommand("flashcards", "Karteikarten üben (wie /practice)"),
     BotCommand("daily", "Tägliche Mini-Challenge (3 Aufgaben)"),
@@ -236,6 +236,39 @@ MENU_COMMANDS = [
     BotCommand("start", "Willkommen / neu starten"),
     BotCommand("help", "Alle Befehle anzeigen"),
 ]
+
+MENU_COMMANDS_ENGLISH = [
+    BotCommand("course", "📚 English course — lesson + exercises"),
+    BotCommand("browse", "Browse all course units"),
+    BotCommand("leveltest", "Test yourself on an entire level"),
+    BotCommand("practice", "Vocabulary flashcards (Spaced Repetition)"),
+    BotCommand("flashcards", "Flashcard practice (same as /practice)"),
+    BotCommand("daily", "Daily challenge (3 short exercises)"),
+    BotCommand("quiz", "Quick quiz on your weakest skills"),
+    BotCommand("drill", "Focused topic drill (10 exercises)"),
+    BotCommand("classtopic", "Show current class topic"),
+    BotCommand("roleplay", "Roleplay conversation scene"),
+    BotCommand("weekly", "Weekly progress report"),
+    BotCommand("test", "Start adaptive placement test"),
+    BotCommand("profile", "Your learning profile"),
+    BotCommand("mybudget", "Remaining credits today"),
+    BotCommand("subscribe", "Subscription (more messages)"),
+    BotCommand("topup", "Buy a message pack"),
+    BotCommand("pronounce", "Hear pronunciation as voice note"),
+    BotCommand("review", "Practice stats & streak"),
+    BotCommand("topic", "Steer conversation to a topic"),
+    BotCommand("summary", "Review your recent mistakes"),
+    BotCommand("corrections", "Corrections on/off"),
+    BotCommand("docs", "Your documents"),
+    BotCommand("remind", "Set a daily reminder"),
+    BotCommand("impostor", "🎮 Play The Impostor with friends"),
+    BotCommand("start", "Welcome / restart"),
+    BotCommand("help", "Show all commands"),
+]
+
+MENU_COMMANDS = (
+    MENU_COMMANDS_ENGLISH if config.BOT_LANGUAGE == "english" else MENU_COMMANDS_GERMAN
+)
 
 
 async def _expire_subscriptions(context) -> None:  # noqa: ANN001

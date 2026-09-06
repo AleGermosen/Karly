@@ -22,6 +22,11 @@ def _require(name: str) -> str:
 
 # --- Required ---
 TELEGRAM_BOT_TOKEN: str = _require("TELEGRAM_BOT_TOKEN")
+
+# Lock the bot to a single language ("german" or "english").
+# When set, the language picker is skipped and new users are assigned this mode.
+# Empty string means show the picker (default — both languages available).
+BOT_LANGUAGE: str = os.getenv("BOT_LANGUAGE", "").strip().lower()
 GEMINI_API_KEY: str = _require("GEMINI_API_KEY")
 
 # --- Optional ---

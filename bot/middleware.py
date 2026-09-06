@@ -104,8 +104,17 @@ def require_auth(handler: Handler) -> Handler:
                     )
                 return
 
+        # When the bot is locked to a language, auto-assign it lazily so users
+        # don't have to /start first before any command works.
+        if not db_user.language_chosen and config.BOT_LANGUAGE in ("german", "english"):
+            from db.repo import set_language_chosen, set_learning_mode
+            set_learning_mode(db_user.id, config.BOT_LANGUAGE)
+            set_language_chosen(db_user.id)
+            db_user.learning_mode = config.BOT_LANGUAGE
+            db_user.language_chosen = True
+
         # Language gate — redirect to picker until the user has chosen.
-        if not db_user.language_chosen:
+        if not db_user.language_chosen and not config.BOT_LANGUAGE:
             cmd = _command_name(update)
             if cmd not in _LANGUAGE_FREE_COMMANDS:
                 await _dismiss_button()
