@@ -98,11 +98,11 @@ async def weekly_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     )
     if en:
         stats_msg = (
-            "📊 *Informe semanal*\n\n"
-            f"Sesiones de práctica: *{sessions}*\n"
-            f"Tarjetas repasadas: *{this_t}* — Precisión: *{accuracy_line}*\n"
-            f"Racha: *{streak}* días 🔥\n\n"
-            "🧠 *Dominio de habilidades:*\n"
+            "📊 *Weekly report*\n\n"
+            f"Practice sessions: *{sessions}*\n"
+            f"Cards reviewed: *{this_t}* — Accuracy: *{accuracy_line}*\n"
+            f"Streak: *{streak}* days 🔥\n\n"
+            "🧠 *Skill mastery:*\n"
             + mastery_lines
         )
     else:
@@ -120,7 +120,7 @@ async def weekly_report(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if not corrections and this_t == 0:
         if en:
             await update.effective_message.reply_text(
-                "Todavía no hay datos esta semana. ¡Practica un poco y vuelve mañana!"
+                "No data yet this week. Practise a bit and check back tomorrow!"
             )
         else:
             await update.effective_message.reply_text(

@@ -20,6 +20,7 @@ from telegram.ext import (
 
 from bot import credits as credit_mod
 from bot.middleware import require_auth
+from bot.utils import safe_reply
 from db.repo import (
     get_user_by_telegram_id,
     latest_assessment,
@@ -74,7 +75,7 @@ async def daily_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
     if en:
         await update.effective_message.reply_text(
-            "🗓️ Reto diario — 3 ejercicios cortos. /stop para cancelar."
+            "🗓️ Daily challenge — 3 short exercises. /stop to cancel."
         )
     else:
         await update.effective_message.reply_text(
@@ -110,7 +111,7 @@ async def daily_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
             return ConversationHandler.END
         except LLMUnavailable:
             msg = (
-                "No se pudo crear el reto. Inténtalo más tarde."
+                "Couldn't create the challenge. Try again later."
                 if en else
                 "Die tägliche Challenge ließ sich nicht erstellen. Versuch es später."
             )
@@ -121,7 +122,7 @@ async def daily_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         items = [it for it in (items or []) if isinstance(it, dict) and it.get("prompt")]
         if not items:
             msg = (
-                "No se pudo crear el reto. Inténtalo más tarde."
+                "Couldn't create the challenge. Try again later."
                 if en else
                 "Die tägliche Challenge ließ sich nicht erstellen. Versuch es später."
             )
@@ -149,11 +150,11 @@ async def _ask(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     if en:
         if kind == "cloze":
-            text = f"1️⃣ Fill in the blank:\n\n{item['prompt']}\n\n(Escribe la palabra que falta.)"
+            text = f"1️⃣ Fill in the blank:\n\n{item['prompt']}\n\n(Write the missing word.)"
         elif kind == "translate":
-            text = f"2️⃣ Traduce al inglés:\n\n{item['prompt']}"
+            text = f"2️⃣ Translate to English:\n\n{item['prompt']}"
         else:
-            text = f"3️⃣ Responde en inglés:\n\n{item['prompt']}"
+            text = f"3️⃣ Answer in English:\n\n{item['prompt']}"
     else:
         if kind == "cloze":
             text = f"1️⃣ Lückentext:\n\n{item['prompt']}\n\n(Type the missing word.)"
@@ -162,7 +163,7 @@ async def _ask(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         else:
             text = f"3️⃣ Antworte auf Deutsch:\n\n{item['prompt']}"
 
-    await update.effective_message.reply_text(text)
+    await safe_reply(update.effective_message, text)
     return IN_DAILY
 
 
@@ -183,14 +184,14 @@ async def daily_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         if correct:
             context.user_data["daily_correct"] += 1
         if en:
-            mark = "✅ ¡Correcto!" if correct else f"❌ Respuesta: {solution}"
+            mark = "✅ Correct!" if correct else f"❌ Answer: {solution}"
         else:
             mark = "✅ Richtig!" if correct else f"❌ Lösung: {solution}"
         await update.effective_message.reply_text(mark)
     elif kind == "translate":
         if en:
             await update.effective_message.reply_text(
-                f"Tu respuesta: {answer}\nReferencia: {solution}"
+                f"Your answer: {answer}\nReference: {solution}"
             )
         else:
             await update.effective_message.reply_text(
@@ -198,7 +199,7 @@ async def daily_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
             )
     else:
         if en:
-            await update.effective_message.reply_text(f"Respuesta modelo: {solution}")
+            await update.effective_message.reply_text(f"Model answer: {solution}")
         else:
             await update.effective_message.reply_text(f"Beispielantwort: {solution}")
 
@@ -214,8 +215,8 @@ async def _finish(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     _clear(context)
     if en:
         await update.effective_message.reply_text(
-            f"🎉 ¡Reto completado! Rellena-huecos: {correct} correctas. "
-            f"Racha: {streak} días 🔥"
+            f"🎉 Challenge done! Fill-in-the-blank: {correct} correct. "
+            f"Streak: {streak} days 🔥"
         )
     else:
         await update.effective_message.reply_text(
@@ -229,7 +230,7 @@ async def _finish(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def daily_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     en = _en(context)
     _clear(context)
-    msg = "Reto cancelado." if en else "Challenge abgebrochen. (Daily cancelled.)"
+    msg = "Challenge cancelled." if en else "Challenge abgebrochen. (Daily cancelled.)"
     await update.effective_message.reply_text(msg)
     return ConversationHandler.END
 

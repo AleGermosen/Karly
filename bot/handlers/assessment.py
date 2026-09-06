@@ -21,6 +21,7 @@ from telegram.ext import (
 
 from bot import credits as credit_mod
 from bot.middleware import require_auth
+from bot.utils import safe_reply, safe_send
 from db.repo import get_user_by_telegram_id, save_assessment, set_correction_level, update_bkt_state
 from llm import prompts
 from llm.gemini import LLMUnavailable, QuotaExceeded
@@ -213,10 +214,10 @@ async def assess_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
     if en:
         await update.effective_message.reply_text(
-            "¡Vamos! Prueba de nivel corta (~8-12 preguntas): gramática, lectura "
-            "y escritura libre. Toca un botón para preguntas de opción múltiple, "
-            "o escribe tu respuesta para las preguntas abiertas.\n"
-            "/cancel para cancelar."
+            "Let's go! Short placement test (~8-12 questions): grammar, reading, "
+            "and free writing. Tap a button for multiple-choice questions, "
+            "or type your answer for open questions.\n"
+            "/cancel to cancel."
         )
     else:
         await update.effective_message.reply_text(
@@ -252,7 +253,7 @@ async def _serve_next(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         )
         return ConversationHandler.END
     except LLMUnavailable:
-        msg = "Algo falló. Inténtalo más tarde con /test." if en else "Da ging etwas schief bei der Einstufung. Versuch es später mit /test."
+        msg = "Something went wrong. Try again later with /test." if en else "Da ging etwas schief bei der Einstufung. Versuch es später mit /test."
         await context.bot.send_message(update.effective_chat.id, msg)
         return ConversationHandler.END
 
@@ -283,11 +284,9 @@ async def _serve_next(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         text = f"{label}\n{text}"
 
     if count >= MIN_EXCHANGES:
-        hint = "(¡Casi listo! Sigue respondiendo o usa /done para ver tu resultado.)" if en else "(Fast fertig — antworte weiter, oder /done für die Auswertung.)"
+        hint = "(Almost done! Keep answering or use /done to see your result.)" if en else "(Fast fertig — antworte weiter, oder /done für die Auswertung.)"
         await context.bot.send_message(update.effective_chat.id, hint)
-    await context.bot.send_message(
-        update.effective_chat.id, text, reply_markup=keyboard
-    )
+    await safe_send(context.bot, update.effective_chat.id, text, reply_markup=keyboard)
     return ASSESSING
 
 
@@ -328,9 +327,9 @@ async def assess_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     )
 
     if en:
-        mark = "✅ ¡Correcto!" if correct else "❌ Incorrecto."
+        mark = "✅ Correct!" if correct else "❌ Incorrect."
         if not correct and isinstance(answer_index, int) and 0 <= answer_index < len(options):
-            mark += f" Respuesta correcta: {options[answer_index]}"
+            mark += f" Correct answer: {options[answer_index]}"
     else:
         mark = "✅ Richtig!" if correct else "❌ Leider falsch."
         if not correct and isinstance(answer_index, int) and 0 <= answer_index < len(options):
@@ -366,7 +365,7 @@ async def _flush_open(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         )
         net += 1 if correct else -1
         mark = "✅" if correct else "❌"
-        label = f"Pregunta {p['q_no']}" if en else f"Frage {p['q_no']}"
+        label = f"Question {p['q_no']}" if en else f"Frage {p['q_no']}"
         lines.append(f"{label}: {mark}" + (f" {feedback}" if feedback else ""))
 
         result_entry = results[p["result_idx"]]
@@ -413,10 +412,10 @@ async def assess_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     )
 
     if en:
-        mark = "✅ ¡Correcto!" if correct else f"❌ Respuesta: *{expected}*"
+        mark = "✅ Correct!" if correct else f"❌ Answer: *{expected}*"
     else:
         mark = "✅ Richtig!" if correct else f"❌ Lösung: *{expected}*"
-    await update.effective_message.reply_text(mark)
+    await safe_reply(update.effective_message, mark)
 
     return await _serve_next(update, context)
 
@@ -426,7 +425,7 @@ async def assess_done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     en = _is_english(context)
     transcript: list[dict] = context.user_data.get("assess_transcript", [])
     if context.user_data.get("assess_count", 0) < 3:
-        msg = "Por favor responde unas preguntas más primero." if en else "Beantworte bitte noch ein paar Fragen zuerst. (A few more first.)"
+        msg = "Please answer a few more questions first." if en else "Beantworte bitte noch ein paar Fragen zuerst. (A few more first.)"
         await update.effective_message.reply_text(msg)
         return ASSESSING
     return await _finish(update, context, transcript)
@@ -436,7 +435,7 @@ async def _finish(
     update: Update, context: ContextTypes.DEFAULT_TYPE, transcript: list[dict]
 ) -> int:
     en = _is_english(context)
-    msg = "¡Gracias! Evaluando tus respuestas…" if en else "Danke! Ich werte deine Antworten aus… (Scoring your answers…)"
+    msg = "Thanks! Scoring your answers…" if en else "Danke! Ich werte deine Antworten aus… (Scoring your answers…)"
     await update.effective_message.reply_text(msg)
     await _flush_open(update, context)
     prompt = (
@@ -451,11 +450,11 @@ async def _finish(
             Task.assess, prompt, system=_verdict_prompt(context)
         )
     except QuotaExceeded:
-        msg = "Límite alcanzado — inténtalo más tarde. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏"
+        msg = "Limit reached — try again later. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏"
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
     except LLMUnavailable:
-        msg = "Algo falló. Inténtalo más tarde." if en else "Da ging etwas schief bei der Einstufung. Versuch es später mit /test."
+        msg = "Something went wrong. Try again later." if en else "Da ging etwas schief bei der Einstufung. Versuch es später mit /test."
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
@@ -475,8 +474,8 @@ async def _finish(
         if user:
             save_assessment(user.id, {"overall": None, "gaps": []}, transcript)
         msg = (
-            "Pude evaluar tus respuestas pero no formatear el resultado. "
-            "Tu progreso fue guardado. Intenta /profile más tarde."
+            "I could score your answers but couldn't format the result. "
+            "Your progress was saved. Try /profile later."
             if en else
             "Ich konnte deine Antworten auswerten, aber das Ergebnis nicht formatieren. "
             "Dein Fortschritt wurde gespeichert. Schau später in /profile nach."
@@ -495,9 +494,9 @@ async def _finish(
     message = _format_verdict(verdict, en)
     breakdown = _scored_breakdown(scores, en)
     if breakdown:
-        label = "\nTus preguntas de opción múltiple (auto-calificadas):\n" if en else "\nDeine Auswahlfragen (auto-scored):\n"
+        label = "\nYour multiple-choice questions (auto-scored):\n" if en else "\nDeine Auswahlfragen (auto-scored):\n"
         message += label + breakdown
-    await update.effective_message.reply_text(message)
+    await safe_reply(update.effective_message, message)
 
     # Suggest a correction level if the user hasn't manually set one.
     if user and user.correction_level == 1:  # still at default "gentle"
@@ -543,14 +542,14 @@ def _format_verdict(v: dict, en: bool) -> str:
     gaps = v.get("gaps") or []
     gap_lines = "\n".join(f"  • {g}" for g in gaps)
     if en:
-        parts = [f"📊 *¡Prueba completada!*\n\nNivel general: *{v.get('overall', '?')}*"]
+        parts = [f"📊 *Test complete!*\n\nOverall level: *{v.get('overall', '?')}*"]
         if skill_lines:
-            parts.append("\nPor habilidad:\n" + skill_lines)
+            parts.append("\nBy skill:\n" + skill_lines)
         if gap_lines:
-            parts.append("\nÁreas a mejorar:\n" + gap_lines)
+            parts.append("\nAreas to improve:\n" + gap_lines)
         if v.get("summary"):
             parts.append("\n" + v["summary"])
-        parts.append("\nRevisa /profile. ¡Ahora practica escribiendo en inglés!")
+        parts.append("\nCheck /profile. Now practise by writing in English!")
     else:
         parts = [f"📊 *Einstufung fertig!*\n\nOverall: *{v.get('overall', '?')}*"]
         if skill_lines:
@@ -610,7 +609,7 @@ def _clear(context: ContextTypes.DEFAULT_TYPE) -> None:
 async def assess_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     en = _is_english(context)
     _clear(context)
-    msg = "Prueba cancelada." if en else "Einstufung abgebrochen. (Assessment cancelled.)"
+    msg = "Test cancelled." if en else "Einstufung abgebrochen. (Assessment cancelled.)"
     await update.effective_message.reply_text(msg)
     return ConversationHandler.END
 

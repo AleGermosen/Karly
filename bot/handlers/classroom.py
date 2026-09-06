@@ -712,7 +712,7 @@ async def classtopic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     # Student: show their class topic.
     if not user or not user.class_id:
         msg = (
-            "No estás asignado a ninguna clase todavía."
+            "You haven't been assigned to a class yet."
             if en else
             "Du bist noch keiner Klasse zugewiesen."
         )
@@ -722,7 +722,7 @@ async def classtopic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     cls = get_class_by_id(user.class_id)
     if not cls or not cls.topic:
         msg = (
-            "Tu clase no tiene tema asignado actualmente."
+            "Your class doesn't have a topic assigned yet."
             if en else
             "Deine Klasse hat noch kein Thema."
         )
@@ -730,7 +730,7 @@ async def classtopic(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         return
 
     msg = (
-        f"📌 Tema de esta semana: *{cls.topic}*\n\nUsa /drill para practicarlo."
+        f"📌 This week's topic: *{cls.topic}*\n\nUse /drill to practise it."
         if en else
         f"📌 Aktuelles Thema: *{cls.topic}*\n\nNutze /drill zum Üben."
     )
@@ -1169,15 +1169,15 @@ async def on_set_class(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         )
     else:
         welcome = (
-            f"✅ *¡Bienvenido/a a Karly, {first_name}!*\n"
-            f"Tu profesor/a te ha aprobado.{class_line}\n\n"
-            "Tus primeros pasos:\n\n"
-            "1️⃣ */test* — haz la prueba de nivel (~10 preguntas)\n"
-            "2️⃣ Escríbeme en inglés — te corrijo y explico\n"
-            "3️⃣ */practice* — practica vocabulario con tarjetas\n"
-            "4️⃣ */daily* — mini-reto diario (3 ejercicios cortos)\n\n"
-            "ℹ️ Tu profesor/a puede ver tu progreso (nivel, actividad, áreas débiles).\n\n"
-            "/help muestra todos los comandos."
+            f"✅ *Welcome to Karly, {first_name}!*\n"
+            f"Your teacher has approved you.{class_line}\n\n"
+            "Your first steps:\n\n"
+            "1️⃣ */test* — take the placement test (~10 questions)\n"
+            "2️⃣ Write to me in English — I'll correct and explain\n"
+            "3️⃣ */practice* — practise vocabulary with flashcards\n"
+            "4️⃣ */daily* — daily mini-challenge (3 short exercises)\n\n"
+            "ℹ️ Your teacher can see your progress (level, activity, weak areas).\n\n"
+            "/help shows all commands."
         )
     try:
         await context.bot.send_message(chat_id=student_user.telegram_id, text=welcome)
@@ -1386,7 +1386,7 @@ async def on_placement_pick(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if action == "start":
         set_placement_status(user_db_id, "pending")
         await query.edit_message_text(
-            "¡Perfecto! Send /test to begin." if en else "Super! Schick /test um zu beginnen."
+            "Perfect! Send /test to begin." if en else "Super! Schick /test um zu beginnen."
         )
     elif action == "later":
         context.user_data["_placement_remind"] = True

@@ -31,6 +31,7 @@ from telegram.ext import (
 )
 
 from bot.middleware import require_auth
+from bot.utils import safe_reply
 from db.repo import (
     apply_hlr_grade,
     count_due,
@@ -59,10 +60,10 @@ SESSION_LIMIT = 10
 
 # (callback_key, label_de, label_es, source_value_or_None)
 _DECKS = [
-    ("all",          "📚 Alle",      "📚 Todas",      None),
-    ("conversation", "💬 Gespräch",  "💬 Conversación", "conversation"),
-    ("document",     "📄 Dokumente", "📄 Documentos", "document"),
-    ("assessment",   "📝 Test",      "📝 Prueba",     "assessment"),
+    ("all",          "📚 Alle",      "📚 All",          None),
+    ("conversation", "💬 Gespräch",  "💬 Conversations", "conversation"),
+    ("document",     "📄 Dokumente", "📄 Documents",    "document"),
+    ("assessment",   "📝 Test",      "📝 Test",         "assessment"),
 ]
 _KEY_TO_SOURCE: dict[str, str | None] = {k: s for k, _, _, s in _DECKS}
 
@@ -74,10 +75,10 @@ _GRADE_BUTTONS_DE = [
     ("Leicht 😎", 5),
 ]
 _GRADE_BUTTONS_ES = [
-    ("Otra vez ❌", 1),
-    ("Difícil 😕",  3),
-    ("Bien 🙂",     4),
-    ("Fácil 😎",    5),
+    ("Again ❌", 1),
+    ("Hard 😕",  3),
+    ("Good 🙂",  4),
+    ("Easy 😎",  5),
 ]
 
 
@@ -173,7 +174,7 @@ async def practice_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if total_due == 0:
         if en:
             await update.effective_message.reply_text(
-                "¡Nada pendiente! 🎉 Habla conmigo en inglés o haz /test para acumular vocabulario."
+                "Nothing due! 🎉 Chat with me in English or do /test to build up vocabulary."
             )
         else:
             await update.effective_message.reply_text(
@@ -186,8 +187,8 @@ async def practice_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     kb = _deck_keyboard(by_source, total_due, en)
     if en:
         await update.effective_message.reply_text(
-            "🃏 *Flashcards* — elige un mazo y dirección:\n"
-            "(→ = EN→ES normal · ← = ES→EN invertido · /flip cambia durante la sesión.)",
+            "🃏 *Flashcards* — choose a deck and direction:\n"
+            "(→ = EN→ES forward · ← = ES→EN reversed · /flip switches direction mid-session.)",
             reply_markup=kb,
         )
     else:
@@ -217,7 +218,7 @@ async def on_deck_pick(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     en = _en(context)
     items = due_vocab(user_id, limit=SESSION_LIMIT, source=source)
     if not items:
-        msg = "Nada pendiente en este mazo." if en else "Kein Karten fällig in diesem Deck. (Nothing due here.)"
+        msg = "Nothing due in this deck." if en else "Kein Karten fällig in diesem Deck. (Nothing due here.)"
         await query.edit_message_text(msg)
         return ConversationHandler.END
 
@@ -225,8 +226,8 @@ async def on_deck_pick(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     dir_label = _direction_label(direction, en)
     if en:
         await query.edit_message_text(
-            f"🃏 {deck_label} · {dir_label} — {len(items)} tarjetas. /stop para cancelar.\n"
-            "(/flip invierte la dirección durante la sesión.)"
+            f"🃏 {deck_label} · {dir_label} — {len(items)} cards. /stop to cancel.\n"
+            "(/flip reverses direction during the session.)"
         )
     else:
         await query.edit_message_text(
@@ -249,7 +250,7 @@ async def practice_flip(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     context.user_data["practice_dir"] = new
     en = _en(context)
     if en:
-        await update.effective_message.reply_text(f"🔄 Dirección cambiada: {_direction_label(new, en)}")
+        await update.effective_message.reply_text(f"🔄 Direction changed: {_direction_label(new, en)}")
     else:
         await update.effective_message.reply_text(f"🔄 Richtung gewechselt: {_direction_label(new, en)}")
     context.user_data.pop("await", None)
@@ -263,7 +264,7 @@ async def _next_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         done = context.user_data.get("practice_done", 0)
         en = _en(context)
         _clear(context)
-        msg = f"¡Listo! {done} tarjetas practicadas. 💪" if en else f"Fertig! {done} Karten geübt. 💪 (Session done.)"
+        msg = f"Done! {done} cards practised. 💪" if en else f"Fertig! {done} Karten geübt. 💪 (Session done.)"
         await _reply(update, msg)
         return ConversationHandler.END
 
@@ -279,13 +280,13 @@ async def _next_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         if direction == "rev":
             built = _mcq_options_rev(user_id, item)
             if en:
-                question = f"🃏 ¿Cómo se dice en inglés: *{item.get('translation', '?')}*?\n"
+                question = f"🃏 How do you say in English: *{item.get('translation', '?')}*?\n"
             else:
                 question = f"🃏 Wie sagt man auf Deutsch: *{item.get('translation', '?')}*?\n"
         else:
             built = _mcq_options_fwd(user_id, item)
             if en:
-                question = f"🃏 ¿Qué significa: *{item['term']}*?\n"
+                question = f"🃏 What does *{item['term']}* mean?\n"
             else:
                 question = f"🃏 Was bedeutet: *{item['term']}*?\n"
 
@@ -311,8 +312,8 @@ async def _next_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         if direction == "rev":
             if en:
                 prompt_text = (
-                    f"🃏 ¿Cómo se dice en inglés: *{item.get('translation', '?')}*?\n"
-                    "(Recuerda la palabra en inglés, luego revela.)"
+                    f"🃏 How do you say in English: *{item.get('translation', '?')}*?\n"
+                    "(Think of the English word, then reveal.)"
                 )
             else:
                 prompt_text = (
@@ -322,15 +323,15 @@ async def _next_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         else:
             if en:
                 prompt_text = (
-                    f"🃏 ¿Qué significa: *{item['term']}*?\n"
-                    "(Recuerda el significado, luego revela.)"
+                    f"🃏 What does *{item['term']}* mean?\n"
+                    "(Think of the meaning, then reveal.)"
                 )
             else:
                 prompt_text = (
                     f"🃏 Was bedeutet: *{item['term']}*?\n"
                     "(Recall the meaning, then reveal.)"
                 )
-        reveal_label = "Mostrar respuesta 👀" if en else "Antwort zeigen 👀"
+        reveal_label = "Show answer 👀" if en else "Antwort zeigen 👀"
         kb = InlineKeyboardMarkup(
             [[InlineKeyboardButton(reveal_label, callback_data="reveal")]]
         )
@@ -342,14 +343,14 @@ async def _next_card(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             re.escape(item["term"]), "_____", item["context_sentence"], count=1
         )
         if en:
-            await _reply(update, f"✏️ Completa el espacio:\n\n{blanked}\n\n(Escribe la palabra que falta.)")
+            await _reply(update, f"✏️ Fill in the blank:\n\n{blanked}\n\n(Write the missing word.)")
         else:
             await _reply(update, f"✏️ Fülle die Lücke:\n\n{blanked}\n\n(Type the missing word.)")
 
     else:  # sentence
         context.user_data["await"] = "sentence"
         if en:
-            await _reply(update, f"🛠️ Usa *{item['term']}* en una oración propia.\n(Escribe tu oración en inglés.)")
+            await _reply(update, f"🛠️ Use *{item['term']}* in your own sentence.\n(Write your sentence in English.)")
         else:
             await _reply(update, f"🛠️ Benutze *{item['term']}* in einem eigenen Satz.\n(Use the word in your own sentence.)")
     return IN_SESSION
@@ -372,16 +373,17 @@ async def on_reveal(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         if ctx:
             text += f"\n_{ctx}_"
     else:
-        answer = item.get("translation") or ("(sin traducción guardada)" if en else "(keine Übersetzung gespeichert)")
+        answer = item.get("translation") or ("(no translation saved)" if en else "(keine Übersetzung gespeichert)")
         ctx = item.get("context_sentence")
         text = f"💡 *{item['term']}* — {answer}"
         if ctx:
             text += f"\n_{ctx}_"
 
-    how_well = "¿Qué tan bien lo sabías?" if en else "Wie gut wusstest du es?"
+    how_well = "How well did you know it?" if en else "Wie gut wusstest du es?"
     text += f"\n\n{how_well}"
     context.user_data["await"] = "grade"
-    await query.edit_message_text(text, reply_markup=_grade_keyboard(en))
+    from bot.utils import safe_edit
+    await safe_edit(query, text, reply_markup=_grade_keyboard(en))
     return IN_SESSION
 
 
@@ -402,7 +404,7 @@ async def on_mcq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     answer = item.get("term") if direction == "rev" else item.get("translation")
     en = _en(context)
     if en:
-        mark = "✅ ¡Correcto!" if correct else f"❌ Era: {answer}"
+        mark = "✅ Correct!" if correct else f"❌ It was: {answer}"
     else:
         mark = "✅ Richtig!" if correct else f"❌ Es war: {answer}"
     await query.edit_message_text(query.message.text + f"\n\n{mark}")
@@ -437,8 +439,8 @@ async def on_typed(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             item["term"].lower()
         )
         if en:
-            mark = "✅ ¡Correcto!" if correct else f"❌ Era: *{item['term']}*"
-            how_well = "¿Qué tan bien lo sabías?"
+            mark = "✅ Correct!" if correct else f"❌ It was: *{item['term']}*"
+            how_well = "How well did you know it?"
         else:
             mark = "✅ Richtig!" if correct else f"❌ Es war: *{item['term']}*"
             how_well = "Wie gut wusstest du es?"
@@ -462,7 +464,7 @@ async def on_typed(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
             system=sentence_prompt,
         )
     except QuotaExceeded:
-        msg = "Límite alcanzado — inténtalo más tarde. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏 (Gemini quota reached.)"
+        msg = "Limit reached — try again later. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏 (Gemini quota reached.)"
         await update.effective_message.reply_text(msg)
         _clear(context)
         return ConversationHandler.END
@@ -477,16 +479,14 @@ async def on_typed(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         if corrected and corrected.strip().lower() != answer.strip().lower():
             msg += f"\n✅ {corrected}"
     else:
-        msg = "(No se pudo revisar — elige tu nota.)" if en else "(Konnte nicht prüfen — wähle deine Note.)"
+        msg = "(Couldn't check — choose your grade.)" if en else "(Konnte nicht prüfen — wähle deine Note.)"
 
     if en:
-        how_well = "¿Qué tan bien lo sabías?"
+        how_well = "How well did you know it?"
     else:
         how_well = "Wie gut wusstest du es?"
     context.user_data["await"] = "grade"
-    await update.effective_message.reply_text(
-        f"{msg}\n\n{how_well}", reply_markup=_grade_keyboard(en)
-    )
+    await safe_reply(update.effective_message, f"{msg}\n\n{how_well}", reply_markup=_grade_keyboard(en))
     return IN_SESSION
 
 
@@ -504,7 +504,7 @@ async def practice_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     en = _en(context)
     _clear(context)
     if en:
-        await update.effective_message.reply_text(f"Sesión terminada. {done} tarjetas practicadas.")
+        await update.effective_message.reply_text(f"Session ended. {done} cards practised.")
     else:
         await update.effective_message.reply_text(f"Übung beendet. {done} Karten geübt. (Stopped.)")
     return ConversationHandler.END
@@ -531,7 +531,7 @@ async def _reply(update: Update, text: str, keyboard=None) -> None:
         update.callback_query.message if update.callback_query else None
     )
     if msg:
-        await msg.reply_text(text, reply_markup=keyboard)
+        await safe_reply(msg, text, reply_markup=keyboard)
 
 
 def build_handler() -> ConversationHandler:
@@ -570,12 +570,12 @@ async def review(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     hardest = hardest_items(user.id, limit=5)
 
     if en:
-        lines = ["📈 *Revisión*\n", f"Pendientes ahora: *{due}*", f"Racha: *{streak}* días 🔥"]
+        lines = ["📈 *Review*\n", f"Due now: *{due}*", f"Streak: *{streak}* days 🔥"]
         if hardest:
-            lines.append("\nPalabras más difíciles:")
+            lines.append("\nHardest words:")
             for h in hardest:
                 lines.append(f"  • {h['term']} (EF {h['easiness']:.2f})")
-        lines.append("\n/practice para practicar.")
+        lines.append("\n/practice to practise.")
     else:
         lines = ["📈 *Review*\n", f"Fällig jetzt: *{due}*", f"Streak: *{streak}* Tage 🔥"]
         if hardest:

@@ -65,23 +65,23 @@ _BACKEND_NOTICES_DE: dict[str, str] = {
 }
 
 _BACKEND_NOTICES_EN: dict[str, str] = {
-    "⚡ Groq": "⚡ Usando Groq — rápido.",
+    "⚡ Groq": "⚡ Using Groq — fast.",
     "⚡ Groq Mini": (
-        "⚡ El modelo principal de Groq alcanzó su límite — cambiando al modelo más pequeño. "
-        "Sigue siendo rápido. Se reinicia a medianoche (UTC)."
+        "⚡ Groq's main model hit its limit — switching to the smaller model. "
+        "Still fast. Resets at midnight (UTC)."
     ),
     "🤖 Gemini": (
-        "🐢 La cuota gratuita de Groq se agotó — cambiando a Gemini. "
-        "Un poco más lento (~20s)."
+        "🐢 Groq's free quota ran out — switching to Gemini. "
+        "A little slower (~20s)."
     ),
     "🐌 Ollama": (
-        "🐌 Todas las cuotas en la nube están agotadas — ejecutando localmente (Ollama) ahora. "
-        "Lento (~1 min/respuesta), pero funciona."
+        "🐌 All cloud quotas exhausted — running locally (Ollama) now. "
+        "Slow (~1 min/response), but it works."
     ),
 }
 
 _RECOVERED_NOTICE_DE = "⚡ Zurück auf Groqs schnellem Modell!"
-_RECOVERED_NOTICE_EN = "⚡ ¡De vuelta en el modelo rápido de Groq!"
+_RECOVERED_NOTICE_EN = "⚡ Back on Groq's fast model!"
 
 # Matches:  ❌ wrong → ✅ right — reason
 _CORRECTION_RE = re.compile(
@@ -140,9 +140,9 @@ _CORR_CACHE_MAX = 30  # keep the last N corrected replies actionable
 def _correction_keyboard(message_id: int, en: bool = False) -> InlineKeyboardMarkup:
     if en:
         row = [
-            InlineKeyboardButton("📖 ¿Por qué?", callback_data=f"corr:why:{message_id}"),
-            InlineKeyboardButton("➕ Ejemplo", callback_data=f"corr:example:{message_id}"),
-            InlineKeyboardButton("🎯 Practicar", callback_data=f"corr:drill:{message_id}"),
+            InlineKeyboardButton("📖 Why?", callback_data=f"corr:why:{message_id}"),
+            InlineKeyboardButton("➕ Example", callback_data=f"corr:example:{message_id}"),
+            InlineKeyboardButton("🎯 Practise", callback_data=f"corr:drill:{message_id}"),
             InlineKeyboardButton("🔊", callback_data=f"corr:say:{message_id}"),
         ]
     else:
@@ -351,7 +351,7 @@ async def on_correction_action(
         user = get_user_by_telegram_id(update.effective_user.id)
         en = getattr(user, "learning_mode", "german") == "english" if user else False
         msg = (
-            "Esta corrección ya no está disponible. Intenta con un mensaje reciente."
+            "This correction is no longer available. Try with a recent message."
             if en else
             "Diese Korrektur ist zu alt. Probiere es mit einer neueren Nachricht."
         )
@@ -472,13 +472,13 @@ async def english(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if context.args:
             context.args  # forward the args
             await update.effective_message.reply_text(
-                "_(En modo inglés, tus preguntas van con /spanish — te reenvío ahora.)_"
+                "_(In English mode, questions in Spanish go via /spanish — forwarding now.)_"
             )
             await spanish(update, context)
         else:
             await update.effective_message.reply_text(
-                "En modo inglés usa /spanish para hacer preguntas en español.\n"
-                "Ejemplo: /spanish ¿cuándo uso 'the'?"
+                "In English mode use /spanish to ask questions in Spanish.\n"
+                "Example: /spanish ¿cuándo uso 'the'?"
             )
         return
 
@@ -689,7 +689,7 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not messages:
         if en:
             await update.effective_message.reply_text(
-                "Todavía no hay nada que analizar — escríbeme un poco primero. 🙂"
+                "Nothing to analyse yet — write to me a bit first. 🙂"
             )
         else:
             await update.effective_message.reply_text(
@@ -721,13 +721,13 @@ async def summary(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         saved = add_vocab_items(user.id, items, source=VocabSource.conversation)
 
     if en:
-        lines = ["📝 *Análisis*\n", (result.get("summary") or "").strip()]
+        lines = ["📝 *Analysis*\n", (result.get("summary") or "").strip()]
         if items:
-            lines.append("\nPara practicar:")
+            lines.append("\nTo practise:")
             for it in items[:10]:
                 ctx = it.get("context_sentence") or it.get("term")
                 lines.append(f"  • {ctx}")
-            lines.append(f"\n{saved} guardadas para practicar. /practice para repasar. 💪")
+            lines.append(f"\n{saved} saved for practice. /practice to review. 💪")
     else:
         lines = ["📝 *Auswertung*\n", (result.get("summary") or "").strip()]
         if items:

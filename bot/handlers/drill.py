@@ -21,6 +21,7 @@ from telegram.ext import (
 
 from bot import credits as credit_mod
 from bot.middleware import require_auth
+from bot.utils import safe_edit, safe_reply
 from db.repo import get_bkt_state, get_student_topic, get_user_by_telegram_id, record_practice
 from llm import prompts
 from llm.gemini import LLMUnavailable, QuotaExceeded
@@ -95,7 +96,7 @@ async def drill_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
     if en:
         await update.effective_message.reply_text(
-            f"🎯 *Drill: {topic}* — {DRILL_SIZE} ejercicios. /stop para cancelar."
+            f"🎯 *Drill: {topic}* — {DRILL_SIZE} exercises. /stop to cancel."
         )
     else:
         await update.effective_message.reply_text(
@@ -116,7 +117,7 @@ async def drill_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         )
         return ConversationHandler.END
     except LLMUnavailable:
-        msg = "No se pudo crear el drill. Inténtalo más tarde." if en else "Drill konnte nicht erstellt werden. Versuch es später."
+        msg = "Couldn't create the drill. Try again later." if en else "Drill konnte nicht erstellt werden. Versuch es später."
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
@@ -126,7 +127,7 @@ async def drill_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         if isinstance(it, dict) and it.get("prompt") and it.get("type") in ("mcq", "fill")
     ]
     if not items:
-        msg = "No se pudo crear el drill. Inténtalo más tarde." if en else "Drill konnte nicht erstellt werden. Versuch es später."
+        msg = "Couldn't create the drill. Try again later." if en else "Drill konnte nicht erstellt werden. Versuch es später."
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
@@ -155,10 +156,10 @@ async def _ask(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     if item.get("type") == "mcq":
         kb = _drill_keyboard(q_no, len(item.get("options") or []))
-        await update.effective_message.reply_text(text, reply_markup=kb)
+        await safe_reply(update.effective_message, text, reply_markup=kb)
     else:
         label = "✏️" if en else "✏️"
-        await update.effective_message.reply_text(f"{label} {text}")
+        await safe_reply(update.effective_message, f"{label} {text}")
 
     return IN_DRILL
 
@@ -188,11 +189,11 @@ async def drill_mcq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     total = context.user_data.get("drill_total", DRILL_SIZE)
     base = _item_text(item, q_no, total)
     if correct:
-        feedback = f"\n\n✅ {'¡Correcto!' if en else 'Richtig!'}"
+        feedback = f"\n\n✅ {'Correct!' if en else 'Richtig!'}"
     else:
         feedback = f"\n\n❌ {correct_text}\n_{explanation}_"
 
-    await query.edit_message_text(base + feedback)
+    await safe_edit(query, base + feedback)
     context.user_data["drill_queue"].pop(0)
     return await _ask(update, context)
 
@@ -213,11 +214,11 @@ async def drill_fill(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     explanation = item.get("explanation", "")
     if correct:
-        mark = f"✅ {'¡Correcto!' if en else 'Richtig!'}"
+        mark = f"✅ {'Correct!' if en else 'Richtig!'}"
     else:
         mark = f"❌ *{expected}*\n_{explanation}_"
 
-    await update.effective_message.reply_text(mark)
+    await safe_reply(update.effective_message, mark)
     context.user_data["drill_queue"].pop(0)
     return await _ask(update, context)
 
@@ -232,9 +233,9 @@ async def _finish(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     if en:
         await update.effective_message.reply_text(
-            f"🎯 *Drill completo — {topic}*\n\n"
-            f"{correct}/{total} correctas ({pct}%)\n\n"
-            + ("¡Excelente dominio!" if pct >= 80 else "Sigue practicando — /drill para repetir.")
+            f"🎯 *Drill done — {topic}*\n\n"
+            f"{correct}/{total} correct ({pct}%)\n\n"
+            + ("Excellent mastery! 💪" if pct >= 80 else "Keep practising — /drill to repeat.")
         )
     else:
         await update.effective_message.reply_text(
@@ -250,7 +251,7 @@ async def drill_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     done = context.user_data.get("drill_q_no", 0)
     en = _en(context)
     _clear(context)
-    msg = f"Drill cancelado. {done} preguntas respondidas." if en else f"Drill abgebrochen. {done} Fragen beantwortet."
+    msg = f"Drill cancelled. {done} questions answered." if en else f"Drill abgebrochen. {done} Fragen beantwortet."
     await update.effective_message.reply_text(msg)
     return ConversationHandler.END
 

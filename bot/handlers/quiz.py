@@ -20,6 +20,7 @@ from telegram.ext import (
 
 from bot import credits as credit_mod
 from bot.middleware import require_auth
+from bot.utils import safe_edit, safe_reply
 from db.repo import (
     get_bkt_state,
     get_student_topic,
@@ -117,10 +118,10 @@ async def quiz_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     topic_note = f" Topic focus: {class_topic}." if class_topic else ""
 
     if en:
-        topic_line = f" Tema: *{class_topic}*." if class_topic else ""
+        topic_line = f" Topic: *{class_topic}*." if class_topic else ""
         intro = (
-            f"⚡ Quiz — {QUIZ_SIZE} preguntas, enfocadas en: {', '.join(skill_labels)}.{topic_line}\n"
-            f"Toca un número para responder. /stop para cancelar."
+            f"⚡ Quiz — {QUIZ_SIZE} questions, focused on: {', '.join(skill_labels)}.{topic_line}\n"
+            f"Tap a number to answer. /stop to cancel."
         )
     else:
         topic_line = f" Thema: *{class_topic}*." if class_topic else ""
@@ -149,7 +150,7 @@ async def quiz_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         )
         return ConversationHandler.END
     except LLMUnavailable:
-        msg = "No se pudo crear el quiz. Inténtalo más tarde." if en else "Quiz konnte nicht erstellt werden. Versuch es später."
+        msg = "Couldn't create the quiz. Try again later." if en else "Quiz konnte nicht erstellt werden. Versuch es später."
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
@@ -162,7 +163,7 @@ async def quiz_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         and isinstance(it.get("answer_index"), int)
     ]
     if not items:
-        msg = "No se pudo crear el quiz. Inténtalo más tarde." if en else "Quiz konnte nicht erstellt werden. Versuch es später."
+        msg = "Couldn't create the quiz. Try again later." if en else "Quiz konnte nicht erstellt werden. Versuch es später."
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
@@ -188,7 +189,7 @@ async def _ask(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     n = len(item.get("options") or [])
     text = _item_text(item)
     kb = _quiz_keyboard(q_no, n)
-    await update.effective_message.reply_text(text, reply_markup=kb)
+    await safe_reply(update.effective_message, text, reply_markup=kb)
     return IN_QUIZ
 
 
@@ -222,10 +223,10 @@ async def quiz_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         update_bkt_state(user_id, skill, correct, level=level)
 
     if en:
-        mark = "✅ ¡Correcto!" if correct else f"❌ Correcto era: {options[answer_index]}"
+        mark = "✅ Correct!" if correct else f"❌ Correct answer: {options[answer_index]}"
     else:
         mark = "✅ Richtig!" if correct else f"❌ Richtig wäre: {options[answer_index]}"
-    await query.edit_message_text(_item_text(item) + f"\n\n{mark}")
+    await safe_edit(query, _item_text(item) + f"\n\n{mark}")
 
     queue.pop(0)
     return await _ask(update, context)
@@ -239,8 +240,8 @@ async def _finish(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     pct = round(correct / total * 100) if total else 0
     if en:
         await update.effective_message.reply_text(
-            f"🎯 ¡Quiz completado! {correct}/{total} correctas ({pct}%). "
-            "Dominio BKT actualizado — revisa /profile."
+            f"🎯 Quiz done! {correct}/{total} correct ({pct}%). "
+            "BKT mastery updated — check /profile."
         )
     else:
         await update.effective_message.reply_text(
@@ -257,7 +258,7 @@ async def quiz_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     en = _en(context)
     _clear(context)
     if en:
-        await update.effective_message.reply_text(f"Quiz cancelado. {done} preguntas respondidas.")
+        await update.effective_message.reply_text(f"Quiz cancelled. {done} questions answered.")
     else:
         await update.effective_message.reply_text(f"Quiz abgebrochen. {done} Fragen beantwortet. (Stopped.)")
     return ConversationHandler.END

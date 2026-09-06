@@ -96,7 +96,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return
 
     if en:
-        await message.reply_text(f"📄 Analizando *{filename}*… un momento.")
+        await message.reply_text(f"📄 Analysing *{filename}*… one moment.")
     else:
         await message.reply_text(f"📄 Analysiere *{filename}*… einen Moment.")
     await context.bot.send_chat_action(chat_id=message.chat_id, action="typing")
@@ -108,7 +108,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     except Exception as exc:
         logger.exception("PDF download/extract failed")
         if en:
-            await message.reply_text("No pude leer el PDF. ¿Está dañado?")
+            await message.reply_text("Couldn't read the PDF. Is it damaged?")
         else:
             await message.reply_text(
                 "Konnte die PDF nicht lesen. Ist sie beschädigt? (Couldn't read the PDF.)"
@@ -118,8 +118,8 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if len(text) < 40:
         if en:
             await message.reply_text(
-                "Este PDF no tiene texto extraíble — probablemente es un escaneo. "
-                "Envíame un PDF con texto. 🙏"
+                "This PDF has no extractable text — it's probably a scan. "
+                "Send me a PDF with text. 🙏"
             )
         else:
             await message.reply_text(
@@ -151,14 +151,14 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return
     except LLMUnavailable:
         if en:
-            await message.reply_text("El análisis no funcionó. Inténtalo más tarde.")
+            await message.reply_text("Analysis failed. Try again later.")
         else:
             await message.reply_text("Die Analyse hat nicht geklappt. Versuch es später nochmal.")
         return
 
     if not collected:
         if en:
-            await message.reply_text("No encontré términos útiles en este documento. 🤔")
+            await message.reply_text("Couldn't find any useful terms in this document. 🤔")
         else:
             await message.reply_text("Ich habe keine nützlichen Fachbegriffe gefunden. 🤔")
         return
@@ -187,13 +187,13 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     top = ordered[:10]
     if en:
-        lines = [f"✅ *{filename}* analizado!", "", summary.strip(), "", "🔑 Términos clave:"]
+        lines = [f"✅ *{filename}* analysed!", "", summary.strip(), "", "🔑 Key terms:"]
         for t in top:
             tr = f" — {t['translation']}" if t.get("translation") else ""
             lines.append(f"  • {t['term']}{tr}")
         lines.append(
-            f"\n{inserted} nuevas palabras guardadas (Doc #{document_id}). "
-            f"Usa /learn {document_id} para una lección, o /practice para repasar."
+            f"\n{inserted} new words saved (Doc #{document_id}). "
+            f"Use /learn {document_id} for a lesson, or /practice to review."
         )
     else:
         lines = [f"✅ *{filename}* analysiert!", "", summary.strip(), "", "🔑 Top-Begriffe:"]
@@ -217,7 +217,7 @@ async def docs(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not documents:
         if en:
             await update.effective_message.reply_text(
-                "Todavía no hay documentos. ¡Envíame un PDF en inglés! 📄"
+                "No documents yet. Send me an English PDF! 📄"
             )
         else:
             await update.effective_message.reply_text(
@@ -225,10 +225,10 @@ async def docs(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
         return
     if en:
-        lines = ["📚 *Tus documentos:*"]
+        lines = ["📚 *Your documents:*"]
         for d in documents:
-            lines.append(f"  • #{d['id']} — {d['filename']} ({d['terms']} términos)")
-        lines.append("\n/learn <id> para una lección.")
+            lines.append(f"  • #{d['id']} — {d['filename']} ({d['terms']} terms)")
+        lines.append("\n/learn <id> for a lesson.")
     else:
         lines = ["📚 *Deine Dokumente:*"]
         for d in documents:
@@ -253,7 +253,7 @@ async def learn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if document is None:
             if en:
                 await update.effective_message.reply_text(
-                    "No hay documento con esa ID. /docs muestra tus documentos."
+                    "No document with that ID. /docs shows your documents."
                 )
             else:
                 await update.effective_message.reply_text(
@@ -265,7 +265,7 @@ async def learn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         if recent is None:
             if en:
                 await update.effective_message.reply_text(
-                    "Todavía no hay documentos. Envíame un PDF primero. 📄"
+                    "No documents yet. Send me a PDF first. 📄"
                 )
             else:
                 await update.effective_message.reply_text(
@@ -277,11 +277,11 @@ async def learn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     from bot.handlers.conversation import _user_level
 
     level = _user_level(user.cefr_estimate)
-    terms_str = ", ".join(t["term"] for t in document["terms"][:25]) or ("(ninguno)" if en else "(keine)")
+    terms_str = ", ".join(t["term"] for t in document["terms"][:25]) or ("(none)" if en else "(keine)")
 
     if en:
         await update.effective_message.reply_text(
-            f"🎓 Construyendo una lección de *{document['filename']}*… un momento."
+            f"🎓 Building a lesson from *{document['filename']}*… one moment."
         )
     else:
         await update.effective_message.reply_text(
@@ -311,7 +311,7 @@ async def learn(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
     except LLMUnavailable:
         if en:
-            await update.effective_message.reply_text("La lección no funcionó. Inténtalo más tarde.")
+            await update.effective_message.reply_text("Lesson generation failed. Try again later.")
         else:
             await update.effective_message.reply_text("Die Lektion hat nicht geklappt. Versuch es später.")
         return
@@ -330,8 +330,8 @@ async def docfocus(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         context.user_data["docfocus"] = True
         if en:
             await update.effective_message.reply_text(
-                "Foco en documento ACTIVADO — oriento la conversación hacia el último documento. "
-                "(/docfocus off para desactivar.)"
+                "Document focus ON — I'll steer the conversation toward your latest document. "
+                "(/docfocus off to disable.)"
             )
         else:
             await update.effective_message.reply_text(
@@ -340,13 +340,13 @@ async def docfocus(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
     elif arg in ("off", "aus"):
         context.user_data["docfocus"] = False
-        msg = "Foco en documento DESACTIVADO." if en else "Dokument-Fokus AUS. (Off.)"
+        msg = "Document focus OFF." if en else "Dokument-Fokus AUS. (Off.)"
         await update.effective_message.reply_text(msg)
     else:
         if en:
-            state = "ACTIVADO" if context.user_data.get("docfocus") else "DESACTIVADO"
+            state = "ON" if context.user_data.get("docfocus") else "OFF"
             await update.effective_message.reply_text(
-                f"Foco en documento está {state}. Usa /docfocus on o /docfocus off."
+                f"Document focus is {state}. Use /docfocus on or /docfocus off."
             )
         else:
             state = "AN" if context.user_data.get("docfocus") else "AUS"

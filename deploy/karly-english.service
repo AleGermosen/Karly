@@ -5,9 +5,9 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=%h/Karly
+WorkingDirectory=%h/PycharmProjects/Karly
 # EnvironmentFile sets vars before Python starts; dotenv won't overwrite them.
-EnvironmentFile=%h/Karly/.env.english
+EnvironmentFile=%h/PycharmProjects/Karly/.env.english
 ExecStart=%h/Karly/.venv/bin/python -m bot.main
 Restart=on-failure
 RestartSec=5

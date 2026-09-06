@@ -170,7 +170,7 @@ async def roleplay_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     if en:
         await update.effective_message.reply_text(
-            "🎭 Elige una escena para practicar inglés:",
+            "🎭 Choose a scene to practise English:",
             reply_markup=_scenario_keyboard(en=True),
         )
     else:
@@ -197,7 +197,7 @@ async def _launch_scene(
     key_map = _KEY_EN if en else _KEY_DE
     scenario = key_map.get(key)
     if not scenario:
-        msg = "Escena desconocida." if en else "Unbekannte Szene. (Unknown scene.)"
+        msg = "Unknown scene." if en else "Unbekannte Szene. (Unknown scene.)"
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
@@ -227,11 +227,11 @@ async def _launch_scene(
     try:
         opening = await route(Task.chat, "Start the scene.", system=system)
     except QuotaExceeded:
-        msg = "Límite alcanzado — inténtalo más tarde. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏"
+        msg = "Limit reached — try again later. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏"
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
     except LLMUnavailable:
-        msg = "No se pudo iniciar la escena. Inténtalo más tarde." if en else "Szene konnte nicht gestartet werden. Versuch es später."
+        msg = "Couldn't start the scene. Try again later." if en else "Szene konnte nicht gestartet werden. Versuch es später."
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
@@ -245,9 +245,12 @@ async def _launch_scene(
     context.user_data["scene_user_id"] = user.id
     record_practice(user.id)
 
-    done_hint = "/done para terminar" if en else "/done zum Beenden"
+    done_hint = "/done to finish" if en else "/done zum Beenden"
     header = f"🎭 *{title}*\n{done_hint}\n\n"
-    await update.effective_message.reply_text(header + opening)
+    try:
+        await update.effective_message.reply_text(header + opening)
+    except Exception:
+        await update.effective_message.reply_text(header + opening, parse_mode=None)
     return IN_SCENE
 
 
@@ -275,11 +278,11 @@ async def scene_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     try:
         reply = await route(Task.chat, text, system=system, history=llm_history)
     except QuotaExceeded:
-        msg = "Límite alcanzado — inténtalo más tarde. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏"
+        msg = "Limit reached — try again later. 🙏" if en else "Tageslimit erreicht — versuch es später. 🙏"
         await update.effective_message.reply_text(msg)
         return IN_SCENE
     except LLMUnavailable:
-        msg = "(Backend no disponible — inténtalo de nuevo.)" if en else "(Backend nicht erreichbar — versuch nochmal.)"
+        msg = "(Backend unavailable — try again.)" if en else "(Backend nicht erreichbar — versuch nochmal.)"
         await update.effective_message.reply_text(msg)
         return IN_SCENE
 
@@ -289,11 +292,15 @@ async def scene_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     context.user_data["scene_history"] = history
     context.user_data["scene_turns"] = context.user_data.get("scene_turns", 0) + 1
 
-    await update.effective_message.reply_text(reply)
+    try:
+        await update.effective_message.reply_text(reply)
+    except Exception:
+        # Markdown parse error or other Telegram API issue — send plain text.
+        await update.effective_message.reply_text(reply, parse_mode=None)
 
     turns = context.user_data["scene_turns"]
     if turns == 10:
-        nudge = "(¡Buen trabajo! Escribe /done cuando termines — te daré retroalimentación.)" if en else "(Gute Arbeit! Tippe /done wenn du fertig bist — ich gebe dir Feedback.)"
+        nudge = "(Good work! Type /done when you're done — I'll give you feedback.)" if en else "(Gute Arbeit! Tippe /done wenn du fertig bist — ich gebe dir Feedback.)"
         await update.effective_message.reply_text(nudge)
     return IN_SCENE
 
@@ -307,7 +314,7 @@ async def scene_done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     if turns == 0 or not system:
         _clear(context)
-        msg = "Escena terminada." if en else "Szene beendet. (Scene ended.)"
+        msg = "Scene ended." if en else "Szene beendet. (Scene ended.)"
         await update.effective_message.reply_text(msg)
         return ConversationHandler.END
 
@@ -319,14 +326,16 @@ async def scene_done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         if user_id:
             credit_mod.spend(user_id, task="chat", model="roleplay_debrief")
     except (QuotaExceeded, LLMUnavailable):
-        debrief = "(¡Buen trabajo de todas formas!)" if en else "(Feedback nicht verfügbar — gute Arbeit trotzdem!)"
+        debrief = "(Good work anyway!)" if en else "(Feedback nicht verfügbar — gute Arbeit trotzdem!)"
 
     title = context.user_data.get("scene_title", "Scene")
-    rounds_label = "rondas" if en else "Runden"
+    rounds_label = "rounds" if en else "Runden"
     _clear(context)
-    await update.effective_message.reply_text(
-        f"🎭 *{title}* — {turns} {rounds_label}\n\n{debrief}"
-    )
+    text = f"🎭 *{title}* — {turns} {rounds_label}\n\n{debrief}"
+    try:
+        await update.effective_message.reply_text(text)
+    except Exception:
+        await update.effective_message.reply_text(text, parse_mode=None)
     return ConversationHandler.END
 
 
@@ -334,7 +343,7 @@ async def scene_done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 async def scene_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     en = _scene_en(context)
     _clear(context)
-    msg = "Escena cancelada." if en else "Szene abgebrochen. (Roleplay stopped.)"
+    msg = "Scene cancelled." if en else "Szene abgebrochen. (Roleplay stopped.)"
     await update.effective_message.reply_text(msg)
     return ConversationHandler.END
 

@@ -109,7 +109,7 @@ HELP_GERMAN = (
     "/impostor help — alle Spielbefehle\n\n"
 
     "── Sistema ──\n"
-    "/language — cambiar a modo inglés\n"
+    "/language — switch to English mode\n"
     "/status — Backend-Ladder & Groq-Quota (verbleibende Anfragen)\n"
     "/backend on|off — Backend-Label in jeder Antwort anzeigen\n"
     "/cancel — aktive Session abbrechen\n"
