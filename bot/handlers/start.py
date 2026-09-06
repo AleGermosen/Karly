@@ -324,7 +324,9 @@ HELP_TEACHER = (
     "── Superuser only ──\n"
     "/addteacher NAME — promote a student to teacher\n"
     "/removeteacher NAME — demote a teacher to student\n"
-    "/teachers — list all teachers with class and student counts\n\n"
+    "/teachers — list all teachers with class and student counts\n"
+    "/grantunlimited NAME — remove all credit limits for a user\n"
+    "/revokeunlimited NAME — restore standard limits\n\n"
 
     "── Your learning ──\n"
     "All student commands work for you too — see the next message."
