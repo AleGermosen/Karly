@@ -88,6 +88,9 @@ class User(Base):
     # last_session_summary: one-sentence description of what the last session covered.
     profile_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     last_session_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # When True, per-user daily cap and session/weekly caps are bypassed.
+    # Superusers get this automatically; teachers/students need it granted explicitly.
+    unlimited_credits: Mapped[bool] = mapped_column(Boolean, default=False)
 
     @property
     def corrections_on(self) -> bool:

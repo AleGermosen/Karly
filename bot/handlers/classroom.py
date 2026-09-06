@@ -59,6 +59,7 @@ from db.repo import (
     set_user_status,
     assign_unit,
     clear_assignment,
+    set_unlimited_credits,
     student_last_active,
     top_credit_consumers,
     vocab_count,
@@ -939,6 +940,75 @@ async def removeteacher(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     target = matches[0]
     set_user_role(target.id, "student")
     await update.effective_message.reply_text(f"✅ *{target.name}* demoted to student.")
+
+
+# ---------------------------------------------------------------------------
+# /grantunlimited <name> / /revokeunlimited <name>  (superuser only)
+# ---------------------------------------------------------------------------
+
+def _find_any_user(query: str):
+    """Search all students (including pending) by name fragment."""
+    roster = list_students(include_pending=True)
+    q = query.lower()
+    return [s for s in roster if s.name and q in s.name.lower()]
+
+
+@require_auth
+async def grantunlimited(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    caller = _caller(update)
+    if not _is_superuser(caller):
+        await update.effective_message.reply_text("🚫 Superuser only.")
+        return
+    if not context.args:
+        await update.effective_message.reply_text("Usage: /grantunlimited <name>")
+        return
+
+    query = " ".join(context.args)
+    matches = _find_any_user(query)
+    if not matches:
+        await update.effective_message.reply_text(
+            f"No user matching '{query}'. They must have started the bot first."
+        )
+        return
+    if len(matches) > 1:
+        await update.effective_message.reply_text(
+            "Multiple matches: " + ", ".join(s.name or "?" for s in matches)
+        )
+        return
+
+    target = matches[0]
+    set_unlimited_credits(target.id, True)
+    await update.effective_message.reply_text(
+        f"✅ *{target.name}* now has unlimited credits — no daily or session cap."
+    )
+
+
+@require_auth
+async def revokeunlimited(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    caller = _caller(update)
+    if not _is_superuser(caller):
+        await update.effective_message.reply_text("🚫 Superuser only.")
+        return
+    if not context.args:
+        await update.effective_message.reply_text("Usage: /revokeunlimited <name>")
+        return
+
+    query = " ".join(context.args)
+    matches = _find_any_user(query)
+    if not matches:
+        await update.effective_message.reply_text(f"No user matching '{query}'.")
+        return
+    if len(matches) > 1:
+        await update.effective_message.reply_text(
+            "Multiple matches: " + ", ".join(s.name or "?" for s in matches)
+        )
+        return
+
+    target = matches[0]
+    set_unlimited_credits(target.id, False)
+    await update.effective_message.reply_text(
+        f"✅ *{target.name}* is back on the standard credit limits."
+    )
 
 
 # ---------------------------------------------------------------------------

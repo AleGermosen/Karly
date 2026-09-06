@@ -95,6 +95,8 @@ def build_application() -> Application:
     # Superuser-only teacher management.
     app.add_handler(CommandHandler("addteacher", classroom.addteacher))
     app.add_handler(CommandHandler("removeteacher", classroom.removeteacher))
+    app.add_handler(CommandHandler("grantunlimited", classroom.grantunlimited))
+    app.add_handler(CommandHandler("revokeunlimited", classroom.revokeunlimited))
     app.add_handler(CommandHandler("teachers", classroom.teachers_list))
     # Approval flow callbacks (multi-step DM to superuser).
     app.add_handler(

@@ -38,6 +38,8 @@ _MIGRATIONS: dict[str, dict[str, str]] = {
         "topup_credits": "INTEGER NOT NULL DEFAULT 0",
         # F-19 — placement status.
         "placement_status": "TEXT",
+        # Unlimited credits flag — bypasses per-user and session/weekly caps.
+        "unlimited_credits": "BOOLEAN NOT NULL DEFAULT 0",
     },
     "vocab_items": {
         "hlr_half_life": "REAL NOT NULL DEFAULT 0.0",

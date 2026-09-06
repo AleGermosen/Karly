@@ -244,6 +244,17 @@ def _effective_user_limit(user_id: int) -> int:
     return config.DAILY_CREDIT_LIMIT + granted + bonus
 
 
+def _is_unlimited(user_id: int) -> bool:
+    """True if this user bypasses per-user and session/weekly caps."""
+    from db.repo import get_user_by_id
+    user = get_user_by_id(user_id)
+    if user is None:
+        return False
+    if getattr(user, "role", "student") == "superuser":
+        return True
+    return bool(getattr(user, "unlimited_credits", False))
+
+
 def credits_check(user_id: int, cost: int) -> str:
     """Return 'ok', 'global_limit', 'user_limit', 'session_limit', or 'week_limit'.
 
@@ -251,11 +262,14 @@ def credits_check(user_id: int, cost: int) -> str:
     1. Classroom daily ceiling (global pool + per-student daily cap).
     2. Public subscription tier limits (session window + weekly cap).
     Topup credits transparently cover tier-limit hits — returns 'ok' in that case.
+    Unlimited users (superuser role or unlimited_credits=True) skip checks 1b and 2.
     """
     if cost <= 0:
         return "ok"
     if global_credits_used() + cost > _global_limit_for_now():
         return "global_limit"
+    if _is_unlimited(user_id):
+        return "ok"
     if daily_credits_used(user_id) + cost > _effective_user_limit(user_id):
         return "user_limit"
     status, _ = public_limit_check(user_id)

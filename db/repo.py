@@ -163,6 +163,14 @@ def set_language_chosen(user_id: int) -> None:
             user.language_chosen = True
 
 
+def set_unlimited_credits(user_id: int, value: bool) -> None:
+    """Grant or revoke the unlimited-credits flag for a user."""
+    with get_session() as session:
+        user = session.get(User, user_id)
+        if user is not None:
+            user.unlimited_credits = value
+
+
 # --- LLM usage / credit tracking -------------------------------------------
 
 def record_llm_usage(
