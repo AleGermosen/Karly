@@ -1,4 +1,5 @@
 .env
+.env.english
 *.db
 *.db-journal
 .venv/
