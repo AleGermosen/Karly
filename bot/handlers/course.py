@@ -19,6 +19,7 @@ import re
 from typing import Any
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.helpers import escape_markdown
 from telegram.ext import (
     CallbackQueryHandler,
     CommandHandler,
@@ -316,7 +317,7 @@ async def _send_next_question(
 
     item = items[idx]
     qtype = item.get("type")
-    prompt = item.get("prompt", "")
+    prompt = escape_markdown(item.get("prompt", ""), version=1)
     q_num = f"*Q{idx + 1}/{len(items)}* ({qtype})\n\n"
 
     if qtype == "mcq":

@@ -13,6 +13,7 @@ import json
 import random
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.helpers import escape_markdown
 from telegram.ext import (
     CallbackQueryHandler,
     CommandHandler,
@@ -147,7 +148,7 @@ async def _send_lt_question(
 
     item = items[idx]
     qtype = item.get("type")
-    prompt = item.get("prompt", "")
+    prompt = escape_markdown(item.get("prompt", ""), version=1)
     unit = loader.get_unit(item.get("unit", ""))
     unit_label = f"_{unit.title_target}_" if unit else ""
     q_num = f"*Q{idx + 1}/{len(items)}*  {unit_label}\n\n"
