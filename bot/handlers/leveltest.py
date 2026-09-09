@@ -155,7 +155,7 @@ async def _send_lt_question(
     if qtype == "mcq":
         opts = item.get("options", [])
         keyboard = InlineKeyboardMarkup([[
-            InlineKeyboardButton(f"{i + 1}. {opt}", callback_data=f"lt:ans:{i}")
+            InlineKeyboardButton(f"{i + 1}. {opts[i]}", callback_data=f"lt:ans:{i}")
             for i in range(len(opts))
         ]])
         await update.effective_message.reply_text(

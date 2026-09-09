@@ -126,7 +126,7 @@ def require_auth(handler: Handler) -> Handler:
                 return
 
         en = getattr(db_user, "learning_mode", "german") == "english"
-        sig = inspect.signature(handler)
+        sig = inspect.signature(handler, follow_wrapped=False)
         if len(sig.parameters) > 2:
             return await handler(update, context, db_user, en)
         return await handler(update, context)
