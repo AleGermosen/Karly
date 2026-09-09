@@ -22,8 +22,19 @@ for dir in "${CHECKOUTS[@]}"; do
         found_any=1
         name=$(basename "$db" .db)
         dest="${BACKUP_DIR}/${name}-${STAMP}.db"
-        # sqlite3 .backup is safe to run while the bot is live.
-        sqlite3 "$db" ".backup '${dest}'"
+        # Python's stdlib sqlite3 .backup() is safe to run while the bot is
+        # live, same guarantee as the `sqlite3` CLI's .backup — used here
+        # instead since the CLI tool isn't guaranteed to be installed on a
+        # fresh box, while python3 (needed to run the bot itself) always is.
+        python3 -c "
+import sqlite3, sys
+src = sqlite3.connect(sys.argv[1])
+dst = sqlite3.connect(sys.argv[2])
+with dst:
+    src.backup(dst)
+src.close()
+dst.close()
+" "$db" "$dest"
         echo "karly-backup: wrote ${dest} ($(du -h "$dest" | cut -f1))"
     done
 done

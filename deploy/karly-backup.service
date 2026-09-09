@@ -3,4 +3,4 @@ Description=Karly — nightly database backup
 
 [Service]
 Type=oneshot
-ExecStart=%h/Karly/deploy/karly-backup.sh
+ExecStart=%h/PycharmProjects/Karly/deploy/karly-backup.sh

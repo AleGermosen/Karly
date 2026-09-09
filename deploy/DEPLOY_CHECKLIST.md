@@ -3,6 +3,13 @@
 Your recurring runbook for shipping changes from **Vanessa** (dev laptop) to
 the **OptiPlex** (server). Two terminals are always open:
 
+> **Two bots run from one checkout.** The OptiPlex runs both a German
+> (`karly.service`, `.env`, `karly_german.db`) and an English
+> (`karly-english.service`, `.env.english`, `karly_english.db`) instance of
+> the exact same code. `make deploy` / `make restart` / `make stop` / `make
+> status` / `make logs` all operate on **both** units together — restarting
+> only one would leave the other running stale code with no warning.
+
 | Terminal | Machine | Prompt |
 |---|---|---|
 | **Vanessa** | Dev laptop | `(.venv) aj@Vanessa:~/PycharmProjects/Karly$` |
@@ -82,8 +89,8 @@ make logs           # Ctrl-C to stop
 ```
 
 That's it. `make deploy` runs `deploy/deploy.sh`, which pushes the current
-branch, SSHes to the OptiPlex to `git pull`, reinstalls deps, and
-`systemctl --user restart karly`.
+branch, SSHes to the OptiPlex to `git pull`, reinstalls deps, and restarts
+**both** `karly` and `karly-english`.
 
 ---
 
@@ -109,20 +116,24 @@ calls (means Groq key is missing or Groq is exhausted).
 
 ## Secrets — never committed, must be set on OptiPlex manually
 
-`.env` is gitignored. When you add a new secret, SSH in and append it:
+`.env` (German) and `.env.english` (English) are both gitignored and
+independent — each bot has its own Telegram token and its own copy of every
+other secret. When you add a new secret, SSH in and append it to **both**:
 
 **On OptiPlex:**
 ```bash
 echo 'NEW_VAR=value' >> ~/PycharmProjects/Karly/.env
-systemctl --user restart karly
+echo 'NEW_VAR=value' >> ~/PycharmProjects/Karly/.env.english   # don't forget this one
+systemctl --user restart karly karly-english
 ```
 
-Current secrets in `.env` on the OptiPlex:
-- `TELEGRAM_BOT_TOKEN`
+Current secrets in each `.env*` on the OptiPlex:
+- `TELEGRAM_BOT_TOKEN` (different per bot — two separate Telegram bots)
 - `GEMINI_API_KEY`
 - `GROQ_API_KEY`
 
-After editing `.env`, always restart the service for it to take effect.
+After editing either `.env` file, restart that bot's service (or both, if the
+value is shared) for it to take effect.
 
 ---
 
@@ -143,11 +154,26 @@ All remote targets need `KARLY_HOST` (and `KARLY_REMOTE_DIR` unless you set a
 
 Or run systemctl directly **on OptiPlex** if SSH isn't cooperating:
 ```bash
-systemctl --user restart karly
-journalctl --user -u karly -n 50 --no-pager
+systemctl --user restart karly karly-english
+journalctl --user -u karly -u karly-english -n 50 --no-pager
 ```
 
 ---
+
+## Nightly database backup
+
+`karly-backup.timer` runs `deploy/karly-backup.sh` at 03:00 server time,
+backing up every `karly_*.db` (and any legacy `karly.db`) it finds under
+`~/PycharmProjects/Karly` into `~/karly-backups/`, pruning anything older
+than 14 days. Installed once on the OptiPlex via:
+```bash
+cp deploy/karly-backup.service deploy/karly-backup.timer ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now karly-backup.timer
+```
+Uses Python's stdlib `sqlite3` module rather than the `sqlite3` CLI, since
+the CLI isn't guaranteed to be installed — no extra package needed. Check it
+ran with `systemctl --user status karly-backup.service` or `ls ~/karly-backups/`.
 
 ## When the schema changes
 

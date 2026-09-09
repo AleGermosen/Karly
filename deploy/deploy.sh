@@ -28,9 +28,17 @@ git fetch origin
 git checkout "$BRANCH"
 git pull --ff-only origin "$BRANCH"
 .venv/bin/pip install -q -r requirements.txt
-systemctl --user restart karly
+# Both bots (German + English) run the same checkout, so any code change
+# needs both units restarted — restarting only "karly" here would leave the
+# English bot running stale code until someone noticed and restarted it by hand.
+for u in karly karly-english; do
+  systemctl --user restart "\$u"
+done
 sleep 2
-systemctl --user --no-pager status karly | head -n 15
+for u in karly karly-english; do
+  echo "== \$u =="
+  systemctl --user --no-pager status "\$u" | head -n 15
+done
 REMOTE
 
-echo "==> Done. Live logs:  make logs   (or ssh $HOST 'journalctl --user -u karly -f')"
+echo "==> Done. Live logs:  make logs   (or ssh $HOST 'journalctl --user -u karly -u karly-english -f')"

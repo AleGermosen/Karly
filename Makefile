@@ -31,14 +31,19 @@ curriculum-rehash:
 deploy:
 	./deploy/deploy.sh
 
+# Both bots (German: karly, English: karly-english) run off the same
+# checkout, so the remote targets below cover both by default rather than
+# silently leaving one on stale code / not reporting its state.
+KARLY_UNITS := karly karly-english
+
 logs:
-	ssh "$(KARLY_HOST)" 'journalctl --user -u karly -n 100 -f'
+	ssh "$(KARLY_HOST)" 'journalctl --user -u karly -u karly-english -n 100 -f'
 
 status:
-	ssh "$(KARLY_HOST)" 'systemctl --user --no-pager status karly'
+	ssh "$(KARLY_HOST)" 'for u in $(KARLY_UNITS); do echo "== $$u =="; systemctl --user --no-pager status $$u; done'
 
 restart:
-	ssh "$(KARLY_HOST)" 'systemctl --user restart karly'
+	ssh "$(KARLY_HOST)" 'for u in $(KARLY_UNITS); do systemctl --user restart $$u; done'
 
 stop:
-	ssh "$(KARLY_HOST)" 'systemctl --user stop karly'
+	ssh "$(KARLY_HOST)" 'for u in $(KARLY_UNITS); do systemctl --user stop $$u; done'

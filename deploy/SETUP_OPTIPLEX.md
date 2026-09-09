@@ -1,5 +1,12 @@
 # Deploying Karly on the OptiPlex (run-from-there, edit-from-here)
 
+> This is the **one-time, from-scratch** setup runbook (single bot, generic
+> paths/IPs). It's already been done on the current OptiPlex, which now runs
+> **two** bot instances (German + English) from `~/PycharmProjects/Karly` —
+> see `DEPLOY_CHECKLIST.md` for the actual day-to-day flow and how the
+> second (`karly-english`) unit + the nightly backup timer were added on top
+> of what's set up below.
+
 Goal: the **OptiPlex 3020M** runs Karly 24/7 as a background service; you keep
 developing on your main PC and deploy with one command (`make deploy`). Because
 the bot uses Telegram **long polling**, the OptiPlex needs no public IP, no port
@@ -102,7 +109,7 @@ Quick sanity check that it starts (Ctrl-C after you see "Starting Karly"):
 ### B6. Install the systemd **user** service
 ```bash
 mkdir -p ~/.config/systemd/user
-cp ~/Karly/deploy/karly.service ~/.config/systemd/user/karly.service
+cp ~/PycharmProjects/Karly/deploy/karly.service ~/.config/systemd/user/karly.service
 systemctl --user daemon-reload
 systemctl --user enable --now karly
 systemctl --user --no-pager status karly     # should be "active (running)"
