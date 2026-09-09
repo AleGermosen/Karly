@@ -1,0 +1,1414 @@
+- id: en.b2.g01
+  kind: grammar
+  level: B2
+  order: 1
+  title_target: Perfect modals — must have, can't have, might have
+  title_l1: Modales perfectos — deducción en el pasado
+  can_do: I can make deductions and draw conclusions about past events.
+  prereqs:
+  - en.b1.g10
+  skill: grammar
+  explain:
+  - 'Use perfect modals to reason about the past: must have (certain), might/may have
+    (possible), can''t have (impossible).'
+  - 'must have + past participle: strong positive deduction. ''She must have left
+    early — her desk is clear.'''
+  - 'can''t have + past participle: strong negative deduction. ''He can''t have read
+    it — he only got it an hour ago.'''
+  - 'might/may/could have + past participle: possibility. ''They might have taken
+    a different route.'''
+  - 'should have / ought to have: expectation (it was expected but didn''t happen).
+    ''You should have called me.'''
+  - 'could have: unrealised ability or past possibility. ''I could have helped, but
+    I didn''t know.'''
+  - 'These are also used for criticism: ''You shouldn''t have said that.'''
+  examples:
+  - target: She must have worked very hard — the project is excellent.
+    gloss: Debe de haber trabajado mucho — el proyecto es excelente.
+  - target: He can't have seen the email — he hasn't replied yet.
+    gloss: No puede haber visto el correo — todavía no ha respondido.
+  - target: They might have missed the flight. Let me check.
+    gloss: Puede que hayan perdido el vuelo. Déjame comprobarlo.
+  pitfalls:
+  - Spanish uses 'deber de haber' (must have) or 'poder haber' (might have). The modal
+    + have + participle structure in English is rigid — don't drop 'have'.
+  - 'Don''t confuse ''must have'' (deduction) with ''had to'' (obligation): ''He must
+    have been tired'' ≠ ''He had to be tired.'''
+  - Can't have ≠ couldn't. 'She can't have done it' (deduction) vs 'She couldn't do
+    it' (inability at the time).
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:1d0adfd3a7f28c43
+- id: en.b2.g02
+  kind: grammar
+  level: B2
+  order: 2
+  title_target: Mixed conditionals
+  title_l1: Condicionales mixtos
+  can_do: I can link a past condition to a present result, and a present state to
+    a past result.
+  prereqs:
+  - en.b1.g07
+  - en.b1.g08
+  skill: grammar
+  explain:
+  - Mixed conditionals combine tenses across the if-clause and main clause.
+  - 'Type 1 mix — past condition, present result: ''If I had studied medicine, I would
+    be a doctor now.'' (If + past perfect → would + infinitive)'
+  - 'Type 2 mix — present condition, past result: ''If I weren''t so shy, I would
+    have spoken to her.'' (If + past simple → would have + participle)'
+  - Use type 1 mix when an unreal past event would affect the present situation.
+  - Use type 2 mix when a permanent present state caused an unreal past result.
+  - The two clauses can appear in either order with no comma needed when the main
+    clause comes first.
+  - 'Time markers help: ''now'', ''still'', ''today'' signal the present result half;
+    ''yesterday'', ''last year'' signal the past condition.'
+  examples:
+  - target: If I had taken that job, I would be living in Paris now.
+    gloss: Si hubiera aceptado ese trabajo, ahora estaría viviendo en París.
+  - target: If she weren't so stubborn, she would have apologised by now.
+    gloss: Si no fuera tan terca, ya se habría disculpado.
+  - target: He would have become a pilot if he had better eyesight.
+    gloss: Habría sido piloto si tuviera mejor vista.
+  pitfalls:
+  - 'Spanish mixed conditionals use ''hubiera/hubiese + participio'' and ''estaría''.
+    English is stricter: always ''would + have + participle'' for the past result
+    half.'
+  - 'Don''t mix up the halves: ''If I had studied, I would be…'' — the if-clause is
+    always the past perfect for mix 1.'
+  - 'Never use ''would'' in the if-clause: ''If I would have studied'' is incorrect.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:c2c68d57560d17e7
+- id: en.b2.g03
+  kind: grammar
+  level: B2
+  order: 3
+  title_target: Advanced passive — all tenses and structures
+  title_l1: Pasiva avanzada — todos los tiempos y estructuras
+  can_do: I can use the passive across all tenses and with infinitives and gerunds.
+  prereqs:
+  - en.b1.g09
+  skill: grammar
+  explain:
+  - 'Passive: be + past participle. Extend it to every tense and modal.'
+  - 'Future passive: The bridge will be repaired next week.'
+  - 'Perfect passive: The form has been submitted. The work had been completed.'
+  - 'Modal passive: The report must be signed. It should be checked. It might be delayed.'
+  - 'Continuous passive (less common but tested): The road is being widened. It was
+    being painted.'
+  - 'Passive infinitive: He wants to be promoted. She expects to be paid.'
+  - 'Passive gerund: She dislikes being interrupted. He avoided being seen.'
+  - 'Impersonal reporting passives: It is said that... / He is believed to be...'
+  examples:
+  - target: The new law will be implemented next year.
+    gloss: La nueva ley se implementará el año que viene.
+  - target: The suspect is believed to have left the country.
+    gloss: Se cree que el sospechoso ha abandonado el país.
+  - target: She hates being kept waiting at the dentist.
+    gloss: Le molesta que la hagan esperar en el dentista.
+  pitfalls:
+  - Spanish uses 'se' constructions (se implementará) or reflexive passives freely.
+    English keeps the full 'be + participle' structure — don't shorten it.
+  - '''It is said that he is rich'' = ''He is said to be rich''. Both are correct
+    but different structures. Learn both.'
+  - 'Modal passive: ''It must be done'' — the order is modal + be + participle, not
+    ''be + must + done''.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:06cf6c346ae24d03
+- id: en.b2.g04
+  kind: grammar
+  level: B2
+  order: 4
+  title_target: Participle clauses
+  title_l1: Cláusulas de participio
+  can_do: I can use present and past participle clauses to make my writing more concise.
+  prereqs:
+  - en.b1.g03
+  - en.b1.g09
+  skill: grammar
+  explain:
+  - Participle clauses shorten two-clause sentences, replacing relative clauses or
+    adverbial clauses.
+  - 'Present participle (-ing) for active meaning: ''The woman sitting by the window
+    is my boss.'' (= who is sitting)'
+  - 'Past participle for passive meaning: ''The documents signed yesterday are missing.''
+    (= which were signed)'
+  - 'After conjunctions: ''Having finished the report, she went home.'' (= after she
+    had finished)'
+  - 'Reason or result: ''Not knowing the way, I got lost.'' (= because I didn''t know)'
+  - 'Time: ''While waiting for the bus, I checked my messages.'''
+  - Both subject and participle must refer to the same person (dangling participle
+    error otherwise).
+  examples:
+  - target: Walking home, I noticed a strange car outside my building.
+    gloss: Mientras volvía a casa, noté un coche extraño frente a mi edificio.
+  - target: The letter written by the CEO was sent to all employees.
+    gloss: La carta escrita por el director ejecutivo se envió a todos los empleados.
+  - target: Having missed the deadline, she had to explain herself to her manager.
+    gloss: Al haber perdido el plazo, tuvo que dar explicaciones a su jefe.
+  pitfalls:
+  - Spanish allows detached participles more freely. English requires the participle
+    subject to match the main clause subject or you create a dangling modifier.
+  - '''Having been told'' (passive perfect participle) is less common but correct
+    for ''after being told''. Don''t avoid it — it marks B2 writing.'
+  - 'Don''t use ''being'' when the past participle alone does the work: ''Being written
+    yesterday'' → ''Written yesterday''.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:9de2a12723be0d7f
+- id: en.b2.g05
+  kind: grammar
+  level: B2
+  order: 5
+  title_target: Inversion for emphasis
+  title_l1: Inversión para enfatizar
+  can_do: I can invert subject and auxiliary for emphasis in formal and written English.
+  prereqs:
+  - en.b1.g28
+  skill: grammar
+  explain:
+  - 'Inversion: place the auxiliary before the subject to add emphasis or formality.'
+  - 'After negative and restrictive adverbials: Never have I seen such dedication.
+    Rarely does he make mistakes.'
+  - 'Common triggers: Never, Rarely, Seldom, Hardly…when, No sooner…than, Not only…but
+    also, Only then, Under no circumstances.'
+  - 'Pattern: negative adverb + auxiliary + subject + main verb.'
+  - '''Hardly had she arrived when the phone rang.'' (= She had hardly arrived when…)'
+  - '''Not only did he arrive late, but he also forgot the report.'''
+  - 'After ''only'' phrases: ''Only after reading the report did I understand.'''
+  - Inversion is formal and mostly written — neutral spoken English avoids it.
+  examples:
+  - target: Never have I felt so embarrassed in my life.
+    gloss: Nunca en mi vida me he sentido tan avergonzado.
+  - target: No sooner had she sat down than the fire alarm went off.
+    gloss: No bien se había sentado cuando sonó la alarma de incendios.
+  - target: Not only did he win the race, but he also broke the record.
+    gloss: No solo ganó la carrera, sino que también batió el récord.
+  pitfalls:
+  - 'Spanish achieves fronting by word order alone: ''Nunca he visto…'' does not require
+    inversion. English needs the auxiliary flipped: ''Never have I seen…'' not ''Never
+    I have seen…'''
+  - 'After ''only'': the inversion goes in the MAIN clause, not the ''only'' clause:
+    ''Only after he left did I relax.'''
+  - 'Don''t invert after positive adverbs: ''Always I go'' is wrong. Inversion is
+    triggered by negatives and restrictives only.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:c71f3d314a61eb09
+- id: en.b2.g06
+  kind: grammar
+  level: B2
+  order: 6
+  title_target: Advanced relative clauses — reduced and non-finite
+  title_l1: Cláusulas de relativo avanzadas
+  can_do: I can use reduced relative clauses and non-finite relatives in formal English.
+  prereqs:
+  - en.b1.g19
+  skill: grammar
+  explain:
+  - Reduced relative clauses drop the relative pronoun + be when possible.
+  - '''The woman who is sitting by the window'' → ''The woman sitting by the window.'''
+  - '''The report that was submitted yesterday'' → ''The report submitted yesterday.'''
+  - Use -ing (active) or past participle (passive) in the reduced form.
+  - 'Non-finite relatives with infinitive express possibility or duty: ''The only
+    person to complain was Jim.'' (= who complained)'
+  - 'Preposition + which/whom in formal writing: ''The company for which she works
+    is very large.'''
+  - '''Whoever, whatever, whichever, wherever, whenever, however'' introduce free
+    relatives: ''Whoever did this made a serious mistake.'''
+  examples:
+  - target: The candidate chosen for the role has 10 years of experience.
+    gloss: El candidato elegido para el puesto tiene 10 años de experiencia.
+  - target: This is the only solution likely to work in the time available.
+    gloss: Esta es la única solución que probablemente funcione en el tiempo disponible.
+  - target: Whatever you decide, I'll support you.
+    gloss: Decidas lo que decidas, te apoyaré.
+  pitfalls:
+  - Spanish rarely reduces relatives this way. English reduced relatives look like
+    adjectives placed after the noun — don't add 'that is' back.
+  - Avoid 'The man who sitting there' — either full (who is sitting) or reduced (sitting).
+    Never both.
+  - 'Whoever vs. whoever: ''Whoever comes first will win'' (subject); ''Give it to
+    whoever wants it'' (object of give).'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:a49ebfc1d6b0aa0a
+- id: en.b2.g07
+  kind: grammar
+  level: B2
+  order: 7
+  title_target: Subjunctive and formal that-clauses
+  title_l1: Subjuntivo y cláusulas formales con that
+  can_do: I can use the subjunctive in formal recommendations, demands, and fixed
+    phrases.
+  prereqs:
+  - en.b1.g16
+  skill: grammar
+  explain:
+  - 'English has a mandative subjunctive in formal contexts: base form of verb, no
+    -s in third person.'
+  - 'After verbs of demanding, recommending, suggesting, insisting: ''The committee
+    recommended that she be promoted.'''
+  - 'After adjectives: ''It is essential that he attend the meeting.'''
+  - 'No third-person -s: ''It is important that he arrive on time'' (not ''arrives'').'
+  - 'Negative subjunctive: ''It is crucial that they not sign the contract yet.'''
+  - 'Fixed subjunctive phrases: If need be. Come what may. Suffice it to say. Be that
+    as it may.'
+  - 'AmE uses subjunctive more; BrE often prefers ''should'': ''She suggested he should
+    go'' (BrE) = ''She suggested he go'' (AmE). Both correct.'
+  examples:
+  - target: The judge insisted that the witness tell the full truth.
+    gloss: El juez insistió en que el testigo dijera toda la verdad.
+  - target: It is vital that every employee be informed of the changes.
+    gloss: Es fundamental que todos los empleados sean informados de los cambios.
+  - target: Come what may, we will finish the project on time.
+    gloss: Pase lo que pase, terminaremos el proyecto a tiempo.
+  pitfalls:
+  - Spanish subjunctive is everywhere. English subjunctive only surfaces in formal
+    recommendations and fixed phrases — don't use it in casual speech.
+  - '''He be'' sounds wrong to many learners because the base form feels plural. Trust
+    the grammar: the subjunctive doesn''t agree with the subject.'
+  - The alternative 'should' structure ('He suggested she should leave') is perfectly
+    correct and less formal.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:ed2e2ccb05c349e6
+- id: en.b2.g08
+  kind: grammar
+  level: B2
+  order: 8
+  title_target: Wish, if only, and hypothetical past
+  title_l1: Wish, if only y el pasado hipotético
+  can_do: I can express regrets about the past and wishes about the present and future.
+  prereqs:
+  - en.b1.g07
+  - en.b1.g08
+  skill: grammar
+  explain:
+  - '''Wish + past simple: wish about the present (opposite of reality). ''I wish
+    I lived closer to work.'''
+  - '''Wish + would: wish about future behaviour (often irritation). ''I wish he would
+    stop interrupting.'''
+  - '''Wish + past perfect: regret about the past. ''I wish I had studied harder.'''
+  - '''If only'' is a stronger, more emotional form of wish. Same tenses.'
+  - '''I wish I were'' is formally correct (subjunctive); ''I wish I was'' is common
+    in speech.'
+  - '''It''s time + past simple: ''It''s time you went to bed.'' (It should already
+    have happened.)'
+  - '''I''d rather + past simple (other person): ''I''d rather you didn''t do that.'''
+  examples:
+  - target: I wish I had taken that job offer when I had the chance.
+    gloss: Ojalá hubiera aceptado esa oferta de trabajo cuando tuve la oportunidad.
+  - target: If only she would listen to advice for once.
+    gloss: Ojalá escuchara los consejos alguna vez.
+  - target: It's high time the government did something about this.
+    gloss: Ya es hora de que el gobierno haga algo al respecto.
+  pitfalls:
+  - '''Wish'' in English does not allow the indicative present in its complement:
+    ''I wish I live closer'' is wrong. Use past simple for present wishes.'
+  - 'Tense shift is confusing: ''I wish I knew'' (present wish) vs ''I wish I had
+    known'' (past regret). The further back in tense, the further back in time.'
+  - Don't confuse 'I'd rather you did' (past simple = polite preference now) with
+    'I'd rather have done' (past infinitive = preference in the past).
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:aca281cd80b0ca39
+- id: en.b2.g09
+  kind: grammar
+  level: B2
+  order: 9
+  title_target: Causative have and get
+  title_l1: Causativo con have y get
+  can_do: I can describe having something done by someone else using have and get.
+  prereqs:
+  - en.b1.g09
+  skill: grammar
+  explain:
+  - '''Have something done: you arrange for someone else to do it. ''I had my car
+    serviced.'' (A mechanic did it, not me.)'
+  - 'Form: have + object + past participle.'
+  - '''Get something done'' is more informal and colloquial. ''I got my hair cut.'''
+  - 'Get someone to do something: ''I got my brother to fix it.'' (They agreed to
+    do it.)'
+  - 'Have someone do something (no -to, AmE): ''I had the plumber check the pipes.'''
+  - 'Passive get: ''She got promoted.'' = ''She was promoted.'' (Slightly more active
+    feel.)'
+  - 'Negative and questions follow the normal auxiliary pattern: Did you have it fixed?
+    I haven''t had it done yet.'
+  examples:
+  - target: We're having the house painted this summer.
+    gloss: Este verano vamos a que nos pinten la casa.
+  - target: She got her tooth extracted at the dentist this morning.
+    gloss: Esta mañana le sacaron una muela en el dentista.
+  - target: I need to get this document translated before Friday.
+    gloss: Necesito que me traduzcan este documento antes del viernes.
+  pitfalls:
+  - 'Spanish uses ''mandar hacer'' or reflexive ''me lo arreglaron''. English causative
+    has a fixed order: have/get + object + participle.'
+  - Don't say 'I had my car to be serviced'. The infinitive 'to be' doesn't belong
+    after 'have + object' in the causative.
+  - 'Negative experience passives also use ''have'': ''She had her bag stolen.'' This
+    is NOT causative — she didn''t arrange it. Context distinguishes them.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:3d63bd3ffb501652
+- id: en.b2.g10
+  kind: grammar
+  level: B2
+  order: 10
+  title_target: Advanced reporting verbs
+  title_l1: Verbos de reporte avanzados
+  can_do: I can report speech using a range of verbs that show the speaker's intent.
+  prereqs:
+  - en.b1.g15
+  skill: grammar
+  explain:
+  - Basic say/tell can be replaced with more precise reporting verbs that show intent.
+  - 'Verb + to-infinitive: agree, offer, promise, refuse, threaten, claim. ''He promised
+    to help.'''
+  - 'Verb + that-clause: admit, complain, explain, suggest, add, confirm, deny. ''She
+    admitted that she had been wrong.'''
+  - 'Verb + -ing: admit, deny, suggest, recommend. ''She denied stealing the money.'''
+  - 'Verb + object + to-infinitive: advise, encourage, persuade, remind, warn, urge.
+    ''They warned us not to enter.'''
+  - 'Verb + of + -ing: accuse, suspect. ''He accused her of lying.'''
+  - 'Verb + for + -ing: apologise, thank, criticise, blame. ''She apologised for being
+    late.'''
+  examples:
+  - target: He threatened to go to the press if they didn't pay him.
+    gloss: Amenazó con ir a la prensa si no le pagaban.
+  - target: She denied having seen the document before.
+    gloss: Negó haber visto el documento antes.
+  - target: They urged us not to make any rash decisions.
+    gloss: Nos instaron a no tomar decisiones precipitadas.
+  pitfalls:
+  - 'Each verb has a fixed pattern. ''He suggested to go'' is wrong — ''suggest''
+    takes -ing or a that-clause: ''suggested going'' / ''suggested that we go''.'
+  - 'Deny takes -ing, not that + subjunctive: ''She denied stealing'' not ''denied
+    to steal''.'
+  - 'Accuse and blame use ''of'', not ''for'': ''accused her of lying'', not ''for
+    lying''.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:d97d449da11e4d8d
+- id: en.b2.g11
+  kind: grammar
+  level: B2
+  order: 11
+  title_target: Fronting and focus structures
+  title_l1: Posposición y estructuras de foco
+  can_do: I can move elements to the front of a sentence for emphasis and contrast.
+  prereqs:
+  - en.b1.g28
+  - en.b2.g05
+  skill: grammar
+  explain:
+  - Fronting moves a non-subject element to the front for emphasis or topic continuity.
+  - 'Object fronting: ''That book I''ve never read.'' (contrast with others I have
+    read)'
+  - 'Complement fronting: ''Wonderful was the view from the top.'' (literary/formal)'
+  - 'Adverbial fronting is common and natural: ''In this room, no phones are allowed.'''
+  - 'Fronting often triggers inversion: ''Down came the rain.'' ''Across the road
+    ran the child.'''
+  - 'Topic-comment structure: ''As for the budget, we''ll discuss it later.'''
+  - 'Contrast: ''Some people loved it. Others hated it. Disappointed were the organisers.'''
+  examples:
+  - target: That kind of behaviour I simply will not tolerate.
+    gloss: Ese tipo de comportamiento, sencillamente, no lo voy a tolerar.
+  - target: Down the stairs came the children, shouting with excitement.
+    gloss: Por las escaleras bajaron los niños, gritando de emoción.
+  - target: As for the cost, we can talk about that separately.
+    gloss: En cuanto al coste, podemos hablar de eso por separado.
+  pitfalls:
+  - Spanish fronting is natural in speech ('Ese libro, no lo he leído'). English fronting
+    is more marked and mainly written/formal — don't overuse it in speech.
+  - When a non-subject is fronted, check whether inversion is needed. Adverbials often
+    trigger it; objects usually don't.
+  - 'Verb-subject inversion after fronted adverbials of place/direction: ''On the
+    table lay a map'' — the verb moves before the subject.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:e29394ffb5641f58
+- id: en.b2.g12
+  kind: grammar
+  level: B2
+  order: 12
+  title_target: Cleft sentences — it is/was and what-clefts
+  title_l1: Oraciones escindidas — it is/was y clefts con what
+  can_do: I can use cleft sentences to emphasise specific information.
+  prereqs:
+  - en.b1.g28
+  skill: grammar
+  explain:
+  - 'It-clefts: ''It was the manager who called.'' — puts heavy stress on the manager.'
+  - 'Pattern: It is/was + focused element + relative clause (who/that/which).'
+  - 'What-clefts (pseudo-clefts): ''What surprised me most was her calmness.'' — fronts
+    the comment.'
+  - 'Pattern for what-cleft: What + clause + be + focused element.'
+  - 'Reverse what-cleft: ''Her calmness was what surprised me most.'''
+  - 'All that-cleft: ''All I want is a quiet evening.'' (minimises focus)'
+  - Clefts are natural in both speech and writing; overuse makes writing feel choppy.
+  examples:
+  - target: It was her honesty that made such a strong impression on everyone.
+    gloss: Fue su honestidad lo que causó una impresión tan fuerte en todos.
+  - target: What we need now is a clear plan of action.
+    gloss: Lo que necesitamos ahora es un plan de acción claro.
+  - target: All he asked for was a little patience.
+    gloss: Todo lo que pedía era un poco de paciencia.
+  pitfalls:
+  - 'Don''t drop ''it is'' from it-clefts: ''Was the manager who called'' is a fragment.'
+  - 'What-cleft requires ''what'' (= the thing that): ''What I need is rest'' — don''t
+    replace with ''that''.'
+  - 'Tense: the ''it was'' / ''it is'' should match the reality being described, not
+    be fixed to present. Both ''It is'' and ''It was'' are common even for past events.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:08e4c415c432edb1
+- id: en.b2.g13
+  kind: grammar
+  level: B2
+  order: 13
+  title_target: Ellipsis and substitution
+  title_l1: Elipsis y sustitución
+  can_do: I can omit or substitute repeated words using ellipsis and substitution
+    devices.
+  prereqs:
+  - en.b1.g01
+  - en.b1.g02
+  skill: grammar
+  explain:
+  - 'Ellipsis: leaving out words that can be recovered from context. ''She can sing
+    and [she can] dance.'''
+  - 'VP ellipsis: use an auxiliary to stand for the whole VP. ''He ran faster than
+    she did [ran].'''
+  - '''So do I'' / ''Neither do I'' for agreeing with statements.'
+  - '''I think so'' / ''I hope so'' / ''I''m afraid not'' replace that-clauses.'
+  - 'Substitution with ''do'': ''Did he fix it? Yes, he did.'' / ''Better than he
+    used to [do].'''
+  - 'Substitution with ''one(s)'': ''Take the red pen, not the blue one.'''
+  - 'Ellipted infinitives: ''Would you like to come? I''d love to [come].'''
+  examples:
+  - target: She speaks French fluently and her brother does too.
+    gloss: Ella habla francés con fluidez y su hermano también.
+  - target: — Is the meeting cancelled? — I'm afraid so.
+    gloss: — ¿Se ha cancelado la reunión? — Me temo que sí.
+  - target: I'd love to come to the party, but I'm afraid I can't.
+    gloss: Me encantaría venir a la fiesta, pero me temo que no puedo.
+  pitfalls:
+  - Spanish can drop subject pronouns freely (pro-drop). English cannot — only the
+    predicate can be ellipted, never the subject in most cases.
+  - '''So do I'' (positive agreement) vs ''Neither do I'' (negative agreement). Mixing
+    them (''So don''t I'') is incorrect.'
+  - 'Ellipted ''to'' at the end: ''She told me to go but I didn''t want to [go].''
+    The ''to'' stays — don''t drop it.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:20d511e0dc24acc4
+- id: en.b2.g14
+  kind: grammar
+  level: B2
+  order: 14
+  title_target: Discourse markers — structure and cohesion
+  title_l1: Marcadores del discurso — estructura y cohesión
+  can_do: I can use discourse markers to organise ideas and guide the reader through
+    my argument.
+  prereqs:
+  - en.b1.g26
+  skill: grammar
+  explain:
+  - Discourse markers signal the relationship between ideas. They work at sentence
+    and paragraph level.
+  - 'Adding: furthermore, moreover, in addition, what is more, besides.'
+  - 'Contrasting: however, nevertheless, nonetheless, on the other hand, that said,
+    even so, yet.'
+  - 'Conceding: admittedly, granted, while it is true that, to be fair.'
+  - 'Exemplifying: for instance, for example, in particular, such as, namely.'
+  - 'Concluding: therefore, consequently, as a result, in conclusion, to sum up, all
+    in all.'
+  - 'Reformulating: that is to say, in other words, to put it differently.'
+  - Each marker signals a specific relationship. Using the wrong one creates incoherence
+    even if the grammar is perfect.
+  examples:
+  - target: The project was expensive. Nevertheless, the results justified the investment.
+    gloss: El proyecto fue caro. Sin embargo, los resultados justificaron la inversión.
+  - target: There are several problems — the cost, for instance, is far too high.
+    gloss: Hay varios problemas — el coste, por ejemplo, es demasiado elevado.
+  - target: She failed the exam. Consequently, she had to retake it in September.
+    gloss: Suspendió el examen. En consecuencia, tuvo que repetirlo en septiembre.
+  pitfalls:
+  - '''However'' goes at the start or middle of a sentence, not at the end (unlike
+    Spanish ''sin embargo'' which is flexible). ''However, the cost is high'' — correct.'
+  - '''Besides'' means ''in addition''. It does not mean ''except'' or ''next to''
+    in formal writing.'
+  - Overusing 'furthermore' and 'moreover' makes writing feel stilted. Vary with conjunctions
+    and relative clauses.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:82cfbf7b1631dc0b
+- id: en.b2.g15
+  kind: grammar
+  level: B2
+  order: 15
+  title_target: Hedging and tentative language
+  title_l1: Lenguaje de atenuación y expresión tentativa
+  can_do: I can express uncertainty, soften claims, and sound less direct in academic
+    and professional contexts.
+  prereqs:
+  - en.b1.g10
+  skill: grammar
+  explain:
+  - Hedging signals that a claim is uncertain, approximate, or an opinion rather than
+    fact.
+  - 'Modal hedges: may, might, could (possibility); tend to, seem to, appear to (qualified
+    generalisation).'
+  - 'Approximating adverbs: roughly, approximately, around, about, some (before numbers).'
+  - 'Distancing phrases: It seems that... It appears that... It is possible that...
+    It is likely that...'
+  - 'Reporting hedges: According to..., It has been suggested that..., Research indicates
+    that...'
+  - 'Vague language in speech: sort of, kind of, more or less, or something like that.'
+  - Hedging is not weakness — in academic and professional English it is expected
+    and signals precision.
+  examples:
+  - target: The results suggest that further research may be needed.
+    gloss: Los resultados sugieren que puede ser necesaria más investigación.
+  - target: She appears to be struggling with the workload.
+    gloss: Parece que está teniendo dificultades con la carga de trabajo.
+  - target: There were roughly 200 people at the event.
+    gloss: Había unas 200 personas en el acto.
+  pitfalls:
+  - 'Spanish hedges (''parece que'', ''puede que'') map closely to English. The error
+    is choosing the wrong hedge: ''possibly might'' is over-hedged; pick one.'
+  - 'Don''t hedge facts: ''Water is perhaps H₂O'' is wrong. Save hedges for interpretation
+    and uncertain claims.'
+  - '''Seem'' and ''appear'' take the infinitive in formal English: ''She seems to
+    be tired'' not ''She seems that she is tired.'''
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:c4f87f643a84f8fd
+- id: en.b2.g16
+  kind: grammar
+  level: B2
+  order: 16
+  title_target: Linking words — concession and contrast
+  title_l1: Conectores — concesión y contraste
+  can_do: I can use a full range of concession and contrast linkers in formal and
+    informal writing.
+  prereqs:
+  - en.b2.g14
+  skill: grammar
+  explain:
+  - 'Contrast: whereas, while (simultaneous contrast); on the other hand; in contrast.'
+  - 'Concession: although, even though, though (despite the fact); however; nevertheless.'
+  - 'Despite and in spite of take a noun or gerund, NOT a clause: ''Despite being
+    tired, she continued.'''
+  - 'Although and even though introduce clauses: ''Although she was tired, she continued.'''
+  - 'Regardless of + noun/gerund: ''Regardless of the cost, we must proceed.'''
+  - '''No matter'' + question word: ''No matter what she says, I won''t change my
+    mind.'''
+  - '''While'' and ''whereas'' set up direct contrasts between two things.'
+  examples:
+  - target: While I understand your concerns, I think we should proceed.
+    gloss: Aunque entiendo tus preocupaciones, creo que deberíamos seguir adelante.
+  - target: Despite having prepared thoroughly, she felt nervous.
+    gloss: A pesar de haberse preparado a fondo, estaba nerviosa.
+  - target: No matter how hard I try, I can't seem to get this right.
+    gloss: Por mucho que lo intente, no parece que pueda hacerlo bien.
+  pitfalls:
+  - '''Despite'' and ''in spite of'' cannot introduce clauses directly: ''Despite
+    that she was tired'' is wrong. Use ''although'' for clauses.'
+  - '''Although'' and ''even though'' are interchangeable in most cases. ''Even though''
+    is slightly more emphatic.'
+  - '''While'' used for concession (= although) is different from ''while'' used for
+    simultaneous time. Context usually makes it clear.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:da168102e3c196dc
+- id: en.b2.g17
+  kind: grammar
+  level: B2
+  order: 17
+  title_target: Complex prepositions and prepositional phrases
+  title_l1: Preposiciones complejas y frases preposicionales
+  can_do: I can use multi-word prepositions accurately in formal and written English.
+  prereqs:
+  - en.b1.g27
+  skill: grammar
+  explain:
+  - Complex prepositions are two- or three-word phrases that function like single
+    prepositions.
+  - 'Two-word: because of, due to, according to, thanks to, apart from, instead of,
+    regardless of, as well as.'
+  - 'Three-word: in spite of, in addition to, in front of, in terms of, with regard
+    to, on behalf of, in view of, by means of, in the light of.'
+  - 'Due to vs owing to: both mean ''because of''. ''Due to'' works as adjective (''The
+    delay was due to fog''); ''owing to'' is prepositional.'
+  - 'As well as + -ing: ''As well as being expensive, it is unreliable.'''
+  - Apart from + noun/gerund means 'except for' or 'in addition to' (context determines
+    which).
+  examples:
+  - target: In view of the new evidence, the case was reopened.
+    gloss: Teniendo en cuenta las nuevas pruebas, el caso fue reabierto.
+  - target: On behalf of the whole team, I'd like to thank you.
+    gloss: En nombre de todo el equipo, me gustaría darle las gracias.
+  - target: Apart from being expensive, the flat is too far from work.
+    gloss: Además de ser caro, el piso queda demasiado lejos del trabajo.
+  pitfalls:
+  - '''Due to'' is still avoided in formal style where ''owing to'' or ''as a result
+    of'' is preferred, especially after a verb: ''Cancelled owing to bad weather''
+    not ''due to''.'
+  - '''In terms of'' is often overused in writing. Replace it with a direct noun or
+    preposition where possible.'
+  - '''As well as'' adds — it does not contrast. Don''t use it to express contrast.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:7f37c3572c3bc327
+- id: en.b2.g18
+  kind: grammar
+  level: B2
+  order: 18
+  title_target: Register — formal vs informal vocabulary
+  title_l1: Registro — vocabulario formal vs informal
+  can_do: I can choose vocabulary appropriate to the formality of a situation.
+  prereqs:
+  - en.b2.g14
+  skill: vocabulary
+  explain:
+  - Register is how formal or informal your language sounds. It is mainly shown through
+    vocabulary choice.
+  - 'Informal→formal: get→obtain, start→commence, need→require, ask for→request, look
+    into→investigate, end→conclude, help→assist.'
+  - Phrasal verbs are typically informal. Their single-word synonyms are formal.
+  - 'Formal writing: avoid contractions (don''t → do not), passive preferred over
+    active in reports, complex prepositions.'
+  - 'Informal speech: contractions normal, phrasal verbs fine, hedges like ''sort
+    of''.'
+  - Neutral register works for most everyday writing and professional emails.
+  - Choosing the wrong register is not a grammar error but it will affect how you
+    are perceived in English-speaking professional environments.
+  examples:
+  - target: We would like to request clarification regarding the proposed changes.
+    gloss: Nos gustaría solicitar aclaraciones sobre los cambios propuestos.
+  - target: The results clearly demonstrate the effectiveness of the approach.
+    gloss: Los resultados demuestran claramente la eficacia del enfoque.
+  - target: Please let me know if you require any further information.
+    gloss: Por favor, hágamelo saber si necesita más información.
+  pitfalls:
+  - Spanish formal vocabulary often transfers — many English formal words come from
+    Latin/French, same roots. Exploit this ('require' vs 'requiero').
+  - Don't assume formal = longer. 'Use' is often better than 'utilise' even in formal
+    writing.
+  - Mixing registers (informal vocabulary in a formal report) reads as unprofessional,
+    even if grammatically correct.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:6975b6769d67bcb9
+- id: en.b2.g19
+  kind: grammar
+  level: B2
+  order: 19
+  title_target: Collocations — verb-noun and adjective-noun
+  title_l1: Colocaciones — verbo-sustantivo y adjetivo-sustantivo
+  can_do: I can use high-frequency collocations correctly instead of translating word
+    for word.
+  prereqs:
+  - en.b1.g27
+  skill: vocabulary
+  explain:
+  - A collocation is a pair of words that naturally go together. Using the wrong word
+    sounds unnatural even if it is not grammatically wrong.
+  - 'Make vs do: make a decision, make an effort, make progress, make a mistake; do
+    homework, do research, do damage, do business.'
+  - 'Adjective+noun: heavy (rain/traffic/smoker); strong (accent/coffee/argument);
+    high (demand/level/risk); deep (sleep/concern).'
+  - 'Verb+noun: take (responsibility/action/care); pay (attention/compliment/visit);
+    give (advice/presentation/permission).'
+  - 'Common errors: *do a mistake (make a mistake); *a strong rain (heavy rain); *make
+    research (do research).'
+  - Learn collocations as chunks, not word by word. A dictionary of collocations is
+    more useful than a grammar for these.
+  examples:
+  - target: She made a great effort to arrive on time despite the traffic.
+    gloss: Hizo un gran esfuerzo por llegar a tiempo a pesar del tráfico.
+  - target: Heavy rain is forecast for the whole weekend.
+    gloss: Se prevén lluvias intensas durante todo el fin de semana.
+  - target: The company has a high demand for skilled engineers.
+    gloss: La empresa tiene una gran demanda de ingenieros cualificados.
+  pitfalls:
+  - Spanish uses 'hacer' for many actions (hacer un esfuerzo, hacer daño). English
+    splits between make and do. Learn each collocation — there is no reliable rule.
+  - '''Strong'' and ''powerful'' are not interchangeable: ''a strong coffee'' but
+    ''a powerful engine''.'
+  - 'Verb + noun collocations are particularly fixed: ''take a decision'' (British)
+    / ''make a decision'' (more common). Both are correct but note the variety.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:2d6780f6f6fdfac6
+- id: en.b2.g20
+  kind: grammar
+  level: B2
+  order: 20
+  title_target: Phrasal verbs — separable and inseparable (B2 set)
+  title_l1: Verbos frasales — separables e inseparables (conjunto B2)
+  can_do: I can use and understand common B2-level phrasal verbs in context.
+  prereqs:
+  - en.b1.g21
+  skill: vocabulary
+  explain:
+  - B2 phrasal verbs extend the B1 set with higher-frequency items in professional
+    and formal contexts.
+  - 'Separable (object can split): bring about, call off, carry out, draw up, look
+    into, put off, set up, take on, turn down.'
+  - 'Inseparable: come across (discover), get over (recover), look forward to (anticipate),
+    run into (meet by chance), stand for.'
+  - 'Three-word phrasal verbs: come up with, get on with, put up with, look up to,
+    look down on.'
+  - 'Formal synonyms exist but phrasal verbs dominate spoken English: ''call off''
+    = cancel; ''look into'' = investigate.'
+  examples:
+  - target: The meeting was called off at the last minute due to the storm.
+    gloss: La reunión se canceló en el último momento por la tormenta.
+  - target: She came up with an innovative solution to the problem.
+    gloss: Se le ocurrió una solución innovadora al problema.
+  - target: I can't put up with this noise any longer.
+    gloss: Ya no puedo aguantar este ruido más tiempo.
+  pitfalls:
+  - 'Separable phrasal verbs: if the object is a pronoun it MUST go between verb and
+    particle: ''call it off'' not ''call off it''.'
+  - '''Look forward to'' takes -ing, not the infinitive: ''I''m looking forward to
+    meeting you'' not ''to meet you''.'
+  - 'Three-word phrasal verbs are always inseparable: ''I can''t put up with it''
+    — you cannot split any part of a three-word phrasal verb.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:a68229770aaf1bcd
+- id: en.b2.g21
+  kind: grammar
+  level: B2
+  order: 21
+  title_target: Complex sentence connectors — result and purpose
+  title_l1: Conectores de resultado y propósito
+  can_do: I can express result and purpose using a full range of complex connectors.
+  prereqs:
+  - en.b2.g14
+  skill: grammar
+  explain:
+  - 'Result: so...that, such...that, so much/many...that, as a result, therefore,
+    consequently, hence.'
+  - '''So + adjective/adverb + that: ''It was so cold that the pipes burst.'''
+  - '''Such + (a) + noun + that: ''It was such a cold night that the pipes burst.'''
+  - 'Purpose: in order to, so as to, in order that, so that (with a modal).'
+  - '''In order to'' and ''so as to'' take an infinitive and share the same subject.
+    ''In order that'' and ''so that'' introduce a clause with a modal.'
+  - '''So as not to'' / ''in order not to'' for negative purpose: ''She whispered
+    so as not to wake the children.'''
+  - '''For'' + -ing expresses a general purpose or function: ''This tool is used for
+    cutting wire.'''
+  examples:
+  - target: The instructions were so complicated that nobody could follow them.
+    gloss: Las instrucciones eran tan complicadas que nadie podía seguirlas.
+  - target: He left early so as not to miss the first train.
+    gloss: Se marchó pronto para no perder el primer tren.
+  - target: The deadline was extended so that everyone could submit on time.
+    gloss: Se amplió el plazo para que todo el mundo pudiera entregar a tiempo.
+  pitfalls:
+  - '''So'' vs ''such'': ''so'' modifies adjectives and adverbs; ''such'' modifies
+    nouns (with or without adjective). ''So fast'' but ''such a fast car''.'
+  - 'Purpose ''for + object + infinitive'' is not standard: use ''so that he could''
+    rather than ''for him to'', though the latter appears in some structures.'
+  - '''Hence'' is formal and usually needs no object: ''The costs rose; hence the
+    decision to postpone.'''
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:126a54d4c37d342a
+- id: en.b2.g22
+  kind: grammar
+  level: B2
+  order: 22
+  title_target: Conditionals — advanced forms (unless, were to, should)
+  title_l1: Condicionales — formas avanzadas
+  can_do: I can use advanced conditional forms for formal and hypothetical situations.
+  prereqs:
+  - en.b2.g02
+  skill: grammar
+  explain:
+  - '''Were to'' + infinitive makes a conditional more hypothetical or formal: ''If
+    he were to resign, it would be a disaster.'''
+  - '''Should'' in the if-clause makes an event slightly less likely: ''If you should
+    have any questions, please contact us.'' (formal)'
+  - 'Inverted conditionals (no ''if''): ''Were he to resign...'' / ''Should you need
+    help...'' / ''Had I known...'''
+  - '''Unless'' = if not. ''Unless you pay, you can''t enter'' = ''If you don''t pay,
+    you can''t enter.'''
+  - 'Conjunctions for conditions: provided (that), as long as, on condition that,
+    given that, assuming (that).'
+  - 'Subjunctive in formal conditionals: ''If this be true...'' (very formal/archaic
+    but found in legal texts).'
+  examples:
+  - target: Were the government to cut funding, the project would collapse.
+    gloss: Si el gobierno recortara la financiación, el proyecto colapsaría.
+  - target: Should you require assistance, do not hesitate to contact us.
+    gloss: Si necesita ayuda, no dude en ponerse en contacto con nosotros.
+  - target: Had I known about the problem earlier, I could have solved it.
+    gloss: Si hubiera sabido antes del problema, podría haberlo resuelto.
+  pitfalls:
+  - 'Inverted conditionals require inversion of subject and auxiliary, not just dropping
+    ''if'': ''Were he...'' not ''He were...'''
+  - '''Unless'' cannot be used with negative verbs: ''Unless you don''t come'' is
+    wrong. Say ''Unless you come'' or ''If you don''t come''.'
+  - '''Provided that'' requires a real (not impossible) condition. Don''t use it for
+    third conditional situations.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:41c36c0026041e80
+- id: en.b2.g23
+  kind: grammar
+  level: B2
+  order: 23
+  title_target: Nominalisation
+  title_l1: Nominalización
+  can_do: I can convert verbs and adjectives into nouns to write in a more formal
+    and impersonal style.
+  prereqs:
+  - en.b2.g18
+  skill: grammar
+  explain:
+  - Nominalisation replaces verb phrases and clauses with noun phrases — central to
+    academic and business writing.
+  - 'Verb → noun: decide → decision; analyse → analysis; investigate → investigation;
+    fail → failure; grow → growth.'
+  - 'Adjective → noun: efficient → efficiency; important → importance; accurate →
+    accuracy; significant → significance.'
+  - 'Suffixes: -tion/-sion, -ment, -ance/-ence, -ity, -ness, -al, -ure.'
+  - 'Before nominalising: ''Scientists found that the drug reduced pain.'''
+  - 'After: ''Scientists'' findings demonstrated a reduction in pain.'''
+  - 'Effect: the agent disappears, tone becomes impersonal, density increases — useful
+    for reports, less useful for storytelling.'
+  examples:
+  - target: The implementation of the new policy led to a significant reduction in
+      costs.
+    gloss: La implementación de la nueva política llevó a una reducción significativa
+      de los costes.
+  - target: Further analysis of the data is required before a decision can be made.
+    gloss: Se requiere un análisis más profundo de los datos antes de tomar una decisión.
+  - target: Her promotion was a recognition of her outstanding contribution to the
+      team.
+    gloss: Su ascenso fue un reconocimiento a su destacada contribución al equipo.
+  pitfalls:
+  - 'Over-nominalisation produces heavy, unreadable prose. In emails and conversation,
+    prefer the verb: ''We decided'' over ''A decision was made''.'
+  - 'Spelling changes: ''analyse → analysis'' (not ''analysation''); ''describe →
+    description'' (not ''describement'').'
+  - 'Not every verb has a clean noun: ''walk'' → ''walk'' (same form); use context
+    to judge when nominalisation helps.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:930b5ab3b7ee13fe
+- id: en.b2.g24
+  kind: grammar
+  level: B2
+  order: 24
+  title_target: Reported speech — advanced structures
+  title_l1: Estilo indirecto avanzado
+  can_do: I can report speech using advanced structures including reporting questions
+    and passives.
+  prereqs:
+  - en.b2.g10
+  skill: grammar
+  explain:
+  - 'Reporting yes/no questions: use whether or if. ''He asked whether she had seen
+    it.'''
+  - 'Reporting wh-questions: word order becomes statement order. ''She asked where
+    I had been.'''
+  - 'Reporting orders and requests: tell/ask + object + to-infinitive. ''He told her
+    to stop.'''
+  - Verb tenses still backshift unless the reporting verb is present or the content
+    is still true.
+  - 'Impersonal reporting in news/academic: ''It was announced that...'' / ''He was
+    said to have...'' / ''She is reported to be...'''
+  - '''Claim, allege, assert'' for unverified statements. ''It is alleged that he
+    stole the funds.'''
+  - 'Time and place references shift: now → then, here → there, today → that day,
+    tomorrow → the following day.'
+  examples:
+  - target: She asked whether the report had been submitted on time.
+    gloss: Preguntó si el informe se había entregado a tiempo.
+  - target: The minister is reported to have resigned over the scandal.
+    gloss: Se informa de que el ministro ha dimitido por el escándalo.
+  - target: They alleged that the company had been concealing the losses for years.
+    gloss: Alegaron que la empresa había estado ocultando las pérdidas durante años.
+  pitfalls:
+  - 'Don''t use question word order in reported questions: ''She asked where was I''
+    is wrong. Use statement order: ''where I was''.'
+  - No question mark in reported questions — they are statements.
+  - 'The no-backshift rule: when the situation is still true, backshift is optional.
+    ''He said that Paris is the capital'' is fine (still true).'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:a85888a13eb6ddcd
+- id: en.b2.g25
+  kind: grammar
+  level: B2
+  order: 25
+  title_target: Gerunds and infinitives — advanced patterns
+  title_l1: Gerundios e infinitivos — patrones avanzados
+  can_do: I can use gerunds and infinitives correctly in complex patterns including
+    meaning differences.
+  prereqs:
+  - en.b1.g12
+  skill: grammar
+  explain:
+  - 'Verbs where the choice of gerund vs infinitive changes meaning: stop, try, forget,
+    remember, regret, mean, go on.'
+  - '''Stop + -ing: stop an activity. Stop + to-inf: stop in order to do. ''She stopped
+    smoking.'' / ''She stopped to smoke.'''
+  - '''Remember + -ing: past memory. Remember + to-inf: future duty. ''I remember
+    seeing him.'' / ''Remember to call.'''
+  - '''Try + -ing: experiment. Try + to-inf: attempt. ''Try adding sugar.'' / ''I''m
+    trying to concentrate.'''
+  - '''Regret + -ing: past regret. Regret + to-inf: polite announcement. ''I regret
+    saying that.'' / ''I regret to inform you...'''
+  - 'Perfect infinitive and gerund: ''She claims to have met him'' / ''Having met
+    him once, she felt comfortable.'''
+  - 'Passive gerund and infinitive: ''She enjoyed being complimented.'' / ''He expects
+    to be promoted.'''
+  examples:
+  - target: I remember meeting her at the conference last year.
+    gloss: Recuerdo haberla conocido en la conferencia el año pasado.
+  - target: Remember to submit your assignment before midnight.
+    gloss: Recuerda entregar tu trabajo antes de medianoche.
+  - target: We regret to inform you that your application has been unsuccessful.
+    gloss: Lamentamos informarle de que su solicitud no ha sido aceptada.
+  pitfalls:
+  - These pairs are not interchangeable. 'I remember to meet her' is grammatical but
+    means something different (future task). Context must be right.
+  - '''Mean + -ing: involve/entail. Mean + to-inf: intend. ''This means working overtime''
+    ≠ ''I mean to finish today.'''
+  - 'Go on + -ing: continue same activity. Go on + to-inf: then do a new activity.
+    ''He went on talking'' (didn''t stop) vs ''She went on to win the prize'' (next
+    thing).'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:60b736c46085d9ee
+- id: en.b2.g26
+  kind: grammar
+  level: B2
+  order: 26
+  title_target: Concessive clauses — whatever, whoever, however
+  title_l1: Cláusulas concesivas — whatever, whoever, however
+  can_do: I can use wh-ever concessive structures to express universality and indifference
+    to condition.
+  prereqs:
+  - en.b2.g06
+  skill: grammar
+  explain:
+  - '''Wh-ever'' structures concede all possibilities and still assert the main clause.'
+  - '''Whatever: ''Whatever you decide, I''ll support you.'' (= regardless of what
+    you decide)'
+  - '''Whoever: ''Whoever did this will be caught.'' (= no matter who did it)'
+  - '''However: ''However hard she tried, she couldn''t lift it.'' (= no matter how
+    hard)'
+  - '''Whenever: ''Whenever I visit, she bakes a cake.'' (= every time, no matter
+    when)'
+  - '''Wherever: ''Wherever he goes, he makes friends.'' (= in every place)'
+  - '''Whichever: ''Take whichever you prefer.'' (= any one, it doesn''t matter which)'
+  - These can be stressed in speech to emphasise the universality.
+  examples:
+  - target: However difficult the task, we will complete it on time.
+    gloss: Por muy difícil que sea la tarea, la completaremos a tiempo.
+  - target: Wherever you travel, you'll find that people are basically the same.
+    gloss: Dondequiera que viajes, encontrarás que la gente es básicamente igual.
+  - target: Whoever is responsible for this needs to come forward immediately.
+    gloss: Quien sea responsable de esto tiene que presentarse de inmediato.
+  pitfalls:
+  - 'Don''t use ''whatever'' where ''whichever'' is needed: ''Whichever dress you
+    choose'' (limited set) vs ''Whatever you choose'' (any thing, open set).'
+  - '''However + adjective/adverb'' (concessive) is different from ''however'' as
+    a discourse marker (contrast). ''However hard she tried'' ≠ ''However, she tried
+    hard.'''
+  - 'Subject vs object whoever: ''Whoever calls'' (subject) vs ''call whoever you
+    like'' (object of call). The verb form of the sub-clause agrees with the sense.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:876039b681c43c25
+- id: en.b2.g27
+  kind: grammar
+  level: B2
+  order: 27
+  title_target: Time clauses — advanced connectors
+  title_l1: Cláusulas de tiempo — conectores avanzados
+  can_do: I can use a range of time connectors beyond when and while in complex sentences.
+  prereqs:
+  - en.b1.g03
+  skill: grammar
+  explain:
+  - Advanced time connectors express precise temporal relationships.
+  - '''Once: ''Once you''ve signed the form, you can leave.'' (= as soon as / after)'
+  - '''As: ''As she was leaving, the phone rang.'' (= at the exact moment)'
+  - '''By the time: ''By the time he arrived, everyone had gone.'' (= before that
+    point)'
+  - '''No sooner...than: ''No sooner had she sat down than the alarm went off.'' (=
+    immediately after)'
+  - '''Hardly/scarcely...when: same meaning as no sooner...than. Both trigger inversion.'
+  - '''Until/till: up to a point. Negative + until: ''She didn''t speak until asked.'''
+  - '''As soon as vs once: both mean ''immediately after'' but ''once'' implies completion
+    is a condition; ''as soon as'' emphasises immediacy.'
+  examples:
+  - target: By the time the ambulance arrived, the situation had already stabilised.
+    gloss: Para cuando llegó la ambulancia, la situación ya se había estabilizado.
+  - target: As the storm approached, people began leaving the beach.
+    gloss: A medida que se acercaba la tormenta, la gente empezó a abandonar la playa.
+  - target: Once you've mastered the basics, everything else falls into place.
+    gloss: Una vez que dominas los fundamentos, todo lo demás encaja.
+  pitfalls:
+  - 'Future in time clauses: use present simple after time connectors, never will.
+    ''When you arrive'' not ''when you will arrive''.'
+  - 'Perfect in time clauses: use present perfect for a completed action before the
+    main event. ''Once she has submitted the form, call her.'''
+  - '''As'' for time is easy to confuse with ''as'' for reason. They take different
+    clause types: time ''as'' allows progressive; reason ''as'' is more flexible.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:35069e1a03cc26d0
+- id: en.b2.g28
+  kind: grammar
+  level: B2
+  order: 28
+  title_target: Abstract nouns and the — specific reference
+  title_l1: Sustantivos abstractos y el artículo determinado — referencia específica
+  can_do: I can use articles correctly with abstract and uncountable nouns in formal
+    contexts.
+  prereqs:
+  - en.b1.g20
+  skill: grammar
+  explain:
+  - Abstract nouns are generally uncountable and take no article when used generically.
+  - '''Love is complicated.'' (generic) vs ''The love she felt for him was undeniable.''
+    (specific)'
+  - '''Information, advice, news, equipment, progress, research, knowledge, evidence''
+    are uncountable in English — no plural, no ''a''.'
+  - '''A piece of advice / a piece of news / a piece of evidence'' — use ''piece of''
+    to count.'
+  - When context makes the noun specific or unique, use 'the'. 'The advice he gave
+    me was excellent.'
+  - 'Zero article for generics: ''Education is the key to progress.'''
+  - 'Institutions as concepts (no article): ''at university'', ''in hospital'', ''at
+    home'' vs ''at the university'' (specific building).'
+  examples:
+  - target: The information provided in the report was outdated.
+    gloss: La información proporcionada en el informe estaba desactualizada.
+  - target: She gave me some useful advice about dealing with stress.
+    gloss: Me dio algunos consejos útiles para lidiar con el estrés.
+  - target: Progress in the field of renewable energy has been remarkable.
+    gloss: El progreso en el ámbito de las energías renovables ha sido notable.
+  pitfalls:
+  - Spanish 'la información' always has the article. English 'information' without
+    specific context takes no article. This is a very common Spanish-speaker error.
+  - Never 'an advice', 'a news', 'an equipment'. These are always uncountable. Use
+    'a piece of' or 'some' for the singular sense.
+  - 'Plural abstract concepts take no article: ''Freedoms are important'' refers to
+    specific types; ''Freedom is important'' is the generic truth.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:4c322aff57e31f09
+- id: en.b2.g29
+  kind: grammar
+  level: B2
+  order: 29
+  title_target: Emphatic structures — do/does/did and stress
+  title_l1: Estructuras enfáticas — do/does/did y énfasis
+  can_do: I can use emphatic do/does/did and other structures to add emphasis or correct
+    a misconception.
+  prereqs:
+  - en.b1.g28
+  skill: grammar
+  explain:
+  - Emphatic do/does/did adds stress to an affirmative clause. 'I do understand your
+    concern.' / 'She did call — I heard her.'
+  - 'Use to: contradict a previous statement, express surprise, or add emotional force.'
+  - '''I did send the email'' (you claim I didn''t — I''m correcting you).'
+  - 'In formal writing: ''The company does take corporate responsibility seriously.'''
+  - 'Emphatic reflexives: ''The president himself signed the order.'' / ''She did
+    it herself.'''
+  - 'Emphasising adjectives and adverbs: absolutely, completely, utterly, entirely,
+    perfectly — used with adjectives, not verbs.'
+  - 'Double emphasis is stylistically weak: avoid ''I did absolutely do it''.'
+  examples:
+  - target: I do think you should reconsider your decision.
+    gloss: Sí creo que deberías reconsiderar tu decisión.
+  - target: She did warn us about this, but nobody listened.
+    gloss: Sí nos advirtió de esto, pero nadie escuchó.
+  - target: The CEO herself announced the merger this morning.
+    gloss: La propia directora ejecutiva anunció la fusión esta mañana.
+  pitfalls:
+  - Emphatic do only works in affirmative sentences. Negatives and questions already
+    use do — there is no extra emphatic layer.
+  - 'Tense matches the original verb: ''She does work hard'' (present); ''She did
+    work hard'' (past). Never ''She did works''.'
+  - 'Don''t use emphatic do if the sentence already has a modal: ''She can really
+    do it'' (the adverb adds emphasis).'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:ae3a2d59d07957b7
+- id: en.b2.g30
+  kind: grammar
+  level: B2
+  order: 30
+  title_target: Writing an argument — structure and coherence
+  title_l1: Redacción argumentativa — estructura y coherencia
+  can_do: I can write a structured argument in English using appropriate organisation,
+    linkers, and register.
+  prereqs:
+  - en.b2.g14
+  - en.b2.g15
+  - en.b2.g18
+  - en.b2.g23
+  skill: writing
+  explain:
+  - 'Effective arguments have three parts: introduction (position), body (evidence
+    + counter), conclusion (summary + call to action).'
+  - 'Introduction: state the topic and your position. ''It is widely argued that...
+    However, this essay will argue that...'''
+  - 'Body paragraphs: one main idea each. Topic sentence → evidence → analysis → link.'
+  - 'Counter-argument + rebuttal: ''While it is true that... Nevertheless...'''
+  - 'Conclusion: summarise without introducing new ideas. ''In conclusion, it is clear
+    that...'''
+  - 'Coherence devices: logical connectors, pronoun reference, lexical repetition
+    (synonyms), ellipsis.'
+  - 'Register: formal vocabulary, passive where appropriate, no contractions, hedging
+    for claims.'
+  examples:
+  - target: While it is true that social media connects people, it is equally important
+      to consider its effect on mental health.
+    gloss: Si bien es cierto que las redes sociales conectan a las personas, es igualmente
+      importante considerar su efecto en la salud mental.
+  - target: In conclusion, the evidence clearly suggests that investment in education
+      yields the greatest long-term returns.
+    gloss: En conclusión, la evidencia sugiere claramente que la inversión en educación
+      produce los mayores beneficios a largo plazo.
+  - target: Furthermore, recent studies have demonstrated a strong correlation between
+      exercise and improved academic performance.
+    gloss: Además, estudios recientes han demostrado una fuerte correlación entre
+      el ejercicio y la mejora del rendimiento académico.
+  pitfalls:
+  - Don't begin every sentence with a discourse marker — it becomes mechanical. Vary
+    clause structure and use connectors selectively.
+  - 'Avoid first-person in formal essays unless instructed: ''The evidence suggests''
+    not ''I think''.'
+  - A counter-argument paragraph strengthens your argument — don't skip it. Conceding
+    then rebutting shows intellectual honesty.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:7673bf498b66ea1c
