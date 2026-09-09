@@ -36,6 +36,7 @@ from bot.handlers import (
     report,
     roleplay,
     start,
+    switcher,
     vocab,
 )
 from db.session import init_db
@@ -128,12 +129,30 @@ def build_application() -> Application:
         app.add_handler(handler)
 
     # Conversation flows (registered before the catch-all handler).
-    app.add_handler(assessment.build_handler())
-    app.add_handler(practice.build_handler())
-    app.add_handler(daily.build_handler())
-    app.add_handler(quiz.build_handler())
-    app.add_handler(drill.build_handler())
-    app.add_handler(roleplay.build_handler())
+    assessment_h = assessment.build_handler()
+    practice_h = practice.build_handler()
+    daily_h = daily.build_handler()
+    quiz_h = quiz.build_handler()
+    drill_h = drill.build_handler()
+    roleplay_h = roleplay.build_handler()
+
+    # Register the session switcher so users can jump between modes without /stop.
+    switcher.register({
+        "assess_mode":   (assessment._clear,  assessment_h,  "Test"),
+        "practice_mode": (practice._clear,    practice_h,    "Practice"),
+        "daily_mode":    (daily._clear,       daily_h,       "Daily"),
+        "quiz_mode":     (quiz._clear,        quiz_h,        "Quiz"),
+        "drill_mode":    (drill._clear,       drill_h,       "Drill"),
+        "scene_mode":    (roleplay._clear,    roleplay_h,    "Roleplay"),
+    })
+    app.add_handler(CommandHandler(switcher.ENTRY_COMMANDS, switcher.handle), group=-1)
+
+    app.add_handler(assessment_h)
+    app.add_handler(practice_h)
+    app.add_handler(daily_h)
+    app.add_handler(quiz_h)
+    app.add_handler(drill_h)
+    app.add_handler(roleplay_h)
 
     # Global /cancel — only fires when no conversation is active (the assessment
     # and practice handlers consume /cancel/​/stop themselves while running).
