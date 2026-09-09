@@ -104,15 +104,10 @@ def require_auth(handler: Handler) -> Handler:
                     )
                 return
 
-        # When the bot is locked to a language, always enforce it — overrides
-        # whatever learning_mode is stored (shared DB with the other bot instance).
-        if config.BOT_LANGUAGE in ("german", "english"):
-            from db.repo import set_language_chosen, set_learning_mode
-            if db_user.learning_mode != config.BOT_LANGUAGE or not db_user.language_chosen:
-                set_learning_mode(db_user.id, config.BOT_LANGUAGE)
-                set_language_chosen(db_user.id)
-            db_user.learning_mode = config.BOT_LANGUAGE
-            db_user.language_chosen = True
+        # Each locked bot has its own database, so new users are created already
+        # in this bot's language (see get_or_create_user) — no per-request rewrite
+        # is needed. When the bot is unlocked (BOT_LANGUAGE empty) the picker below
+        # still runs.
 
         # Language gate — redirect to picker until the user has chosen.
         if not db_user.language_chosen and not config.BOT_LANGUAGE:

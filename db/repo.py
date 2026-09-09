@@ -60,11 +60,16 @@ def get_or_create_user(
                 _config.SUPERUSER_TELEGRAM_ID
                 and telegram_id == _config.SUPERUSER_TELEGRAM_ID
             )
+            # Each bot owns its own database, so a new user is created directly
+            # in this bot's locked language — no picker, no per-request rewrite.
+            locked = _config.BOT_LANGUAGE if _config.BOT_LANGUAGE in ("german", "english") else None
             user = User(
                 telegram_id=telegram_id,
                 name=name,
                 role="superuser" if is_superuser else "student",
                 status="active" if is_superuser else default_status,
+                learning_mode=locked or "german",
+                language_chosen=bool(locked),
             )
             session.add(user)
             session.flush()

@@ -63,37 +63,6 @@ def _apply_migrations() -> None:
                     )
 
 
-def _migrate_correction_level() -> None:
-    """One-time data migration: map corrections_on=0 → correction_level='off'."""
-    with engine.begin() as conn:
-        conn.execute(text(
-            "UPDATE users SET correction_level = 'off' "
-            "WHERE corrections_on = 0 AND correction_level = 'relaxed'"
-        ))
-
-
-def _migrate_correction_level_to_int() -> None:
-    """Convert old string correction_level values to the 0-5 integer scale.
-
-    Mapping: 'off' → 0, 'relaxed' → 1 (gentle, the new default), 'strict' → 4.
-    Also re-writes any numeric string ('0'..'5') as a real INTEGER so that
-    SQLite stores them with numeric affinity and SQLAlchemy reads them back correctly.
-    """
-    mapping = {"off": 0, "relaxed": 1, "strict": 4}
-    with engine.begin() as conn:
-        for old, new in mapping.items():
-            conn.execute(
-                text("UPDATE users SET correction_level = :new WHERE correction_level = :old"),
-                {"new": new, "old": old},
-            )
-        # Re-cast any remaining string digits to real integers.
-        for v in range(6):
-            conn.execute(
-                text("UPDATE users SET correction_level = :v WHERE correction_level = :s"),
-                {"v": v, "s": str(v)},
-            )
-
-
 def _migrate_language_chosen() -> None:
     """Mark any user who already has messages as having chosen their language.
 
@@ -121,14 +90,56 @@ def _migrate_teacher_role() -> None:
         )
 
 
+def _guard_bot_language() -> None:
+    """Stamp this database with its bot language and refuse a mismatched boot.
+
+    Belt-and-braces isolation on top of config.py's DATABASE_URL check: the first
+    time a locked bot opens a database it records BOT_LANGUAGE in class_settings.
+    If a later boot opens a database stamped with a *different* language (e.g. the
+    wrong file was copied or restored), we exit rather than write one bot's data
+    into the other bot's database.
+    """
+    import sys
+
+    lang = config.BOT_LANGUAGE
+    if lang not in ("german", "english"):
+        return
+    key = "bot_language"
+    with engine.begin() as conn:
+        row = conn.execute(
+            text("SELECT value FROM class_settings WHERE key = :k"), {"k": key}
+        ).fetchone()
+        stamped = row[0] if row else None
+        if stamped is None:
+            conn.execute(
+                text(
+                    "INSERT INTO class_settings (key, value, updated_at) "
+                    "VALUES (:k, :v, :ts)"
+                ),
+                {"k": key, "v": lang, "ts": _now_iso()},
+            )
+        elif stamped != lang:
+            sys.stderr.write(
+                f"\n[db] Database {config.DATABASE_URL} belongs to the {stamped!r} "
+                f"bot, but BOT_LANGUAGE={lang!r}.\n"
+                f"     Refusing to start to avoid mixing the two bots' data. "
+                f"Point DATABASE_URL at this bot's own file.\n\n"
+            )
+            sys.exit(1)
+
+
+def _now_iso() -> str:
+    from datetime import datetime
+    return datetime.utcnow().isoformat(sep=" ")
+
+
 def init_db() -> None:
     """Create all tables if they don't exist, then backfill new columns."""
     Base.metadata.create_all(engine)
     _apply_migrations()
-    _migrate_correction_level()
-    _migrate_correction_level_to_int()
     _migrate_language_chosen()
     _migrate_teacher_role()
+    _guard_bot_language()
 
 
 @contextmanager

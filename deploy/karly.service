@@ -7,8 +7,10 @@ Wants=network-online.target
 Type=simple
 # %h expands to the user's home directory. Adjust if you clone elsewhere.
 WorkingDirectory=%h/Karly
+# Set env vars before Python starts so the DB path never depends on cwd. This
+# mirrors the English unit and guarantees the German bot uses its own database.
+EnvironmentFile=%h/Karly/.env
 ExecStart=%h/Karly/.venv/bin/python -m bot.main
-# config.py loads .env via python-dotenv, so no EnvironmentFile is needed.
 Restart=on-failure
 RestartSec=5
 # Give the bot a moment to shut down cleanly on stop/restart.

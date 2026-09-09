@@ -42,6 +42,20 @@ OLLAMA_MODEL: str = os.getenv(
 
 DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///karly.db").strip()
 
+# Isolation guard: when locked to a language, the two bots MUST use different
+# database files or they leak data into each other (same telegram_id → same row).
+# Require the language to appear in the DB path so a mis-wired env crashes loudly
+# at startup instead of silently sharing the other bot's database.
+if BOT_LANGUAGE in ("german", "english") and BOT_LANGUAGE not in DATABASE_URL.lower():
+    sys.stderr.write(
+        f"\n[config] BOT_LANGUAGE={BOT_LANGUAGE!r} but DATABASE_URL={DATABASE_URL!r} "
+        f"does not name that language.\n"
+        f"         Each locked bot needs its own database, e.g. "
+        f"sqlite:///karly_{BOT_LANGUAGE}.db — refusing to start to avoid "
+        f"leaking data between bots.\n\n"
+    )
+    sys.exit(1)
+
 # --- Groq (optional — absence means Groq rungs are skipped) ---
 GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "").strip()
 GROQ_BASE_URL: str = os.getenv(
@@ -62,6 +76,11 @@ GROQ_READ_TIMEOUT: float = float(os.getenv("GROQ_READ_TIMEOUT", "30.0"))
 # Conversation context window — 8 recent turns keeps input tokens ~40% lower
 # than the old 20-turn window while preserving meaningful context.
 CONTEXT_WINDOW_MESSAGES: int = 8
+
+# How many recent user messages the end-of-session memory summarizer samples.
+# Larger than the chat context window because it scans for durable facts, not
+# immediate conversational context.
+SUMMARY_WINDOW_MESSAGES: int = int(os.getenv("SUMMARY_WINDOW_MESSAGES", "20"))
 
 # Per-student daily LLM credit allowance. 20 credits ≈ 20 conversation turns,
 # or a course unit + daily challenge + a few chat messages.

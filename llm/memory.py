@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 
+import config
 from db import repo
 from llm.router import Task
 from llm.structured import generate_json
@@ -18,7 +19,7 @@ from llm.structured import generate_json
 logger = logging.getLogger(__name__)
 
 # How many recent user messages to feed into the summarizer.
-_MSG_WINDOW = 20
+_MSG_WINDOW = config.SUMMARY_WINDOW_MESSAGES
 
 _SYSTEM = """\
 You are a memory assistant for a language-learning tutor bot. Your job is to \
