@@ -1,6 +1,6 @@
 # Karly — Roadmap & Status
 
-*Last updated: 2026-09-04 (session 2)*
+*Last updated: 2026-09-09*
 
 ---
 
@@ -16,7 +16,7 @@
 
 | # | Item | Priority | Notes |
 |---|------|----------|-------|
-| **H7** | English B1 curriculum — ~28 units + ~392 questions | High | Content-only, no code. Next curriculum level after A2. See `CURRICULUM_PLAN.md` |
+| **H9** | English C1 curriculum — ~30 units + ~420 questions | High | Needs its own unit shape (not a grammar list — see `CURRICULUM_PLAN.md §3`). Next curriculum level. |
 | **PAY** | Payment system end-to-end test + pricing decision | High | Code exists (F-15/F-16/F-21); needs live test + price calibration. See detail below. |
 | **F-13** | Voice notes — speak German/English, get a text correction back | Medium | Groq Whisper → existing correction pipeline (Phase 5) |
 | ~~**F-14**~~ | ~~Assignments — teacher assigns a unit, student sees it as next `/course` task~~ | ~~Medium~~ | ~~Done~~ |
@@ -31,6 +31,8 @@
 | **H5 `/leveltest` + `/browse`** | 15-question level test, CEFR level cleared on pass, `/browse` unit picker |
 | **H6 English A2** | 24 units + 336 questions (`curriculum/en/a2.yaml` + `curriculum/bank/en/a2.jsonl`) |
 | **H0b Curriculum lint** | `make curriculum-lint` / `curriculum-rehash` — validates and rehashes content files |
+| **H7 English B1** | 28 units + 392 questions (`curriculum/en/b1.yaml` + `curriculum/bank/en/b1.jsonl`) |
+| **H8 English B2** | 30 units + 420 questions (`curriculum/en/b2.yaml` + `curriculum/bank/en/b2.jsonl`) |
 | **F-13 Voice notes** | `/pronounce` — Gemini TTS pronunciation voice notes |
 | **F-14 Assignments** | `/assignunit` — teacher assigns a course unit; student sees it pinned in `/course`; auto-dismissed on pass |
 | **F-14 CSV export** | `/export` — teacher downloads student progress as CSV |
@@ -102,9 +104,9 @@ Machinery is complete. Content is the remaining work — each level is a YAML + 
 - [x] `/browse` — jump to any unit at or below your level
 - [x] Flashcard creation from missed questions (H4)
 - [x] English A2 — 24 units, 336 questions
-- [ ] **English B1** — ~28 units, ~392 questions ← **next content run**
-- [ ] English B2 — ~30 units
-- [ ] English C1 — ~30 units (needs own unit shape; see `CURRICULUM_PLAN.md §3`)
+- [x] English B1 — 28 units, 392 questions
+- [x] English B2 — 30 units, 420 questions
+- [ ] **English C1** — ~30 units (needs own unit shape; see `CURRICULUM_PLAN.md §3`) ← **next content run**
 - [ ] German levels — personal track, on demand
 
 ### Phase 5 — Voice *(F-13 follow-on)*
@@ -135,7 +137,7 @@ In dependency order:
 
 **Core features:** adaptive placement test (A1 start, MCQ + fill-in-the-blank, auto-graded), spaced-repetition flashcards (HLR scheduler, MCQ/cloze/sentence modes, deck picker with per-deck fwd/rev direction), daily mini-challenge (shared per level, cached), rapid skill quiz, roleplay scenes (6 German + 6 English scenarios, corrections at right level), weekly progress report, PDF vocabulary extraction, The Impostor social deduction game, BKT skill mastery, DKT LSTM (gated, activates at 50+ reviews).
 
-**English course (A1 + A2 live):** `/course` with lesson cards, exercise runner (MCQ/cloze/transform/produce), pass/fail per unit, progress bar, missed-question → flashcard pipeline. `/leveltest` clears a CEFR level and unlocks the next. `/browse` jumps to any unit. 44 units and 616 banked questions shipped; B1 is next.
+**English course (A1 → B2 live):** `/course` with lesson cards, exercise runner (MCQ/cloze/transform/produce), pass/fail per unit, progress bar, missed-question → flashcard pipeline. `/leveltest` clears a CEFR level and unlocks the next. `/browse` jumps to any unit. 102 units and 1,428 banked questions shipped across four levels; C1 is next.
 
 **Classroom controls:** superuser + teacher roles, multi-step approval flow (approve → assign teacher → assign class), per-teacher class management (`/newclass`, `/classes`, `/moveclass`, `/assign`), drill topic per class, roster views, skill error rates dashboard, per-student daily credit cap, global ceiling with reserve pool, rate limiting, concurrency queue, streak bonus, low-balance nudge, `/mybudget` for students.
 

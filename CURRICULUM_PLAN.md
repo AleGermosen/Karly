@@ -1,13 +1,13 @@
 # Karly — Curriculum phase
 
-*Last updated: 2026-09-04*
+*Last updated: 2026-09-09*
 
 ---
 
 ## TL;DR — Where we are and what's next
 
 ```
-✅ A1 done  ✅ A2 done  ⏳ B1 next  ⬜ B2  ⬜ C1
+✅ A1 done  ✅ A2 done  ✅ B1 done  ✅ B2 done  ⬜ C1
 ```
 
 **What's built and live:**
@@ -15,6 +15,10 @@
 - `curriculum/bank/en/a1.jsonl` — 280 questions (14 per unit)
 - `curriculum/en/a2.yaml` — 24 units, all hashes computed
 - `curriculum/bank/en/a2.jsonl` — 336 questions (14 per unit)
+- `curriculum/en/b1.yaml` — 28 units, all hashes computed
+- `curriculum/bank/en/b1.jsonl` — 392 questions (14 per unit)
+- `curriculum/en/b2.yaml` — 30 units, all hashes computed
+- `curriculum/bank/en/b2.jsonl` — 420 questions (14 per unit)
 - `curriculum/loader.py` — loads all YAML/JSONL at import time
 - `scripts/curriculum_lint.py` — validates and rehashes content (`make curriculum-lint / curriculum-rehash`)
 - `bot/handlers/course.py` — `/course`, lesson cards, exercise runner, pass/fail, flashcard creation from missed items
@@ -22,12 +26,10 @@
 - DB tables: `unit_progress`, `item_attempts`
 
 **What's missing / next:**
-- **H7 English B1** — 28 units, ~392 questions. Biggest content run (narrative tenses, both conditionals, passive, reported speech, relative clauses). Start here.
-- **H8 English B2** — 30 units after B1
 - **H9 English C1** — needs its own unit shape first (not a grammar list — see §3)
 - **H10 German levels** — personal track, whenever wanted
-- **Reading track** — generated texts + comprehension questions (after B1)
-- **Writing track** — task + LLM grading against checklist (after B1)
+- **Reading track** — generated texts + comprehension questions
+- **Writing track** — task + LLM grading against checklist
 - **Listening track** — needs TTS; build with voice notes phase
 
 **No code needed** for H7–H9. Each is a YAML file + JSONL bank, then `make curriculum-rehash`, smoke test, commit.
@@ -97,8 +99,8 @@ a time**, and every level after the first is a content-only commit.
 |---|---|---|---|
 | **A1** | 20 | to be, present simple, articles, plurals, can, past simple, basic questions | ✅ **Done — 280 questions** |
 | **A2** | 24 | past continuous, present perfect, going to/will, comparatives/superlatives, must/should/have to, used to, passive, conditionals 1, reported speech | ✅ **Done — 336 questions** |
-| **B1** | ~28 | all narrative tenses, conditionals 1–2, passive (all tenses), reported speech (extended), relative clauses, gerunds vs infinitives, modals of deduction | ⏳ **Next** |
-| **B2** | ~30 | perfect modals, mixed conditionals, advanced passive, participle clauses, inversion basics | ⬜ |
+| **B1** | 28 | all narrative tenses, conditionals 1–2, passive (all tenses), reported speech (extended), relative clauses, gerunds vs infinitives, modals of deduction | ✅ **Done — 392 questions** |
+| **B2** | 30 | mixed conditionals, inversion, advanced passive, subjunctive, cleft sentences, discourse markers, hedging, nominalisation, participle clauses, advanced register | ✅ **Done — 420 questions** |
 | **C1** | ~30 | register, hedging, emphasis and cleft sentences, nominalisation, collocation, discourse markers | ⬜ needs own unit shape — see below |
 
 **Two things worth knowing before you start:**
@@ -130,9 +132,9 @@ working, so they can be spread out.
 | **H4** | Mastery per topic; missed questions become flashcards | code | ✅ **done** | The thing Test-English can't do |
 | **H5** | `/leveltest` (clear a level) and `/browse` (jump to any unit) | code | ✅ **done** | Finishing a level means something |
 | **H6** | English A2 — 24 topics + 336 questions | content | ✅ **done** | Second level available to students |
-| **H7** | English B1 — ~28 topics + ~392 questions | content | ⏳ **next** | Serves intermediate students |
-| **H8** | English B2 — ~30 topics + ~420 questions | content | ⬜ | |
-| **H9** | English C1 — needs its own unit shape first (§3) | content + design | ⬜ | Tops out the ladder |
+| **H7** | English B1 — 28 topics + 392 questions | content | ✅ **done** | Serves intermediate students |
+| **H8** | English B2 — 30 topics + 420 questions | content | ✅ **done** | Upper-intermediate level available |
+| **H9** | English C1 — needs its own unit shape first (§3) | content + design | ⬜ **next** | Tops out the ladder |
 | **H10** | German levels, on demand | content | ⬜ | Your own track, whenever you want it |
 
 H7–H9 are repeatable content runs with zero code changes. **Students can use the bot now
@@ -177,7 +179,7 @@ it starts to feel redundant.
 
 | Question | Decision |
 |---|---|
-| Which level first? | English A1 ✅, then A2 ✅, now B1 |
+| Which level first? | English A1 ✅, A2 ✅, B1 ✅, B2 ✅ — now C1 |
 | Content in git or database? | Git — fits the existing deploy, reviewable in diffs ✅ |
 | Pass mark for a unit? | 80%, retake any time ✅ |
 | Locked units, or browse freely? | Soft: "Continue" follows the order, `/browse` opens anything at or below your level ✅ |
