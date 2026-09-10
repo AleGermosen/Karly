@@ -1,6 +1,6 @@
 # Karly — Roadmap & Status
 
-*Last updated: 2026-09-09*
+*Last updated: 2026-09-09 (C1 complete — English ladder A1→C1 done)*
 
 ---
 
@@ -16,7 +16,6 @@
 
 | # | Item | Priority | Notes |
 |---|------|----------|-------|
-| **H9** | English C1 curriculum — ~30 units + ~420 questions | High | Needs its own unit shape (not a grammar list — see `CURRICULUM_PLAN.md §3`). Next curriculum level. |
 | **PAY** | Payment system end-to-end test + pricing decision | High | Code exists (F-15/F-16/F-21); needs live test + price calibration. See detail below. |
 | **F-13** | Voice notes — speak German/English, get a text correction back | Medium | Groq Whisper → existing correction pipeline (Phase 5) |
 | ~~**F-14**~~ | ~~Assignments — teacher assigns a unit, student sees it as next `/course` task~~ | ~~Medium~~ | ~~Done~~ |
@@ -33,6 +32,7 @@
 | **H0b Curriculum lint** | `make curriculum-lint` / `curriculum-rehash` — validates and rehashes content files |
 | **H7 English B1** | 28 units + 392 questions (`curriculum/en/b1.yaml` + `curriculum/bank/en/b1.jsonl`) |
 | **H8 English B2** | 30 units + 420 questions (`curriculum/en/b2.yaml` + `curriculum/bank/en/b2.jsonl`) |
+| **H9 English C1** | 30 units + 420 questions — C1 unit shape: 3 mcq+3 cloze+4 transform+4 produce; 20 grammar units (inversion, clefts, hedging, subjunctive, etc.) + 10 vocabulary units (collocation, register, word formation, discourse markers, idioms, punctuation). English ladder A1→C1 complete. |
 | **F-13 Voice notes** | `/pronounce` — Gemini TTS pronunciation voice notes |
 | **F-14 Assignments** | `/assignunit` — teacher assigns a course unit; student sees it pinned in `/course`; auto-dismissed on pass |
 | **F-14 CSV export** | `/export` — teacher downloads student progress as CSV |
@@ -93,9 +93,9 @@ These three are one coherent system and must land in this order: limits first, t
 - [x] `TypedDict` for history/correction dicts — `bot/types.py`
 - [x] Ladder health check in `/status` — poisoned rungs listed with reason
 
-### Phase 4 — Curriculum phase 📚 *(in progress)*
+### Phase 4 — Curriculum phase 📚 *(complete)*
 
-Machinery is complete. Content is the remaining work — each level is a YAML + JSONL commit with no code changes.
+English ladder A1→C1 is done. German levels are the only remaining content work.
 
 - [x] Curriculum lint tool (`make curriculum-lint / curriculum-rehash`)
 - [x] English A1 — 20 units, 280 questions
@@ -106,7 +106,7 @@ Machinery is complete. Content is the remaining work — each level is a YAML + 
 - [x] English A2 — 24 units, 336 questions
 - [x] English B1 — 28 units, 392 questions
 - [x] English B2 — 30 units, 420 questions
-- [ ] **English C1** — ~30 units (needs own unit shape; see `CURRICULUM_PLAN.md §3`) ← **next content run**
+- [x] **English C1** — 30 units, 420 questions (C1 unit shape: heavier transform+produce; grammar + vocabulary units)
 - [ ] German levels — personal track, on demand
 
 ### Phase 5 — Voice *(F-13 follow-on)*
@@ -136,6 +136,8 @@ In dependency order:
 **Dual-language tutor:** German mode (English speaker learning German) and English mode (Spanish speaker learning English) — both fully featured.
 
 **Core features:** adaptive placement test (A1 start, MCQ + fill-in-the-blank, auto-graded), spaced-repetition flashcards (HLR scheduler, MCQ/cloze/sentence modes, deck picker with per-deck fwd/rev direction), daily mini-challenge (shared per level, cached), rapid skill quiz, roleplay scenes (6 German + 6 English scenarios, corrections at right level), weekly progress report, PDF vocabulary extraction, The Impostor social deduction game, BKT skill mastery, DKT LSTM (gated, activates at 50+ reviews).
+
+**English course (A1–C1):** 132 units, 1,848 questions across 5 levels. Structured lesson cards, exercise runner (MCQ + cloze + transform + produce), 80% pass mark, `/leveltest` to clear a level, `/browse` to jump to any unit, missed questions auto-added to the SRS flashcard deck.
 
 **English course (A1 → B2 live):** `/course` with lesson cards, exercise runner (MCQ/cloze/transform/produce), pass/fail per unit, progress bar, missed-question → flashcard pipeline. `/leveltest` clears a CEFR level and unlocks the next. `/browse` jumps to any unit. 102 units and 1,428 banked questions shipped across four levels; C1 is next.
 

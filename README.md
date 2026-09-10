@@ -1,6 +1,6 @@
-# Karly 🇩🇪
+# Karly 🇩🇪🇬🇧
 
-A personal German-tutor Telegram bot. You write in German, Karly corrects you, drills your vocabulary on a spaced-repetition schedule, runs placement tests, quizzes you on your weak spots, and plays roleplay scenes with you — all inside Telegram, no app install required.
+A personal language-tutor Telegram bot — German for English speakers and English for Spanish speakers. You write in the target language, Karly corrects you, drills your vocabulary on a spaced-repetition schedule, runs placement tests, quizzes you on your weak spots, plays roleplay scenes with you, and guides you through a structured A1–C1 course — all inside Telegram, no app install required.
 
 Built for one user (me), deployed on a home OptiPlex server, free to run.
 
@@ -10,14 +10,17 @@ Built for one user (me), deployed on a home OptiPlex server, free to run.
 
 | Feature | How it works |
 |---|---|
-| **Conversation + corrections** | Write anything in German. Karly replies at your level and marks every mistake `❌ wrong → ✅ right — why`. Three levels: strict / relaxed / off. |
+| **Conversation + corrections** | Write anything in the target language. Karly replies at your level and marks every mistake `❌ wrong → ✅ right — why`. Correction strictness 0–5. |
+| **Structured course** `/course` | A1–C1 course for English (Spanish speakers). Lesson card → exercises → pass/fail → next unit. Progress bar, 80% pass mark, retakeable any time. |
+| **Level test** `/leveltest` | 15 questions sampled across all units of your current level. Pass ≥ 80% → CEFR level cleared, offered the next one. |
+| **Unit browser** `/browse` | Jump to any unit at or below your level. Tap to open the lesson card directly. |
 | **Adaptive placement test** `/test` | 8–12 mixed items (MCQ + open), covering grammar, reading, comprehension, production, functional, and vocab. Difficulty adapts in real time. Per-skill CEFR verdict at the end. |
-| **Flashcards** `/practice` | HLR-scheduled spaced repetition. Four modes: flashcard, cloze, MCQ, sentence-check. Deck picker (All / Chat / Docs / Test) and DE↔EN direction toggle with `/flip`. |
+| **Flashcards** `/practice` | HLR-scheduled spaced repetition. Four modes: flashcard, cloze, MCQ, sentence-check. Deck picker (All / Chat / Docs / Test) and direction toggle with `/flip`. Missed course questions auto-added to your deck. |
 | **Daily challenge** `/daily` | One LLM call → 3 tasks: fill-the-blank, translate, reply to a real situation. Auto-checked locally. Feeds the practice streak. |
 | **Rapid quiz** `/quiz` | 7 MCQ items targeting the 3 skills with lowest BKT mastery. Tap buttons, instant feedback, mastery updates live. |
-| **Roleplay scenes** `/roleplay` | Six scenarios: supermarket, office standup, doctor, restaurant, job interview, explaining a technical problem. Karly plays the character; `/done` gives an English debrief. |
+| **Roleplay scenes** `/roleplay` | Six scenarios per language. Karly plays the character; `/done` gives a debrief in L1. |
 | **Weekly report** `/weekly` | Sessions, card-review accuracy vs. prior week, top error patterns, BKT skill bars — plus an LLM paragraph synthesising everything. |
-| **PDF vocabulary** | Send a German engineering PDF → Karly extracts terminology into flashcards and can run a lesson from it (`/learn`). |
+| **PDF vocabulary** | Send a PDF → Karly extracts terminology into flashcards and can run a lesson from it (`/learn`). |
 | **Skill mastery (BKT)** | Bayesian Knowledge Tracing tracks mastery probability per skill at the CEFR level it was tested at. Shown in `/profile` as `Grammar (A2): ███████░░░ 70%`. |
 | **HLR scheduling** | Half-Life Regression replaces SM-2's fixed multiplier. Every review is logged; next review is scheduled when predicted recall hits 90%. |
 | **DKT LSTM** | TensorFlow LSTM over full review history. Gated: activates automatically when ≥ 50 reviews are logged and TensorFlow is installed. |
@@ -27,12 +30,18 @@ Built for one user (me), deployed on a home OptiPlex server, free to run.
 ## Commands
 
 ```
+── Course (English A1–C1) ────────────────────────────────────────────────
+/course        Your course — lesson card, exercises, progress bar
+/leveltest     15-question level test; pass to clear the level and unlock the next
+/browse        Browse and jump to any unit at or below your level
+/stopcourse    Exit an active exercise or level test
+
 ── Learning ──────────────────────────────────────────────────────────────
 /practice      Flashcards — pick a deck and direction (also /flashcards)
-/flip          Switch DE↔EN direction mid-session
+/flip          Switch target↔L1 direction mid-session
 /daily         3-task daily challenge (cloze + translate + reply)
 /quiz          7-question MCQ targeting your weakest skills
-/roleplay      Roleplay scene in German; /done for English debrief
+/roleplay      Roleplay scene; /done for L1 debrief
 /test          Adaptive placement test (~10 questions); /done to finish early
 
 ── Profile & Stats ───────────────────────────────────────────────────────
@@ -42,16 +51,17 @@ Built for one user (me), deployed on a home OptiPlex server, free to run.
 /summary       Review this session's mistakes and save them to flashcards
 
 ── Conversation Tools ────────────────────────────────────────────────────
-/corrections   Set correction level: strict | relaxed | off
+/corrections   Set correction strictness 0–5
 /topic         Steer the conversation to a topic (/topic clear to reset)
-/english       Ask a meta-question about German in English
+/english       Ask a meta-question in English (German mode)
+/spanish       Ask a meta-question in Spanish (English mode)
 /remind        Daily reminder — /remind HH:MM to set, /remind off to clear
 
 ── Documents ─────────────────────────────────────────────────────────────
 /docs          Your uploaded PDFs
 /learn         Start a lesson from a document
 /docfocus      Lock conversation to the latest document (on | off)
-               Send any German PDF to extract vocabulary automatically.
+               Send any PDF to extract vocabulary automatically.
 
 ── System ────────────────────────────────────────────────────────────────
 /status        Backend ladder state + live Groq request quota
@@ -83,9 +93,15 @@ Telegram ──► python-telegram-bot 21 (async, long polling)
                 │     dkt.py   Deep Knowledge Tracing LSTM — TensorFlow, gated
                 │     sm2.py   SM-2 (kept for stats compatibility)
                 │
+                ├── Curriculum (curriculum/)
+                │     en/a1–c1.yaml  spine files (30 units each at C1)
+                │     bank/en/*.jsonl question banks (14 q/unit, 1428 total for EN)
+                │     loader.py      loads all YAML+JSONL at startup
+                │
                 └── SQLite via SQLAlchemy  (db/)
                       users · vocab_items · messages · assessments
                       review_logs · concept_mastery · practice_logs · documents
+                      unit_progress · item_attempts
 ```
 
 The router walks the ladder on every call and skips rungs on cooldown. Ollama is excluded from structured tasks — the 3B model can't reliably produce JSON.
