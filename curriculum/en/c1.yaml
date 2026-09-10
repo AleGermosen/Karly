@@ -1,0 +1,1408 @@
+- id: en.c1.g01
+  kind: grammar
+  level: C1
+  order: 1
+  title_target: Inversion for emphasis
+  title_l1: Inversión para énfasis
+  can_do: I can use subject-auxiliary inversion after negative adverbials for emphasis.
+  prereqs:
+  - en.b2.g03
+  skill: grammar
+  explain:
+  - Inversion of subject and auxiliary after negative adverbials creates formal emphasis.
+  - 'Triggers: Never, Rarely, Seldom, Not until, No sooner, Only then, Little, Hardly.'
+  - 'Pattern: adverbial + auxiliary + subject + main verb (same word order as a question).'
+  - 'Never have I seen such chaos. (not: Never I have seen...)'
+  - Not until she arrived did we realise the danger.
+  - No sooner had we sat down than the alarm went off.
+  - Used in formal writing and speeches — not in casual conversation.
+  examples:
+  - target: Rarely does the board reverse a decision once it has been published.
+    gloss: Rara vez el consejo revierte una decisión una vez publicada.
+  - target: Not until he read the report did he understand the scale of the problem.
+    gloss: No fue hasta que leyó el informe que entendió la magnitud del problema.
+  - target: No sooner had the meeting ended than an urgent message arrived.
+    gloss: Apenas había terminado la reunión cuando llegó un mensaje urgente.
+  pitfalls:
+  - Spanish uses natural word order with adverbs; English inversion is strictly formal.
+  - Only negative/restrictive adverbials trigger inversion — not positive adverbs
+    like always.
+  - 'Match the auxiliary to the tense: ''Never had I'' (past), ''Never have I'' (present
+    perfect).'
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:201ffae256788d5e
+- id: en.c1.g02
+  kind: grammar
+  level: C1
+  order: 2
+  title_target: Cleft sentences
+  title_l1: Oraciones escindidas
+  can_do: I can use it-clefts and wh-clefts to highlight a particular element of a
+    sentence.
+  prereqs:
+  - en.b1.g14
+  skill: grammar
+  explain:
+  - Cleft sentences split a clause to highlight one element — subject, object, or
+    adverbial.
+  - 'It-cleft: ''It was Maria who solved it.'' Highlights the agent.'
+  - 'Wh-cleft (pseudo-cleft): ''What I need is more time.'' Highlights the object.'
+  - 'Reverse wh-cleft: ''More time is what I need.'' More formal; emphasis at the
+    end.'
+  - 'All-cleft: ''All she asked for was a fair hearing.'' Minimises the demand.'
+  - 'Use it-clefts to correct assumptions: ''It was in 2005, not 2006, that this happened.'''
+  - After 'it was/is', use 'who' for people and 'that' or 'which' for things.
+  examples:
+  - target: It was the lack of funding that caused the project to be cancelled.
+    gloss: Fue la falta de fondos lo que causó la cancelación del proyecto.
+  - target: What surprised us most was how quickly the situation changed.
+    gloss: Lo que más nos sorprendió fue la rapidez con que cambió la situación.
+  - target: All she asked for was a fair hearing before the committee.
+    gloss: Todo lo que pidió fue una audiencia justa ante el comité.
+  pitfalls:
+  - Spanish uses ''fue X quien/lo que...'' — structurally similar but less frequent
+    than in English.
+  - Don't confuse 'It is clear that' (introductory it) with an it-cleft.
+  - In wh-clefts, 'what' refers to things; for people use 'the person who' or 'those
+    who'.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:d4d5739a3fa64568
+- id: en.c1.g03
+  kind: grammar
+  level: C1
+  order: 3
+  title_target: Fronting for emphasis
+  title_l1: Frontalización para énfasis
+  can_do: I can move non-subject elements to the front of a sentence for stylistic
+    effect.
+  prereqs:
+  - en.c1.g01
+  skill: grammar
+  explain:
+  - Fronting moves a non-subject element to the start of the sentence for emphasis.
+  - 'Object fronting: ''That conclusion I find very difficult to accept.'' Normal
+    S-V order.'
+  - 'Adjective fronting: ''Remarkable as it seems, the plan worked.'''
+  - 'Adverbial fronting: ''In 1992, the agreement was signed.'' No inversion needed.'
+  - Only negative adverbials (Never, Rarely, Not until) trigger inversion when fronted.
+  - Fronting is a deliberate stylistic choice, more common in formal writing than
+    speech.
+  - 'Predicate fronting for contrast: ''Happy she was not.'' Marked and emphatic.'
+  examples:
+  - target: This conclusion I find very difficult to accept without further evidence.
+    gloss: Esta conclusión me resulta muy difícil de aceptar sin más pruebas.
+  - target: Determined as she was, she still needed support from her colleagues.
+    gloss: Por decidida que estuviera, aún necesitaba el apoyo de sus compañeros.
+  - target: Among the most pressing challenges is the shortage of qualified professionals.
+    gloss: Entre los desafíos más urgentes está la escasez de profesionales cualificados.
+  pitfalls:
+  - Object fronting is not a question — no question mark, and subject-verb order is
+    kept.
+  - 'Adjective fronting uses ''as'': ''Small as it is'', not ''Although it is small''.'
+  - Don't front the subject — it's already first. Fronting moves other grammatical
+    roles.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:c14cbf35ac9ecd77
+- id: en.c1.g04
+  kind: grammar
+  level: C1
+  order: 4
+  title_target: Nominalisation
+  title_l1: Nominalización
+  can_do: I can convert verbs and adjectives into noun phrases to create a formal,
+    dense style.
+  prereqs:
+  - en.b2.g09
+  skill: grammar
+  explain:
+  - Nominalisation converts verbs or adjectives into nouns, creating formal, dense
+    prose.
+  - 'Verb + -tion/-sion: decide → decision, expand → expansion, conclude → conclusion.'
+  - 'Verb + -ment: develop → development, achieve → achievement, require → requirement.'
+  - 'Verb + -al: propose → proposal, approve → approval, refuse → refusal.'
+  - 'Adjective + -ity/-ness: responsible → responsibility, complex → complexity.'
+  - 'Verb phrase → noun phrase: ''They investigated'' → ''the investigation of…'''
+  - Overuse creates unnecessary density — use only when formality or economy is needed.
+  examples:
+  - target: The government's refusal to negotiate prolonged the dispute considerably.
+    gloss: La negativa del gobierno a negociar prolongó considerablemente la disputa.
+  - target: An improvement in communication between departments led to greater efficiency.
+    gloss: Una mejora en la comunicación entre departamentos condujo a una mayor eficiencia.
+  - target: The discovery of the documents cast serious doubt on the official account.
+    gloss: El descubrimiento de los documentos puso en duda la versión oficial.
+  pitfalls:
+  - Spanish also uses nominalisation — the pitfall is choosing the wrong English suffix.
+  - 'Don''t nominalise everything: ''problems occurred'' is clearer than ''the occurrence
+    of problems''.'
+  - 'Count vs uncountable: ''a refusal'' (one act) vs ''refusal'' (general tendency)
+    — different meanings.'
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:420dee878c9a18fc
+- id: en.c1.g05
+  kind: grammar
+  level: C1
+  order: 5
+  title_target: Hedging and distancing language
+  title_l1: Lenguaje de cobertura y distanciamiento
+  can_do: I can use hedging language to soften claims and signal uncertainty in formal
+    writing.
+  prereqs:
+  - en.b2.g07
+  skill: grammar
+  explain:
+  - Hedging softens claims, signals uncertainty, or distances the writer from the
+    claim.
+  - 'Adverbs: apparently, reportedly, supposedly, allegedly, presumably, arguably.'
+  - 'Verbs: seem to, appear to, tend to, be said to, be thought to, be believed to.'
+  - 'Modal hedges: may, might, could signal uncertainty; would adds formality and
+    distance.'
+  - 'Phrases: to some extent, in many cases, broadly speaking, it could be argued
+    that.'
+  - Academic writers hedge to show claims may have exceptions or be open to revision.
+  - 'Hedging ≠ vagueness: ''seems to reduce'' is precise; ''maybe reduces'' is not.'
+  examples:
+  - target: The data would appear to suggest a correlation between the two variables.
+    gloss: Los datos parecerían indicar una correlación entre las dos variables.
+  - target: Reportedly, negotiations have stalled despite earlier signs of progress.
+    gloss: Según se informa, las negociaciones se han estancado a pesar de las primeras
+      señales de progreso.
+  - target: To some extent, the results depend on the conditions under which the test
+      was conducted.
+    gloss: En cierta medida, los resultados dependen de las condiciones en que se
+      realizó la prueba.
+  pitfalls:
+  - Spanish uses ''al parecer'', ''supuestamente'' — but English hedging verbs differ
+    in syntax.
+  - 'Don''t stack hedges: ''might possibly seem'' — one hedge per claim is enough.'
+  - Allegedly and reportedly imply someone else's claim — don't use them for your
+    own views.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:7799c63a3c218ef2
+- id: en.c1.g06
+  kind: grammar
+  level: C1
+  order: 6
+  title_target: Advanced conditionals — inverted and formal
+  title_l1: Condicionales avanzados — invertidos y formales
+  can_do: I can form formal conditionals without 'if' by inverting the subject and
+    auxiliary.
+  prereqs:
+  - en.b1.g07
+  - en.b1.g08
+  skill: grammar
+  explain:
+  - In formal English, ''if'' can be omitted by inverting the subject and auxiliary.
+  - '''Were to'': ''Were the plan to fail, we would need an alternative.'' (hypothetical
+    future)'
+  - '''Should'': ''Should you need assistance, please contact us.'' (open future condition)'
+  - '''Had'': ''Had he arrived earlier, he would have met her.'' (unreal past)'
+  - All three are more formal than their standard ''if'' equivalents.
+  - The main clause keeps its normal conditional form (would, would have).
+  - 'Were is subjunctive here — use ''were'' for all persons: ''were he'', ''were
+    they'', ''were it''.'
+  examples:
+  - target: Were the proposal to be rejected, the company would need to reconsider
+      its strategy.
+    gloss: Si la propuesta fuera rechazada, la empresa tendría que reconsiderar su
+      estrategia.
+  - target: Should you require any further information, please do not hesitate to
+      contact us.
+    gloss: Si necesita más información, no dude en ponerse en contacto con nosotros.
+  - target: Had the committee acted sooner, the outcome might have been very different.
+    gloss: Si el comité hubiera actuado antes, el resultado podría haber sido muy
+      diferente.
+  pitfalls:
+  - Spanish does not have this inversion — students often keep ''if'' or write ''If
+    would''.
+  - '''Should'' in this pattern means ''in the event that'', not obligation — don''t
+    confuse them.'
+  - Were to is for hypothetical/future situations; had is strictly for unreal past
+    conditions.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:1887431784126979
+- id: en.c1.g07
+  kind: grammar
+  level: C1
+  order: 7
+  title_target: Impersonal reporting structures
+  title_l1: Estructuras de reporte impersonales
+  can_do: I can report what is believed or claimed without naming a specific source.
+  prereqs:
+  - en.b2.g08
+  skill: grammar
+  explain:
+  - These structures report beliefs or claims without attributing them to a named
+    source.
+  - 'Pattern 1: It + passive reporting verb + that-clause: ''It is believed that...'''
+  - 'Pattern 2: Subject + passive reporting verb + to-infinitive: ''He is said to
+    have left.'''
+  - 'Verbs used: believe, claim, consider, expect, know, report, say, think, allege.'
+  - 'Perfect infinitive marks past report: ''is said to have done'' (past) vs ''is
+    said to do'' (now).'
+  - Common in journalism, academic writing, and legal language to maintain objectivity.
+  - 'Don''t mix patterns: use ''It is believed that he left'' OR ''He is believed
+    to have left''.'
+  examples:
+  - target: It is widely believed that the policy has had little effect on crime rates.
+    gloss: Se cree ampliamente que la política ha tenido poco efecto en las tasas
+      de criminalidad.
+  - target: The chief executive is reported to have resigned following the scandal.
+    gloss: Se informa que el director ejecutivo ha dimitido tras el escándalo.
+  - target: The ancient city is thought to have been abandoned around 600 CE.
+    gloss: Se cree que la ciudad antigua fue abandonada hacia el año 600 d.C.
+  pitfalls:
+  - Spanish uses ''se dice que'', ''se cree que'' — structurally similar but verb
+    agreement differs.
+  - Perfect infinitive (to have + pp) is required when the reported event is in the
+    past.
+  - 'Mixing patterns creates a grammar error: ''It is believed he is said to have...''
+    is wrong.'
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:55b4b382bdfb8656
+- id: en.c1.g08
+  kind: grammar
+  level: C1
+  order: 8
+  title_target: Participle clauses
+  title_l1: Cláusulas de participio
+  can_do: I can use -ing, -ed, and perfect participle clauses to compress information
+    formally.
+  prereqs:
+  - en.b2.g06
+  skill: grammar
+  explain:
+  - Participle clauses compress two ideas into one using -ing, -ed, or having + pp.
+  - 'Present participle (-ing): simultaneous or causal action: ''Walking home, she
+    noticed...'''
+  - 'Perfect participle (having + pp): completed before main action: ''Having finished,
+    she left.'''
+  - 'Past participle (-ed): passive meaning: ''Exhausted by the journey, he slept
+    immediately.'''
+  - The implied subject must match the main clause subject — otherwise it's a dangling
+    participle.
+  - 'Absolute clause: own subject stated: ''The meeting over, the delegates filed
+    out.'''
+  - Participle clauses add a formal, literary tone — common in academic and journalistic
+    prose.
+  examples:
+  - target: Having reviewed all the evidence, the committee reached a unanimous decision.
+    gloss: Tras revisar todas las pruebas, el comité llegó a una decisión unánime.
+  - target: Faced with rising costs, the company had little choice but to reduce its
+      workforce.
+    gloss: Ante el aumento de costes, la empresa tuvo pocas opciones salvo reducir
+      su plantilla.
+  - target: The negotiations having broken down, both sides returned to their original
+      positions.
+    gloss: Al haberse roto las negociaciones, ambas partes volvieron a sus posiciones
+      originales.
+  pitfalls:
+  - 'Dangling participle: ''Walking home, the rain started.'' The rain was not walking.'
+  - 'Having + pp ≠ being: ''Having submitted'' (completed action) ≠ ''Being submitted''
+    (state).'
+  - Spanish uses ''Al + infinitivo'' or ''Habiendo + pp'' for similar effects — but
+    syntax differs.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:3b8fd5890e87915d
+- id: en.c1.g09
+  kind: grammar
+  level: C1
+  order: 9
+  title_target: Concession structures
+  title_l1: Estructuras de concesión
+  can_do: I can use advanced concession structures to acknowledge opposing points
+    formally.
+  prereqs:
+  - en.b1.g13
+  skill: grammar
+  explain:
+  - Concession acknowledges an opposing point before asserting the main argument.
+  - 'Conjunctions: although, even though, while, whereas — full clauses on both sides.'
+  - 'Adverbials: nevertheless, nonetheless, however, even so — open the main clause.'
+  - 'Reduced patterns: despite/in spite of + noun/-ing. ''Despite the rain, we continued.'''
+  - 'Albeit (= although): ''a useful, albeit imperfect, solution.'' Modifies a noun
+    phrase.'
+  - 'Notwithstanding: ''Notwithstanding the challenges, progress was made.'' Formal/legal.'
+  - 'Much as: ''Much as I respect her view, I cannot agree.'' Concedes fully then
+    pivots.'
+  examples:
+  - target: Notwithstanding the difficulties encountered, the project was completed
+      on schedule.
+    gloss: A pesar de las dificultades encontradas, el proyecto se completó a tiempo.
+  - target: The report is useful, albeit limited in scope, and should be read alongside
+      other evidence.
+    gloss: El informe es útil, aunque limitado en alcance, y debe leerse junto con
+      otras pruebas.
+  - target: Much as the proposal appeals to us, we are unable to approve it at this
+      stage.
+    gloss: Aunque la propuesta nos resulta atractiva, no podemos aprobarla en esta
+      fase.
+  pitfalls:
+  - Albeit modifies a noun phrase or adjective — don't use it to introduce a full
+    clause.
+  - 'Notwithstanding can follow the noun: ''the risks notwithstanding'' — both orders
+    are correct.'
+  - Much as ≠ 'much more than' — it means 'even though'. Don't confuse with comparisons.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:ceb56d1aa07d8e00
+- id: en.c1.g10
+  kind: grammar
+  level: C1
+  order: 10
+  title_target: Advanced reporting verbs
+  title_l1: Verbos de reporte avanzados
+  can_do: I can use a range of reporting verbs that signal the speaker's stance and
+    attitude.
+  prereqs:
+  - en.b1.g15
+  skill: grammar
+  explain:
+  - C1 reporting verbs carry meaning beyond ''say'' — they signal stance, force, and
+    attitude.
+  - 'Contend / maintain / argue + that-clause: present an opinion as a reasoned position.'
+  - 'Concede / acknowledge + that: admit a point while maintaining the main argument.'
+  - 'Insist on + -ing or insist that + clause: call strongly for an action or assert
+    a fact.'
+  - 'Deny + -ing (not that-clause): ''She denied having seen the document.'''
+  - 'Warn against + -ing; warn + object + not to: ''He warned against rushing the
+    decision.'''
+  - 'Imply / insinuate + that: suggest without stating directly, often with a negative
+    slant.'
+  examples:
+  - target: The report contends that the current policy is unsustainable in the long
+      term.
+    gloss: El informe sostiene que la política actual no es sostenible a largo plazo.
+  - target: The minister conceded that mistakes had been made but insisted on pressing
+      ahead.
+    gloss: El ministro reconoció que se habían cometido errores pero insistió en seguir
+      adelante.
+  - target: She denied having received any prior notification of the changes.
+    gloss: Negó haber recibido notificación previa de los cambios.
+  pitfalls:
+  - Deny takes -ing, not a that-clause in formal English — ''denied taking'', not
+    ''denied that she took''.
+  - 'Insist on + -ing (action); insist that + clause (fact or demand): different patterns,
+    different meaning.'
+  - Imply = suggest indirectly. Infer = draw a conclusion. These are easily confused.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:d23634bd139d430f
+- id: en.c1.g11
+  kind: grammar
+  level: C1
+  order: 11
+  title_target: Ellipsis and substitution
+  title_l1: Elipsis y sustitución
+  can_do: I can omit or replace repeated words using ellipsis and pro-forms to avoid
+    repetition.
+  prereqs:
+  - en.b1.g16
+  skill: grammar
+  explain:
+  - Ellipsis omits words already understood from context; substitution replaces them.
+  - 'Verbal ellipsis: ''She works harder than he does (work).'' Auxiliary kept, verb
+    dropped.'
+  - 'Clausal ellipsis: ''Are you coming?'' ''I hope so.'' So replaces the whole clause.'
+  - 'Do so / do it: ''If you need to restart, do so immediately.'' More formal than
+    ''do it''.'
+  - 'The former / the latter: refer to the first and second of two things named earlier.'
+  - 'That of / those of: ''Her results exceeded those of every other candidate.'''
+  - 'So and not substitute clauses: ''I think so / I think not.'' Formal and concise.'
+  examples:
+  - target: The second proposal was more detailed, and the former was eventually adopted.
+    gloss: La segunda propuesta era más detallada, y la primera fue finalmente adoptada.
+  - target: Her results exceeded those of every other candidate in the cohort.
+    gloss: Sus resultados superaron los de todos los demás candidatos del grupo.
+  - target: The committee may delay the decision, and if so, all parties will be notified.
+    gloss: El comité puede retrasar la decisión, y si es así, se notificará a todas
+      las partes.
+  pitfalls:
+  - The former = first mentioned; the latter = second. Swapping them is a common error.
+  - So (I hope so) replaces a clause; it (I hope it) replaces a noun — don't swap
+    them.
+  - Do so is more formal than do it; it requires a specific action to substitute for.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:2e4a04301309ece6
+- id: en.c1.g12
+  kind: grammar
+  level: C1
+  order: 12
+  title_target: Complex passive structures
+  title_l1: Construcciones pasivas complejas
+  can_do: I can use causative, semi-passive, and scheduled passive structures accurately.
+  prereqs:
+  - en.b2.g05
+  skill: grammar
+  explain:
+  - Beyond the basic passive, C1 includes causative, get passive, and semi-passive
+    patterns.
+  - 'Causative have/get + object + past participle: ''She had her car serviced.'''
+  - 'Get passive (dynamic): ''He got fired last week.'' More active feeling than ''was
+    fired''.'
+  - 'Need/require + -ing (semi-passive): ''The report needs updating.'' = needs to
+    be updated.'
+  - 'Be due to be + pp (scheduled): ''The building is due to be demolished next year.'''
+  - 'Be about to be + pp: ''The decision is about to be announced.'''
+  - 'Passive infinitive in complex sentences: ''The contract is believed to have been
+    signed.'''
+  examples:
+  - target: The company had its offices completely redesigned following the merger.
+    gloss: La empresa hizo remodelar completamente sus oficinas tras la fusión.
+  - target: Several key sections of the document still need reviewing before publication.
+    gloss: Varias secciones clave del documento aún necesitan revisión antes de su
+      publicación.
+  - target: The bridge is due to be reopened to traffic by the end of the month.
+    gloss: Se prevé que el puente vuelva a abrirse al tráfico a finales de mes.
+  pitfalls:
+  - Have sth done = arrange for it; do sth yourself ≠ have it done — very different
+    meanings.
+  - 'Need + -ing is passive in meaning but active in form: ''needs checking'' = needs
+    to be checked.'
+  - Get passive implies something sudden or unexpected — less neutral than the be
+    passive.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:ec4921cea03401e6
+- id: en.c1.g13
+  kind: grammar
+  level: C1
+  order: 13
+  title_target: Complex noun phrases
+  title_l1: Sintagmas nominales complejos
+  can_do: I can build complex noun phrases using pre- and post-modification in formal
+    writing.
+  prereqs:
+  - en.c1.g04
+  skill: grammar
+  explain:
+  - Noun phrases can be extended before and after the head noun for density and precision.
+  - 'Pre-modification: adjectives, nouns, participles, and compounds before the head
+    noun.'
+  - 'Example: ''a long-awaited government-commissioned independent inquiry'' (4 pre-modifiers).'
+  - 'Post-modification: prepositional phrases, relative clauses, and participle phrases
+    after.'
+  - 'Example: ''the policy introduced in 2015 to address the rising cost of housing.'''
+  - Heavy pre-modification is a feature of written registers; excessive use is hard
+    to parse.
+  - Nominalisation (unit 4) frequently produces complex noun phrases.
+  examples:
+  - target: The recently published peer-reviewed study has reignited the debate.
+    gloss: El estudio revisado por pares recientemente publicado ha reavivado el debate.
+  - target: The proposal submitted by the working group last autumn was finally approved.
+    gloss: La propuesta presentada por el grupo de trabajo el otoño pasado fue finalmente
+      aprobada.
+  - target: A sharp decline in first-time buyers entering the housing market was recorded.
+    gloss: Se registró un fuerte descenso en los compradores por primera vez en el
+      mercado inmobiliario.
+  pitfalls:
+  - Stacking pre-modifiers creates ambiguity — ''old car dealer'' is unclear without
+    context.
+  - 'Post-modifying relative clauses use ''which/who'', not ''what'': ''the plan which
+    was approved''.'
+  - In speech, long noun phrases are avoided — break them into shorter clauses when
+    speaking.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:2adf1197e01523c6
+- id: en.c1.g14
+  kind: grammar
+  level: C1
+  order: 14
+  title_target: Subjunctive in formal English
+  title_l1: Subjuntivo en inglés formal
+  can_do: I can use the mandative subjunctive in formal recommendations and requirements.
+  prereqs:
+  - en.b2.g02
+  skill: grammar
+  explain:
+  - The subjunctive uses the base form of the verb in formal recommendations and demands.
+  - 'Mandative subjunctive: verb of demand/request + that + subject + base form (no
+    -s).'
+  - 'Triggers: recommend, demand, require, suggest, propose, insist, request + that.'
+  - '''It is essential/important/necessary/vital that he be present.'' No -s on be.'
+  - 'Formulaic phrases: ''Be that as it may'', ''come what may'', ''far be it from
+    me''.'
+  - 'Were-subjunctive: ''If I were you'', ''Were it not for...'', ''as it were''.'
+  - 'British English often uses ''should'' instead: ''insist that he should leave''
+    — both correct.'
+  examples:
+  - target: The committee recommended that all participants be given adequate notice.
+    gloss: El comité recomendó que se diera aviso suficiente a todos los participantes.
+  - target: It is essential that each member sign the declaration before the deadline.
+    gloss: Es esencial que cada miembro firme la declaración antes de la fecha límite.
+  - target: Were it not for the generous support of our sponsors, this event would
+      not be possible.
+    gloss: De no ser por el generoso apoyo de nuestros patrocinadores, este evento
+      no sería posible.
+  pitfalls:
+  - Spanish uses subjunctive widely; English mandative subjunctive is restricted to
+    formal writing.
+  - 'The subjunctive has no -s in the third person: ''it is essential that he be''
+    (not ''he is'').'
+  - Don't use modal auxiliaries inside the mandative subjunctive clause itself.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:eb953ee53aab99dc
+- id: en.c1.g15
+  kind: grammar
+  level: C1
+  order: 15
+  title_target: Absolute clauses
+  title_l1: Cláusulas absolutas
+  can_do: I can use absolute clauses with their own stated subject for a formal literary
+    effect.
+  prereqs:
+  - en.c1.g08
+  skill: grammar
+  explain:
+  - Absolute clauses have their own subject and a participle or adjective — no conjunction.
+  - 'Pattern: noun/pronoun + participle/adjective, main clause.'
+  - 'With adjective: ''The meeting over, the delegates filed out quietly.'''
+  - 'With -ing: ''The sun having set, they decided to make camp.'''
+  - 'With -ed: ''The details agreed, the contract was signed.'''
+  - Unlike participle clauses, the absolute clause subject ≠ main clause subject.
+  - They add a literary, formal tone — common in narrative and academic prose.
+  examples:
+  - target: The report finalised, the team presented their findings to the board.
+    gloss: Una vez finalizado el informe, el equipo presentó sus conclusiones al consejo.
+  - target: His patience exhausted, the manager called an end to the discussion.
+    gloss: Agotada su paciencia, el director dio por concluida la discusión.
+  - target: Weather permitting, the outdoor ceremony will take place as planned.
+    gloss: Si el tiempo lo permite, la ceremonia al aire libre se celebrará según
+      lo previsto.
+  pitfalls:
+  - The noun before the participle is the subject of the absolute clause, not the
+    main subject.
+  - Don't confuse with dangling participles — absolute clauses intentionally have
+    their own subject.
+  - '''Weather permitting'' and ''God willing'' are set absolute clause phrases —
+    learn them whole.'
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:5ef4d511e490a6e7
+- id: en.c1.g16
+  kind: grammar
+  level: C1
+  order: 16
+  title_target: Apposition and non-defining relative clauses
+  title_l1: Aposición y oraciones de relativo no especificativas
+  can_do: I can add non-essential information using apposition and non-defining relative
+    clauses.
+  prereqs:
+  - en.b1.g14
+  skill: grammar
+  explain:
+  - Apposition places a second noun phrase directly after the first to rename or explain
+    it.
+  - 'Example: ''Her mentor, Dr. Singh, reviewed the draft.'' Dr. Singh = apposition.'
+  - Apposition is always surrounded by commas; it adds non-essential information.
+  - Non-defining relative clauses also add non-essential information and use commas.
+  - Use 'who' for people, 'which' for things — never 'that' in non-defining clauses.
+  - 'Example: ''The report, which was released on Monday, has been widely discussed.'''
+  - Remove the clause — the sentence must still make complete sense. If not, it is
+    defining.
+  examples:
+  - target: The CEO, a former academic with thirty years of experience, addressed
+      the conference.
+    gloss: El director general, un ex académico con treinta años de experiencia, se
+      dirigió a la conferencia.
+  - target: The proposal, which had been under review for three months, was finally
+      approved.
+    gloss: La propuesta, que había estado en revisión durante tres meses, fue finalmente
+      aprobada.
+  - target: His first novel, a thinly veiled autobiography, was shortlisted for the
+      national prize.
+    gloss: Su primera novela, una autobiografía apenas disimulada, fue preseleccionada
+      para el premio nacional.
+  pitfalls:
+  - Non-defining relative clauses use ''which'', never ''that'', and must have commas.
+  - Remove the clause — if the sentence loses its meaning, it is defining (no commas).
+  - In apposition, the second noun phrase renames the first — they refer to the same
+    entity.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:f8d472385ae78ab0
+- id: en.c1.g17
+  kind: grammar
+  level: C1
+  order: 17
+  title_target: Tense choice for nuance
+  title_l1: Elección del tiempo verbal para matiz
+  can_do: I can choose tenses deliberately to create nuance, distance, or vivid effect.
+  prereqs:
+  - en.b2.g01
+  skill: grammar
+  explain:
+  - Tense choice beyond accuracy — using tenses deliberately for effect or nuance.
+  - 'Present simple for universal truth or vivid narrative: ''Napoleon is defeated
+    at Waterloo.'''
+  - 'Would for past habitual actions (more formal than ''used to''): ''She would sit
+    and watch.'''
+  - 'Present perfect for recent relevance: ''Scientists have discovered...'' (connects
+    to now).'
+  - 'Past simple for completed past: ''Scientists discovered...'' (detached from the
+    present).'
+  - 'Future-in-the-past: ''She knew she would have to leave.'' (planned future from
+    a past point)'
+  - Will for confident predictions; would for hypothetical or distanced future claims.
+  examples:
+  - target: As a child, he would spend entire afternoons reading in the garden.
+    gloss: De niño, solía pasar tardes enteras leyendo en el jardín.
+  - target: Scientists have now confirmed that the compound is safe for human consumption.
+    gloss: Los científicos han confirmado ahora que el compuesto es seguro para el
+      consumo humano.
+  - target: She had always known that success would come at a price.
+    gloss: Siempre había sabido que el éxito tendría un precio.
+  pitfalls:
+  - '''Would'' (past habit) needs a time reference; ''used to'' does not — they are
+    not always interchangeable.'
+  - Spanish uses imperfect for past habits; English ''would'' is more detached and
+    literary.
+  - Present perfect with 'yet', 'already', 'just', 'ever' — don't replace with past
+    simple in formal writing.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:b25b501a5763f942
+- id: en.c1.g18
+  kind: grammar
+  level: C1
+  order: 18
+  title_target: Advanced comparison structures
+  title_l1: Estructuras de comparación avanzadas
+  can_do: I can use proportional, correlative, and formal comparison structures accurately.
+  prereqs:
+  - en.a2.g07
+  skill: grammar
+  explain:
+  - 'Proportional: ''The more data we have, the better our predictions will be.'''
+  - Both clauses use comparative forms — don't mix base and comparative in the same
+    pair.
+  - 'Just as...so: ''Just as water seeks its level, so people find their natural role.'''
+  - 'Rather than: ''She chose to negotiate rather than confront.'' Preference or contrast.'
+  - 'More of a...than: ''It was more of a warning than a genuine threat.'''
+  - 'As...as with negation: ''not so much as replied''; with scope: ''as far as I
+    can tell''.'
+  - 'No sooner...than (time sequence): ''No sooner did she start than problems arose.'''
+  examples:
+  - target: The more complex the system, the greater the risk of unexpected failures.
+    gloss: Cuanto más complejo sea el sistema, mayor será el riesgo de fallos inesperados.
+  - target: Just as automation transformed manufacturing, so AI is reshaping professional
+      services.
+    gloss: Al igual que la automatización transformó la fabricación, la IA está reconfigurando
+      los servicios profesionales.
+  - target: It was more of an oversight than a deliberate policy decision.
+    gloss: Fue más un descuido que una decisión de política deliberada.
+  pitfalls:
+  - 'The more...the more: both clauses need comparative forms — ''The more complex,
+    the greater''.'
+  - 'Just as...so: the ''so'' clause often uses inverted word order: ''so + auxiliary
+    + subject + verb''.'
+  - 'Rather than + -ing (parallel) or + bare infinitive: both are standard, depending
+    on context.'
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:757898a196b576d3
+- id: en.c1.g19
+  kind: grammar
+  level: C1
+  order: 19
+  title_target: Modal verbs for distancing and politeness
+  title_l1: Verbos modales para distanciamiento y cortesía
+  can_do: I can use modal verbs to hedge conclusions, distance claims, and add formality.
+  prereqs:
+  - en.b1.g10
+  skill: grammar
+  explain:
+  - At C1, modals are used not just for ability and obligation but for social nuance.
+  - 'Would appear / would seem: more distanced than ''appears'' — hedges a conclusion.'
+  - 'Might I suggest / Could I trouble you: extremely polite, formal requests.'
+  - 'Should (= if): ''Should you have questions, please contact us.'' (formal conditionals)'
+  - 'Would like vs want: ''would like'' adds formality and social distance to requests.'
+  - 'Ought to: slightly more formal than ''should''; expresses moral or expected obligation.'
+  - 'Need not (formal): ''You need not attend.'' vs. ''You don''t need to attend.''
+    (informal)'
+  examples:
+  - target: It would appear that the initial estimates were significantly understated.
+    gloss: Parece ser que las estimaciones iniciales estaban significativamente subestimadas.
+  - target: I would suggest that we postpone the meeting until further details are
+      available.
+    gloss: Sugeriría que aplazáramos la reunión hasta que haya más detalles disponibles.
+  - target: The committee need not reach a final decision at today's session.
+    gloss: El comité no necesita tomar una decisión final en la sesión de hoy.
+  pitfalls:
+  - '''Would appear'' is more distanced than ''appears'' — don''t use them interchangeably.'
+  - '''Might I...?'' is very formal; in normal speech use ''Can I...?'' or ''Could
+    I...?'''
+  - Need not + bare infinitive (formal); don't need to + full infinitive (informal).
+    Don't swap.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:95b05b46ef24fee8
+- id: en.c1.g20
+  kind: grammar
+  level: C1
+  order: 20
+  title_target: Sentence variety and cohesion
+  title_l1: Variedad de oraciones y cohesión
+  can_do: I can vary sentence structure and create clear logical links across a paragraph.
+  prereqs:
+  - en.c1.g28
+  skill: grammar
+  explain:
+  - Effective C1 writing balances short and long sentences with clear logical connections.
+  - Vary structure: a short punchy sentence after a long one creates deliberate emphasis.
+  - 'Reference chains: pronouns, synonyms, and demonstratives link sentences together.'
+  - 'Lexical cohesion: repeat key terms or use synonyms: ''the project / initiative
+    / scheme''.'
+  - 'Thematic development: keep the same topic at the start of successive sentences.'
+  - 'Paragraph structure: topic sentence → development → example → link forward.'
+  - Avoid overusing ''and'', ''but'', ''also'' to open sentences in formal writing.
+  examples:
+  - target: The proposal was ambitious. What it lacked, however, was a clear implementation
+      plan.
+    gloss: La propuesta era ambiciosa. Sin embargo, lo que le faltaba era un plan
+      de implementación claro.
+  - target: Participation rose sharply in the first quarter. This increase can be
+      attributed to the new scheme.
+    gloss: La participación aumentó notablemente en el primer trimestre. Este aumento
+      puede atribuirse al nuevo plan.
+  - target: The research yielded three key findings. Each of these will be examined
+      in turn below.
+    gloss: La investigación arrojó tres hallazgos clave. Cada uno se examinará a continuación.
+  pitfalls:
+  - Using ''this'' without a clear referent is a common cohesion error — name what
+    ''this'' refers to.
+  - Don't start every sentence the same way — vary the grammatical subject and opener.
+  - A paragraph needs one main idea — don't mix two unrelated ideas in the same paragraph.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:566766b74539971d
+- id: en.c1.g21
+  kind: vocabulary
+  level: C1
+  order: 21
+  title_target: Register — formal vs informal
+  title_l1: Registro — formal vs informal
+  can_do: I can identify and apply the appropriate level of formality for different
+    contexts.
+  prereqs: []
+  skill: vocabulary
+  explain:
+  - Register is the level of formality appropriate to the context, audience, and purpose.
+  - 'Informal: contractions, phrasal verbs, colloquialisms, first person, short sentences.'
+  - 'Formal: full verb forms, Latinate vocabulary, passive, longer complex sentences.'
+  - 'Key contrasts: get → obtain; find out → establish; look into → investigate.'
+  - 'Avoid colloquial openers in formal writing: use ''Furthermore'' not ''Also'';
+    ''However'' not ''But''.'
+  - 'Semi-formal (professional email): polite but not stiff — contractions used sparingly.'
+  - Switching register mid-text creates inconsistency — maintain one register throughout.
+  examples:
+  - target: The matter requires immediate attention. (formal) / We need to deal with
+      this now. (informal)
+    gloss: El asunto requiere atención inmediata. / Tenemos que ocuparnos de esto
+      ahora.
+  - target: Following a thorough investigation, the committee concluded that the procedure
+      had been followed correctly.
+    gloss: Tras una exhaustiva investigación, el comité concluyó que el procedimiento
+      se había seguido correctamente.
+  - target: I would like to draw your attention to a matter of considerable significance.
+    gloss: Quisiera llamar su atención sobre un asunto de considerable importancia.
+  pitfalls:
+  - Spanish formal writing uses subjunctive; English formality uses passive and Latinate
+    vocabulary.
+  - Don't use phrasal verbs in formal writing — use their single-word equivalents
+    instead.
+  - Overcorrecting to formal can sound unnatural — professional emails are usually
+    semi-formal.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:a2383409d763b5b4
+- id: en.c1.g22
+  kind: vocabulary
+  level: C1
+  order: 22
+  title_target: Collocation — verb + noun
+  title_l1: Colocación — verbo + sustantivo
+  can_do: I can use high-frequency verb-noun collocations naturally in formal and
+    academic contexts.
+  prereqs: []
+  skill: vocabulary
+  explain:
+  - Collocations are word pairs that native speakers use naturally together.
+  - 'Make + : a decision, a suggestion, progress, an effort, an exception, an impact.'
+  - 'Do + : research, damage, business, justice, a favour, harm, your best.'
+  - 'Take + : action, responsibility, account of, advantage of, effect, a toll on.'
+  - 'Give + : rise to, way to, evidence, a speech, consideration to, the go-ahead.'
+  - 'Draw + : attention to, a conclusion, a distinction, a parallel, inspiration from.'
+  - Learning collocations improves fluency more than learning isolated words.
+  examples:
+  - target: The new policy has had a significant impact on the number of applications
+      received.
+    gloss: La nueva política ha tenido un impacto significativo en el número de solicitudes
+      recibidas.
+  - target: The committee drew a clear distinction between the two categories of applicants.
+    gloss: El comité trazó una clara distinción entre las dos categorías de solicitantes.
+  - target: It is important that all parties take full responsibility for their actions.
+    gloss: Es importante que todas las partes asuman plena responsabilidad por sus
+      acciones.
+  pitfalls:
+  - 'Do vs make: do (activities, tasks, damage), make (products, decisions, changes)
+    — no rule; learn pairs.'
+  - Take effect ≠ make effect. Take action ≠ do action. These are fixed collocations.
+  - Spanish uses different verb partners — direct translation often produces a wrong
+    collocation.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:a49d16db5970fb9a
+- id: en.c1.g23
+  kind: vocabulary
+  level: C1
+  order: 23
+  title_target: Collocation — adjective + noun
+  title_l1: Colocación — adjetivo + sustantivo
+  can_do: I can use high-frequency adjective-noun collocations accurately in context.
+  prereqs:
+  - en.c1.g22
+  skill: vocabulary
+  explain:
+  - Adjective collocations are as important as verb collocations for natural C1 language.
+  - 'Strong/weak collocate with: evidence, argument, currency, influence, impression.'
+  - 'Heavy collocates with: traffic, industry, rain, involvement, burden, workload,
+    loss.'
+  - 'Deep collocates with: concern, understanding, roots, divisions, impact, satisfaction.'
+  - 'Sharp collocates with: increase, decline, contrast, criticism, mind, drop, rise.'
+  - 'High/low collocate with: priority, demand, standards, risk, probability, cost.'
+  - Using the wrong adjective sounds unnatural even if the meaning is close.
+  examples:
+  - target: There is growing concern about the long-term impact of air pollution on
+      public health.
+    gloss: Hay una preocupación creciente por el impacto a largo plazo de la contaminación
+      del aire.
+  - target: The report highlighted a sharp increase in the number of cases reported
+      last year.
+    gloss: El informe destacó un fuerte aumento en el número de casos reportados el
+      año pasado.
+  - target: She has a deep understanding of the cultural factors that influence business
+      decisions.
+    gloss: Tiene un profundo conocimiento de los factores culturales que influyen
+      en las decisiones empresariales.
+  pitfalls:
+  - '''Big'' ≠ ''strong'' for evidence or arguments — use ''strong argument'', not
+    ''big argument''.'
+  - '''Large'' ≠ ''heavy'' for traffic or loss — ''heavy traffic'', ''heavy loss'',
+    not ''large traffic''.'
+  - Spanish often uses ''gran'' for all — English requires learning each adjective
+    separately.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:0815cbc22957c2ac
+- id: en.c1.g24
+  kind: vocabulary
+  level: C1
+  order: 24
+  title_target: Advanced prepositional phrases
+  title_l1: Frases preposicionales avanzadas
+  can_do: I can use complex prepositional phrases accurately in formal and professional
+    writing.
+  prereqs: []
+  skill: vocabulary
+  explain:
+  - Complex prepositional phrases signal precise meaning and are common in formal
+    writing.
+  - 'By virtue of: because of a particular quality or status. ''By virtue of her seniority...'''
+  - 'In the light of: considering, taking account of. ''In the light of new evidence...'''
+  - 'With regard to / in relation to: concerning, about (formal correspondence).'
+  - 'On the grounds that/of: because, due to (formal reason): ''rejected on the grounds
+    that...'''
+  - 'In the absence of: without, when something is lacking. ''In the absence of evidence...'''
+  - 'To the extent that: in so far as, to the degree that. ''valid to the extent that...'''
+  examples:
+  - target: In the light of recent developments, the board has decided to postpone
+      the vote.
+    gloss: Teniendo en cuenta los últimos avances, el consejo ha decidido posponer
+      la votación.
+  - target: The application was rejected on the grounds that the documentation was
+      incomplete.
+    gloss: La solicitud fue rechazada por el motivo de que la documentación estaba
+      incompleta.
+  - target: In the absence of a formal agreement, both parties will revert to the
+      original terms.
+    gloss: En ausencia de un acuerdo formal, ambas partes volverán a los términos
+      originales.
+  pitfalls:
+  - In the light of (British) = In light of (American) — both correct; be consistent
+    per text.
+  - '''With regard to'' (singular, correct); ''with regards to'' is informal and widely
+    considered an error.'
+  - On the grounds that + clause; on the grounds of + noun — don't swap these patterns.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:3b7bf5c32ef4cee7
+- id: en.c1.g25
+  kind: vocabulary
+  level: C1
+  order: 25
+  title_target: Word formation — prefixes
+  title_l1: Formación de palabras — prefijos
+  can_do: I can use a wide range of prefixes to create and understand new word forms.
+  prereqs: []
+  skill: vocabulary
+  explain:
+  - Prefixes change a word's meaning without changing its grammatical class.
+  - 'Negation: un- (unlikely), dis- (disagree), in-/im-/il-/ir- (irregular, impossible).'
+  - 'Mis- = wrongly or badly: misinterpret, mismanage, mislead, miscommunication.'
+  - 'Over- / under- = too much / too little: overestimate, underperform, overwhelm.'
+  - 'Re- = again or back: reassess, reconsider, revert, restructure, renegotiate.'
+  - 'Pre- / post-: pre-existing, post-war, pre-empt, post-merger, postpone.'
+  - 'The prefix changes meaning but not part of speech: ''happy'' (adj) → ''unhappy''
+    (adj).'
+  examples:
+  - target: The initial estimates significantly underestimated the total cost of the
+      project.
+    gloss: Las estimaciones iniciales subestimaron significativamente el coste total
+      del proyecto.
+  - target: A number of pre-existing conditions were identified during the initial
+      assessment.
+    gloss: Se identificaron varias afecciones preexistentes durante la evaluación
+      inicial.
+  - target: The company was forced to restructure its operations following a sharp
+      fall in profits.
+    gloss: La empresa se vio obligada a reestructurar sus operaciones tras una fuerte
+      caída de beneficios.
+  pitfalls:
+  - 'in- before l → il-: illegal. In- before r → ir-: irrelevant. In- before p/b →
+    im-: impossible.'
+  - '''un-'' and ''dis-'' are not always interchangeable: ''unable'' (not ''disable''),
+    ''disloyal'' (not ''unloyal'').'
+  - Not all verbs take re-: you can ''redo'' but not ''re-know''. Check before using.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:775d13155e8e8434
+- id: en.c1.g26
+  kind: vocabulary
+  level: C1
+  order: 26
+  title_target: Word formation — suffixes
+  title_l1: Formación de palabras — sufijos
+  can_do: I can use a wide range of suffixes to form nouns, verbs, adjectives, and
+    adverbs.
+  prereqs:
+  - en.c1.g25
+  skill: vocabulary
+  explain:
+  - Suffixes change both meaning and grammatical class, enabling lexical flexibility.
+  - 'Noun suffixes: -tion/-sion (action/result), -ity (quality), -ness (state), -ment
+    (result).'
+  - 'Verb suffixes: -ify (make X: clarify, simplify), -ise/-ize (make X: privatise,
+    modernise).'
+  - 'Adjective suffixes: -ive (effective), -ous (ambitious), -al (environmental),
+    -able (sustainable).'
+  - 'Adverb suffix: -ly added to most adjectives: effectively, ambiguously, notably.'
+  - 'Check spelling changes at the boundary: possible → possibility, not ''possibleity''.'
+  - -ise (British) / -ize (American) — Cambridge exams accept both; choose one per
+    text.
+  examples:
+  - target: The privatisation of public services has been a controversial policy choice.
+    gloss: La privatización de los servicios públicos ha sido una opción política
+      controvertida.
+  - target: Simplifying the application process would significantly reduce administrative
+      costs.
+    gloss: Simplificar el proceso de solicitud reduciría significativamente los costes
+      administrativos.
+  - target: The organisation needs to modernise its communication strategy to reach
+      younger audiences.
+    gloss: La organización necesita modernizar su estrategia de comunicación para
+      llegar a públicos más jóvenes.
+  pitfalls:
+  - 'Spelling often changes at the suffix boundary: produce → production (not ''producation'').'
+  - '''Sensible'' (reasonable) ≠ ''sensitive'' (easily affected) — the suffix changes
+    the meaning entirely.'
+  - 'Avoid false derivations: ''informance'' is not a word — use ''information'' or
+    ''performance''.'
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:365c760ae5815590
+- id: en.c1.g27
+  kind: vocabulary
+  level: C1
+  order: 27
+  title_target: Connotation and register choice
+  title_l1: Connotación y elección de registro
+  can_do: I can choose words for their connotation and communicate a deliberate stance.
+  prereqs:
+  - en.c1.g21
+  skill: vocabulary
+  explain:
+  - Connotation is the emotional or evaluative meaning a word carries beyond its definition.
+  - Slim (positive/neutral) vs thin (neutral) vs skinny (slightly negative) — same
+    denotation.
+  - Assertive (positive/neutral) vs aggressive (negative) — same behaviour, different
+    framing.
+  - 'Frugal (positive: careful) vs stingy (negative: unwilling to spend) — same trait.'
+  - Determined (positive) vs stubborn (negative) — describe the same quality from
+    different views.
+  - 'Euphemism: ''passed away'' (died), ''let go'' (fired) — soften the message deliberately.'
+  - Word choice communicates your stance — use connotation deliberately, not accidentally.
+  examples:
+  - target: The new regulations have been described as either prudent or restrictive,
+      depending on one's perspective.
+    gloss: Las nuevas regulaciones han sido calificadas de prudentes o restrictivas,
+      según la perspectiva.
+  - target: What some call determination, others would characterise as inflexibility.
+    gloss: Lo que algunos llaman determinación, otros lo caracterizarían como inflexibilidad.
+  - target: The campaign used carefully chosen language to make the cuts sound like
+      an investment.
+    gloss: La campaña usó un lenguaje cuidadosamente elegido para que los recortes
+      parecieran una inversión.
+  pitfalls:
+  - Spanish has similar positive/negative pairs — the danger is mistranslating the
+    tone.
+  - 'Euphemisms: recognise them in texts; use sparingly in formal academic writing.'
+  - Always check a learner dictionary for connotation notes before choosing a formal
+    synonym.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:30d50d9b9709abfd
+- id: en.c1.g28
+  kind: vocabulary
+  level: C1
+  order: 28
+  title_target: Discourse markers — academic and professional
+  title_l1: Marcadores del discurso — académico y profesional
+  can_do: I can use a wide range of discourse markers to signal logical relationships
+    in extended writing.
+  prereqs: []
+  skill: vocabulary
+  explain:
+  - Discourse markers signal the logical relationship between ideas in extended writing.
+  - 'Addition: furthermore, in addition, moreover, what is more, not only that but
+    also.'
+  - 'Contrast: however, nevertheless, nonetheless, on the other hand, that said, even
+    so.'
+  - 'Result: consequently, therefore, as a result, hence, thus — use in formal writing.'
+  - 'Concession pivot: that said / be that as it may / even so → followed by main
+    claim.'
+  - 'Exemplification: for instance, namely, specifically, such as, in particular.'
+  - 'Ordering: firstly, subsequently, in turn, finally, in conclusion, to sum up.'
+  examples:
+  - target: The policy was widely supported. That said, a number of concerns have
+      since emerged.
+    gloss: La política contó con un amplio apoyo. Dicho esto, desde entonces han surgido
+      algunas preocupaciones.
+  - target: The study is limited in scope; consequently, its findings should be treated
+      with caution.
+    gloss: El estudio es de alcance limitado; por consiguiente, sus conclusiones deben
+      tratarse con cautela.
+  - target: Several factors contributed to the outcome — namely, timing, resources,
+      and leadership.
+    gloss: 'Varios factores contribuyeron al resultado, a saber: el calendario, los
+      recursos y el liderazgo.'
+  pitfalls:
+  - '''That said'' and ''even so'' concede then pivot — don''t use them to introduce
+    your main argument.'
+  - '''Consequently'' and ''therefore'' are not interchangeable with ''so'' in formal
+    writing.'
+  - '''Hence'' is very formal; avoid it in speech. ''This is hence impossible'' is
+    unnatural.'
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:5d66d13772b1cb8c
+- id: en.c1.g29
+  kind: vocabulary
+  level: C1
+  order: 29
+  title_target: Idiomatic and figurative language
+  title_l1: Lenguaje idiomático y figurado
+  can_do: I can understand and use C1-level idioms appropriately in professional contexts.
+  prereqs: []
+  skill: vocabulary
+  explain:
+  - C1 idioms are used in professional and semi-formal contexts, not only casual speech.
+  - 'A drop in the ocean: a tiny amount compared to what is needed.'
+  - 'Up to scratch: meeting the required standard. ''Her work is not quite up to scratch.'''
+  - 'Take with a pinch of salt: treat a claim as less than fully reliable.'
+  - 'On the back burner: postponed or given low priority for now.'
+  - 'Bear fruit: produce positive results. ''The negotiations finally bore fruit.'''
+  - 'In its infancy: at a very early stage of development — used for technology, ideas.'
+  examples:
+  - target: The additional funding allocated to the project was little more than a
+      drop in the ocean.
+    gloss: La financiación adicional asignada al proyecto era poco más que una gota
+      en el océano.
+  - target: The technology is still in its infancy, but early results are promising.
+    gloss: La tecnología todavía está en sus inicios, pero los primeros resultados
+      son prometedores.
+  - target: These statistics should be taken with a pinch of salt given the small
+      sample size.
+    gloss: Estas estadísticas deben tomarse con cautela dado el pequeño tamaño de
+      la muestra.
+  pitfalls:
+  - '''A drop in the bucket'' (American) vs ''a drop in the ocean'' (British) — don''t
+    mix variants.'
+  - Don't overuse idioms in formal academic writing — one or two per piece at most.
+  - Idioms are fixed expressions — don't paraphrase them or substitute synonyms.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:6ecd1268cd106e69
+- id: en.c1.g30
+  kind: vocabulary
+  level: C1
+  order: 30
+  title_target: Punctuation for effect
+  title_l1: Puntuación para efecto estilístico
+  can_do: I can use em dashes, colons, semicolons, and brackets deliberately for stylistic
+    effect.
+  prereqs: []
+  skill: vocabulary
+  explain:
+  - At C1, punctuation is a stylistic tool, not just a grammatical rule.
+  - 'Em dash (—): marks a dramatic pause or emphatic aside: ''The result was clear
+    — and damning.'''
+  - 'Colon introduces, explains, or exemplifies: ''There is one solution: communication.'''
+  - 'Semicolon links two related independent clauses: ''The plan failed; no one was
+    surprised.'''
+  - Parentheses insert supplementary information without interrupting the sentence
+    flow.
+  - 'Comma splice: joining two main clauses with only a comma is an error in formal
+    writing.'
+  - 'Oxford comma (before last item in a list): use consistently — style guides vary.'
+  examples:
+  - target: The decision had consequences no one had anticipated — and those consequences
+      were severe.
+    gloss: La decisión tuvo consecuencias que nadie había anticipado, y esas consecuencias
+      fueron graves.
+  - target: 'Three factors shaped the outcome: timing, resources, and leadership.'
+    gloss: 'Tres factores determinaron el resultado: el momento, los recursos y el
+      liderazgo.'
+  - target: The project exceeded its budget by 40%; as a result, several planned features
+      were cut.
+    gloss: El proyecto superó su presupuesto en un 40%; como resultado, se eliminaron
+      varias funciones planificadas.
+  pitfalls:
+  - 'Comma splice: two main clauses joined by only a comma — very common learner error
+    in formal writing.'
+  - The colon introduces; the semicolon connects two equal clauses — don't swap them.
+  - British English often omits the Oxford comma; American English includes it — be
+    consistent.
+  exercises:
+  - type: mcq
+    n: 3
+  - type: cloze
+    n: 3
+  - type: transform
+    n: 4
+  - type: produce
+    n: 4
+  spine_hash: sha256:20480efae426d1fd

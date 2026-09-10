@@ -7,7 +7,7 @@
 ## TL;DR — Where we are and what's next
 
 ```
-✅ A1 done  ✅ A2 done  ✅ B1 done  ✅ B2 done  ⬜ C1
+✅ A1 done  ✅ A2 done  ✅ B1 done  ✅ B2 done  ✅ C1 done
 ```
 
 **What's built and live:**
@@ -19,6 +19,8 @@
 - `curriculum/bank/en/b1.jsonl` — 392 questions (14 per unit)
 - `curriculum/en/b2.yaml` — 30 units, all hashes computed
 - `curriculum/bank/en/b2.jsonl` — 420 questions (14 per unit)
+- `curriculum/en/c1.yaml` — 30 units, all hashes computed
+- `curriculum/bank/en/c1.jsonl` — 420 questions (14 per unit; mix: 3 mcq, 3 cloze, 4 transform, 4 produce)
 - `curriculum/loader.py` — loads all YAML/JSONL at import time
 - `scripts/curriculum_lint.py` — validates and rehashes content (`make curriculum-lint / curriculum-rehash`)
 - `bot/handlers/course.py` — `/course`, lesson cards, exercise runner, pass/fail, flashcard creation from missed items
@@ -26,7 +28,7 @@
 - DB tables: `unit_progress`, `item_attempts`
 
 **What's missing / next:**
-- **H9 English C1** — needs its own unit shape first (not a grammar list — see §3)
+- **H9 English C1** — ✅ Done. 30 units, 420 questions. C1 unit shape: heavier on transform/produce (4+4 vs 5+5 at B2), vocabulary-type units for collocation/register/word-formation, grammar units for inversion/clefts/hedging/subjunctive etc.
 - **H10 German levels** — personal track, whenever wanted
 - **Reading track** — generated texts + comprehension questions
 - **Writing track** — task + LLM grading against checklist
@@ -101,7 +103,7 @@ a time**, and every level after the first is a content-only commit.
 | **A2** | 24 | past continuous, present perfect, going to/will, comparatives/superlatives, must/should/have to, used to, passive, conditionals 1, reported speech | ✅ **Done — 336 questions** |
 | **B1** | 28 | all narrative tenses, conditionals 1–2, passive (all tenses), reported speech (extended), relative clauses, gerunds vs infinitives, modals of deduction | ✅ **Done — 392 questions** |
 | **B2** | 30 | mixed conditionals, inversion, advanced passive, subjunctive, cleft sentences, discourse markers, hedging, nominalisation, participle clauses, advanced register | ✅ **Done — 420 questions** |
-| **C1** | ~30 | register, hedging, emphasis and cleft sentences, nominalisation, collocation, discourse markers | ⬜ needs own unit shape — see below |
+| **C1** | 30 | inversion, clefts, fronting, nominalisation, hedging, advanced conditionals, reporting, participles, concession, collocation, register, word formation, discourse markers, idioms, punctuation | ✅ **Done — 420 questions** |
 
 **Two things worth knowing before you start:**
 
@@ -134,7 +136,7 @@ working, so they can be spread out.
 | **H6** | English A2 — 24 topics + 336 questions | content | ✅ **done** | Second level available to students |
 | **H7** | English B1 — 28 topics + 392 questions | content | ✅ **done** | Serves intermediate students |
 | **H8** | English B2 — 30 topics + 420 questions | content | ✅ **done** | Upper-intermediate level available |
-| **H9** | English C1 — needs its own unit shape first (§3) | content + design | ⬜ **next** | Tops out the ladder |
+| **H9** | English C1 — 30 units, 420 questions | content + design | ✅ **done** | Tops out the ladder |
 | **H10** | German levels, on demand | content | ⬜ | Your own track, whenever you want it |
 
 H7–H9 are repeatable content runs with zero code changes. **Students can use the bot now
@@ -179,7 +181,7 @@ it starts to feel redundant.
 
 | Question | Decision |
 |---|---|
-| Which level first? | English A1 ✅, A2 ✅, B1 ✅, B2 ✅ — now C1 |
+| Which level first? | English A1 ✅, A2 ✅, B1 ✅, B2 ✅, C1 ✅ — ladder complete |
 | Content in git or database? | Git — fits the existing deploy, reviewable in diffs ✅ |
 | Pass mark for a unit? | 80%, retake any time ✅ |
 | Locked units, or browse freely? | Soft: "Continue" follows the order, `/browse` opens anything at or below your level ✅ |
