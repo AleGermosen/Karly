@@ -1,0 +1,1269 @@
+- id: de.b1.g01
+  kind: grammar
+  level: B1
+  order: 1
+  title_target: Passiv in allen Zeiten
+  title_l1: Passive voice across tenses
+  can_do: I can describe processes and events using the passive voice in various tenses.
+  prereqs:
+  - de.a2.g07
+  - de.a2.g10
+  skill: grammar
+  explain:
+  - 'Passiv = werden + Partizip II. The agent (doer) is optional: von + Dativ.'
+  - 'Präsens: Das Buch wird gelesen. (The book is being read.)'
+  - 'Präteritum: Das Buch wurde gelesen. (The book was read.)'
+  - 'Perfekt: Das Buch ist gelesen worden. (worden, not geworden, in the Perfekt passive.)'
+  - 'Futur I: Das Buch wird gelesen werden. (Two infinitives at clause end.)'
+  - The Perfekt passive uses "worden" (not "geworden") — this is the most common learner
+    error.
+  - 'Use Passiv to focus on the action, not the actor: ''Das Haus wurde gebaut.'''
+  - 'Von + Dativ names the agent when needed: Das Haus wurde von einem Architekten
+    gebaut.'
+  examples:
+  - target: Die Briefe werden jeden Tag von der Sekretärin geschrieben.
+    gloss: The letters are written every day by the secretary.
+  - target: Das Fenster wurde gestern Abend eingebrochen.
+    gloss: The window was broken in yesterday evening.
+  - target: Der Vertrag ist bereits unterzeichnet worden.
+    gloss: The contract has already been signed.
+  pitfalls:
+  - English speakers write "geworden" in the Perfekt passive. It must be "worden"
+    — no "ge-" prefix.
+  - Don't confuse werden + Adjektiv (Das Wetter wird besser) with the passive (Das
+    Buch wird gelesen).
+  - Futur passive has two "werden" in the clause; English speakers often drop one.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:cf6bf881561d4d0c
+- id: de.b1.g02
+  kind: grammar
+  level: B1
+  order: 2
+  title_target: Passiv mit Modalverben
+  title_l1: Passive with modal verbs
+  can_do: I can express obligation, permission, and possibility about actions using
+    modal passive constructions.
+  prereqs:
+  - de.b1.g01
+  skill: grammar
+  explain:
+  - 'Modal passive: Modalverb (conjugated) + Partizip II + werden (infinitive at end).'
+  - 'Präsens: Das muss gemacht werden. (That must be done.)'
+  - 'Präteritum: Das musste gemacht werden. (That had to be done.)'
+  - Perfekt of modal passive is rare in speech — Präteritum is preferred.
+  - 'Common modals: muss, kann, darf, soll, will, dürfte.'
+  - The double infinitive (werden) goes to the very end of the main clause.
+  - 'Negation: Das darf nicht vergessen werden. (That must not be forgotten.)'
+  examples:
+  - target: Die Aufgaben müssen bis Freitag erledigt werden.
+    gloss: The tasks must be completed by Friday.
+  - target: Hier darf nicht geraucht werden.
+    gloss: Smoking is not permitted here.
+  - target: Das Problem konnte schnell gelöst werden.
+    gloss: The problem could be resolved quickly.
+  pitfalls:
+  - English speakers forget "werden" at the end — it is obligatory in German modal
+    passive.
+  - Don't use "sein" instead of "werden" in the modal passive (Zustandspassiv is different).
+  - The modal verb is conjugated; "werden" stays as infinitive at the clause-final
+    position.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:d9b8eabb93157d4a
+- id: de.b1.g03
+  kind: grammar
+  level: B1
+  order: 3
+  title_target: Konjunktiv II für Höflichkeit
+  title_l1: Konjunktiv II for polite requests and hypotheticals
+  can_do: I can make polite requests and talk about hypothetical situations using
+    Konjunktiv II.
+  prereqs:
+  - de.a2.g09
+  skill: grammar
+  explain:
+  - 'Core Konjunktiv II forms to master: wäre, hätte, könnte, müsste, dürfte, würde.'
+  - 'Most verbs use würde + Infinitiv: Ich würde gern kommen. (I would like to come.)'
+  - 'Sein, haben, modals keep their own forms: wäre, hätte, könnte, müsste, sollte,
+    wollte.'
+  - 'Polite requests: Könnten Sie mir helfen? Würden Sie bitte warten?'
+  - 'Hypotheticals: Wenn ich Zeit hätte, würde ich reisen.'
+  - Konjunktiv II differs from Indikativ by an umlaut or "würde" + infinitive construction.
+  - The form "würde" + Infinitiv is acceptable for all verbs except sein, haben, and
+    modals.
+  examples:
+  - target: Könnten Sie mir bitte die Speisekarte bringen?
+    gloss: Could you bring me the menu, please?
+  - target: Ich wäre sehr dankbar, wenn Sie früher kämen.
+    gloss: I would be very grateful if you came earlier.
+  - target: Wenn ich mehr Geld hätte, würde ich ein neues Auto kaufen.
+    gloss: If I had more money, I would buy a new car.
+  pitfalls:
+  - English speakers use "would" for all cases; German requires wäre/hätte/könnte
+    for those verbs.
+  - Don't use würde with sein or haben — use wäre and hätte directly.
+  - The conditional clause uses Konjunktiv II, not Indikativ — "wenn ich Zeit hätte"
+    not "habe".
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:d7e53e8ec7b7dc56
+- id: de.b1.g04
+  kind: grammar
+  level: B1
+  order: 4
+  title_target: Konjunktiv II Vergangenheit
+  title_l1: Past Konjunktiv II (unreal past)
+  can_do: I can talk about events that did not happen and express regret about past
+    situations.
+  prereqs:
+  - de.b1.g03
+  skill: grammar
+  explain:
+  - Past Konjunktiv II = hätte / wäre + Partizip II (same auxiliaries as Perfekt).
+  - Ich hätte das nicht gesagt. (I wouldn't have said that.)
+  - Sie wäre früher gekommen. (She would have come earlier.)
+  - Use "hätte" for verbs that form Perfekt with "haben"; use "wäre" for verbs with
+    "sein".
+  - 'Conditional past: Wenn ich früher aufgestanden wäre, hätte ich den Zug nicht
+    verpasst.'
+  - This form expresses regret, criticism, or hypothetical past — all unreal situations.
+  - 'Modal past: Ich hätte kommen müssen. (I should have come.) — double infinitive
+    at end.'
+  examples:
+  - target: Wenn ich das gewusst hätte, wäre ich nicht gekommen.
+    gloss: If I had known that, I wouldn't have come.
+  - target: Du hättest früher anrufen sollen!
+    gloss: You should have called earlier!
+  - target: Ohne deinen Rat wäre ich gescheitert.
+    gloss: Without your advice, I would have failed.
+  pitfalls:
+  - Don't use "würde haben + Partizip" — the correct form is "hätte + Partizip".
+  - Choosing hätte vs. wäre depends on the verb's Perfekt auxiliary, just as in Perfekt
+    tense.
+  - The modal past (hätte + Inf + müssen/können) puts both infinitives at the end
+    in order.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:c769ce0b8be13f12
+- id: de.b1.g05
+  kind: grammar
+  level: B1
+  order: 5
+  title_target: Konjunktiv I (Indirekte Rede)
+  title_l1: Konjunktiv I — reported speech
+  can_do: I can report what someone else said using Konjunktiv I in written German.
+  prereqs:
+  - de.a2.g13
+  skill: grammar
+  explain:
+  - 'Konjunktiv I is built from the infinitive stem: gehen → gehe, gehe, gehe, gehen,
+    gehet, gehen.'
+  - 'Sein is irregular: er sei, sie seien — these forms are most common in news and
+    formal writing.'
+  - 'Reported speech: Er sagt, er sei krank. (He says he is sick.) — no "dass" required.'
+  - When Konjunktiv I = Indikativ (e.g. wir gehen = wir gehen), switch to Konjunktiv
+    II instead.
+  - 'Perfekt in reported speech: Er sagt, er habe das Buch gelesen.'
+  - Konjunktiv I signals that you are reporting, not asserting — important in journalism.
+  - 'Dass-clause alternative: Er sagt, dass er krank sei. (verb final with dass.)'
+  examples:
+  - target: Die Ministerin erklärte, die Lage sei unter Kontrolle.
+    gloss: The minister stated that the situation was under control.
+  - target: Er berichtete, er habe den Täter gesehen.
+    gloss: He reported that he had seen the perpetrator.
+  - target: Sie sagten, sie kämen morgen — (Konjunktiv II used because K.I. = Indikativ
+      here).
+    gloss: They said they would come tomorrow.
+  pitfalls:
+  - English uses "that + past tense" for reported speech; German uses Konjunktiv I
+    (present).
+  - Don't use Konjunktiv I in everyday speech — it sounds formal/archaic; use dass
+    + Indikativ.
+  - When Konjunktiv I is identical to Indikativ, switch to Konjunktiv II to signal
+    reported speech.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:c1f9a8fef4ed3372
+- id: de.b1.g06
+  kind: grammar
+  level: B1
+  order: 6
+  title_target: Wortstellung in Nebensätzen
+  title_l1: Word order in subordinate clauses
+  can_do: I can construct complex sentences with correct verb-final word order in
+    subordinate clauses.
+  prereqs:
+  - de.a2.g21
+  skill: grammar
+  explain:
+  - 'In a Nebensatz, the conjugated verb goes to the very end: Ich weiß, dass er kommt.'
+  - 'Separable prefixes stay attached at the end: ...dass er aufsteht (not: ...dass
+    er steht auf).'
+  - 'Modal + Infinitiv in Nebensatz: …weil er arbeiten muss. (infinitive before conjugated
+    modal.)'
+  - 'Perfekt in Nebensatz: …weil er gegangen ist. (Partizip before auxiliary ist.)'
+  - 'Double infinitive (Ersatzinfinitiv): …weil er hat kommen müssen. (auxiliary shifts
+    left.)'
+  - Common subordinating conjunctions: weil, dass, ob, wenn, als, obwohl, damit, bevor,
+      nachdem.
+  - 'If the Nebensatz comes first, the main clause inverts: Weil er müde war, ging
+    er früh.'
+  examples:
+  - target: Ich glaube, dass sie morgen nicht kommen wird.
+    gloss: I think that she won't come tomorrow.
+  - target: Er war froh, weil er die Prüfung bestanden hatte.
+    gloss: He was happy because he had passed the exam.
+  - target: Obwohl es regnete, gingen wir spazieren.
+    gloss: Although it was raining, we went for a walk.
+  pitfalls:
+  - English speakers place the verb in the middle of the clause — German requires
+    it at the end.
+  - Don't forget to invert subject and verb in the main clause when the Nebensatz
+    comes first.
+  - With Perfekt, the auxiliary (hat/ist) is the very last word, after the Partizip.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:e39436993323b2a1
+- id: de.b1.g07
+  kind: grammar
+  level: B1
+  order: 7
+  title_target: Erweiterte Partizipialkonstruktionen
+  title_l1: Extended participial phrases
+  can_do: I can use extended participial phrases to replace relative clauses in formal
+    writing.
+  prereqs:
+  - de.a2.g12
+  skill: grammar
+  explain:
+  - A participial phrase expands the Partizip with adverbs/objects placed between
+    article and noun.
+  - 'Relative clause: Das Buch, das von ihm geschrieben wurde → das von ihm geschriebene
+    Buch.'
+  - 'Partizip I (active, ongoing): das singende Kind = the singing child.'
+  - 'Partizip II (passive/completed): das geschriebene Buch = the written book.'
+  - The participial phrase takes adjective endings matching the noun's case/gender/number.
+  - This structure is very common in formal German (newspapers, academic texts, legal
+    language).
+  - 'Complex example: der von der Regierung geplante Gesetzentwurf (the draft law
+    planned by the government).'
+  examples:
+  - target: Das von einem bekannten Architekten entworfene Gebäude steht unter Denkmalschutz.
+    gloss: The building designed by a famous architect is listed.
+  - target: Die auf dem Tisch liegenden Unterlagen gehören mir.
+    gloss: The documents lying on the table belong to me.
+  - target: Der seit Jahren diskutierte Vorschlag wurde abgelehnt.
+    gloss: The proposal that had been discussed for years was rejected.
+  pitfalls:
+  - English allows participial phrases but German ones require full adjective declension
+    endings.
+  - Don't confuse Partizip I (active/ongoing) with Partizip II (completed/passive
+    meaning).
+  - The entire participial phrase sits between the article and the noun — nothing
+    outside that bracket.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:e523b873d50f010c
+- id: de.b1.g08
+  kind: grammar
+  level: B1
+  order: 8
+  title_target: Infinitivkonstruktionen vs. Nebensätze
+  title_l1: Infinitive clauses vs. subordinate clauses
+  can_do: I can choose correctly between an infinitive construction and a subordinate
+    clause.
+  prereqs:
+  - de.a2.g17
+  - de.a2.g13
+  skill: grammar
+  explain:
+  - 'Use zu + Infinitiv when the subject is shared: Ich hoffe, pünktlich zu kommen.'
+  - 'Use dass-Satz when subjects differ: Ich hoffe, dass er pünktlich kommt.'
+  - 'Um…zu + Inf expresses purpose (shared subject): Ich lerne Deutsch, um in Wien
+    zu arbeiten.'
+  - 'Ohne…zu + Inf: Er ging, ohne sich zu verabschieden. (Without saying goodbye.)'
+  - 'Statt…zu + Inf: Statt zu lernen, spielte er. (Instead of studying, he played.)'
+  - After verbs like vergessen, versuchen, beginnen, the infinitive clause is most
+    natural.
+  - 'Negation with zu-Inf: Ich bat ihn, nicht so laut zu sprechen.'
+  examples:
+  - target: Es ist wichtig, jeden Tag Deutsch zu üben.
+    gloss: It is important to practise German every day.
+  - target: Sie bat mich, das Fenster zu schließen.
+    gloss: She asked me to close the window.
+  - target: Ich freue mich darauf, dass du kommst.
+    gloss: I am looking forward to you coming. (different subjects → dass)
+  pitfalls:
+  - English uses infinitives for both same-subject and different-subject cases; German
+    splits them.
+  - Don't use zu-Infinitiv when subjects differ — use a dass-clause instead.
+  - Remember to split separable verbs: aufzustehen, not zuaufstehen.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:28313cc0ebcf1f21
+- id: de.b1.g09
+  kind: grammar
+  level: B1
+  order: 9
+  title_target: Erweiterter Genitiv
+  title_l1: Extended genitive — forms and prepositions
+  can_do: I can use the genitive case correctly in writing, including with genitive
+    prepositions.
+  prereqs:
+  - de.a2.g11
+  skill: grammar
+  explain:
+  - 'Genitive articles: des (m/n), der (f/pl). Masculine/neuter nouns add -(e)s: des
+    Mannes.'
+  - 'Definite genitive: das Auto des Mannes, die Tasche der Frau, die Bücher der Kinder.'
+  - 'Indefinite: ein Freund meiner Schwester. Possessive pronouns decline like "dieser".'
+  - 'Genitive prepositions: trotz (despite), wegen (because of), während (during),
+    innerhalb (inside).'
+  - 'Also: außerhalb (outside), aufgrund (because of), anstatt/statt (instead of).'
+  - These prepositions require genitive in writing; colloquial speech often uses Dativ
+    after trotz/wegen.
+  - 'Formal writing: trotz des schlechten Wetters (not: trotz dem schlechten Wetter).'
+  examples:
+  - target: Trotz des starken Regens fand das Konzert im Freien statt.
+    gloss: Despite the heavy rain, the concert took place outdoors.
+  - target: Während der Ferien besuche ich meine Großeltern.
+    gloss: During the holidays I visit my grandparents.
+  - target: Die Qualität der Produkte hat sich verbessert.
+    gloss: The quality of the products has improved.
+  pitfalls:
+  - English speakers use "of" constructions; German requires full genitive declension
+    on articles/adjectives.
+  - Don't use Dativ after genitive prepositions in formal writing (trotz dem → trotz
+    des).
+  - Masculine and neuter nouns in genitive add -(e)s — don't omit this ending.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:3eadc248f7364bd2
+- id: de.b1.g10
+  kind: grammar
+  level: B1
+  order: 10
+  title_target: lassen + Infinitiv
+  title_l1: Causative and permissive lassen
+  can_do: I can use lassen to express having something done and letting someone do
+    something.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'Causative lassen: Ich lasse das Auto reparieren. (I am having the car repaired.)'
+  - 'Permissive lassen: Sie lässt ihn schlafen. (She lets him sleep.)'
+  - lassen + Infinitiv (no zu) — the infinitive goes to the end of the clause.
+  - 'Perfekt of lassen: Er hat das Auto reparieren lassen. (Ersatzinfinitiv — no ge-.)'
+  - 'Reflexive lassen: Das lässt sich machen. (That can be done. / colloquial passive.)'
+  - lassen is a full verb with strong conjugation: lässt (Präsens), ließ (Präteritum).
+  - 'In Nebensatz: …weil er das Auto reparieren lässt. (both infinitives at end, lässt
+    last.)'
+  examples:
+  - target: Ich lasse mir die Haare schneiden.
+    gloss: I am having my hair cut.
+  - target: Die Eltern lassen die Kinder draußen spielen.
+    gloss: The parents let the children play outside.
+  - target: Das lässt sich leider nicht ändern.
+    gloss: Unfortunately that cannot be changed.
+  pitfalls:
+  - Don't add "zu" before the infinitive — "lassen zu reparieren" is wrong.
+  - 'In the Perfekt, lassen uses Ersatzinfinitiv: "hat reparieren lassen" not "hat
+    repariert gelassen".'
+  - The reflexive lassen (lässt sich) is a useful alternative to the passive — learn
+    it as a set phrase.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:22a72036b534765a
+- id: de.b1.g11
+  kind: grammar
+  level: B1
+  order: 11
+  title_target: werden — Futur vs. Passiv
+  title_l1: Distinguishing werden as future vs. passive auxiliary
+  can_do: I can distinguish and correctly use werden as a future auxiliary and as
+    a passive auxiliary.
+  prereqs:
+  - de.a2.g06
+  - de.a2.g10
+  - de.b1.g01
+  skill: grammar
+  explain:
+  - 'werden + Infinitiv = Futur I: Ich werde morgen kommen. (I will come tomorrow.)'
+  - 'werden + Partizip II = Passiv: Das Buch wird gelesen. (The book is being read.)'
+  - 'The key: after werden, an infinitive = future; a Partizip II = passive.'
+  - Adjective after werden = neither! Das Wetter wird besser. (The weather is getting
+    better.)
+  - 'Futur Passiv (both!): Das wird gemacht werden. (That will be done.) — two werdens.'
+  - Context and the verb form after werden distinguish the constructions.
+  - 'Präteritum of werden: wurde — always passive signal when followed by Partizip
+    II.'
+  examples:
+  - target: Das Paket wird morgen geliefert werden.
+    gloss: The package will be delivered tomorrow. (future passive)
+  - target: Er wird das Paket morgen liefern.
+    gloss: He will deliver the package tomorrow. (future active)
+  - target: Das Paket wird täglich geliefert.
+    gloss: The package is delivered daily. (present passive)
+  pitfalls:
+  - The identical surface form "wird" + verb form confuses learners — look at what
+    follows werden.
+  - '"Wird besser" is neither future nor passive — it is werden as a full verb (to
+    become).'
+  - Don't confuse "wurde" (past passive) with "würde" (Konjunktiv II) — different
+    words entirely.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:85efeaff73e658d9
+- id: de.b1.g12
+  kind: grammar
+  level: B1
+  order: 12
+  title_target: Wechselpräpositionen — Lokale vs. direktionale Bedeutung
+  title_l1: Two-way prepositions — location vs. direction
+  can_do: I can use two-way prepositions correctly with Dativ for location and Akkusativ
+    for direction.
+  prereqs:
+  - de.a2.g04
+  skill: grammar
+  explain:
+  - 'The 9 Wechselpräpositionen: an, auf, hinter, in, neben, über, unter, vor, zwischen.'
+  - 'Location (Wo?): Dativ. Das Buch liegt auf dem Tisch. (on the table = position)'
+  - 'Direction (Wohin?): Akkusativ. Ich lege das Buch auf den Tisch. (onto the table
+    = motion)'
+  - 'Test: replace with a Dativ pronoun for location, Akkusativ for direction.'
+  - 'Verb pairs help: liegen/legen, sitzen/setzen, stehen/stellen, hängen (st.)/hängen
+    (wk.).'
+  - 'Figurative uses often take Akkusativ: sich freuen auf (+ Akk), nachdenken über
+    (+ Akk).'
+  - 'Contracted forms: im (in dem), ins (in das), am (an dem), ans (an das).'
+  examples:
+  - target: Das Bild hängt an der Wand. (Wo?) — Ich hänge das Bild an die Wand. (Wohin?)
+    gloss: The picture is hanging on the wall. — I am hanging the picture on the wall.
+  - target: Die Katze sitzt unter dem Tisch und springt dann unter den Stuhl.
+    gloss: The cat is sitting under the table and then jumps under the chair.
+  - target: Er denkt oft an seine Kindheit.
+    gloss: He often thinks about his childhood. (figurative Akkusativ)
+  pitfalls:
+  - English uses the same preposition for location and direction; German changes the
+    case.
+  - Movement alone does not trigger Akkusativ — only movement toward a goal/destination.
+  - Learn location/direction verb pairs (liegen/legen etc.) to predict the case automatically.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:3e2b4b6e19e4efbc
+- id: de.b1.g13
+  kind: grammar
+  level: B1
+  order: 13
+  title_target: Adjektive als Nomen
+  title_l1: Nominalized adjectives
+  can_do: I can use and understand nominalized adjectives referring to people and
+    abstract concepts.
+  prereqs:
+  - de.a2.g15
+  skill: grammar
+  explain:
+  - 'Adjectives used as nouns are capitalized and keep full adjective endings: der
+    Bekannte.'
+  - 'After definite article: der/die Bekannte, ein/eine Bekannte/r — like a normal
+    adjective.'
+  - 'Masculine/feminine for people: der Fremde (the stranger, m), die Fremde (f),
+    ein Fremder (indef. m).'
+  - 'Neuter for abstract concepts: das Gute, das Schlechte, das Wichtigste.'
+  - 'After nichts/etwas/viel/wenig: etwas Gutes, nichts Neues, viel Interessantes
+    (Nominativ neuter).'
+  - Common examples: der/die Angestellte, Beamte, Jugendliche, Erwachsene, Kranke,
+      Reiche.
+  - 'They decline like adjectives in all cases: dem Bekannten, des Bekannten, die
+    Bekannten.'
+  examples:
+  - target: Ein Bekannter von mir arbeitet bei der Deutschen Bahn.
+    gloss: An acquaintance of mine works at Deutsche Bahn.
+  - target: Das Wichtigste ist, dass wir pünktlich ankommen.
+    gloss: The most important thing is that we arrive on time.
+  - target: Sie hat nichts Neues zu berichten.
+    gloss: She has nothing new to report.
+  pitfalls:
+  - English uses nouns (stranger, employee) where German uses the nominalized adjective
+    form.
+  - Don't drop the adjective ending — "ein Bekannt" is wrong; it must be "ein Bekannter".
+  - After etwas/nichts/viel/wenig, the nominalized adjective is always neuter with
+    a capital letter.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:f4ec0b5c57cc772b
+- id: de.b1.g14
+  kind: grammar
+  level: B1
+  order: 14
+  title_target: Futur II
+  title_l1: Future perfect
+  can_do: I can use Futur II to talk about actions that will be completed by a future
+    point and to make assumptions.
+  prereqs:
+  - de.a2.g06
+  - de.a2.g07
+  skill: grammar
+  explain:
+  - Futur II = werde + Partizip II + haben/sein (infinitive form at end).
+  - Bis morgen werde ich die Arbeit fertig geschrieben haben. (By tomorrow I will
+    have finished.)
+  - 'Common use: assumptions about the past: Er wird das vergessen haben. (He will
+    have forgotten.)'
+  - 'Verbs of motion/change use sein: Sie wird schon angekommen sein.'
+  - Futur II is less common in everyday speech — present perfect often replaces it.
+  - 'Time markers: bis (by), bis dann, bis nächsten Monat — signal Futur II context.'
+  - 'The infinitive of haben/sein is always last: …haben or …sein.'
+  examples:
+  - target: Bis Ende des Jahres werde ich fließend Deutsch sprechen können.
+    gloss: By the end of the year I will have been able to speak German fluently.
+  - target: Er wird den Termin wohl vergessen haben.
+    gloss: He will probably have forgotten the appointment.
+  - target: Wenn du ankommst, werde ich bereits abgereist sein.
+    gloss: By the time you arrive, I will already have left.
+  pitfalls:
+  - Don't confuse with Futur I — Futur II needs the Partizip II plus haben/sein at
+    the end.
+  - Choose haben or sein based on which auxiliary the verb uses in the Perfekt tense.
+  - English speakers often use simple future where German uses Futur II with a time
+    boundary.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:2efa3f4647b0684c
+- id: de.b1.g15
+  kind: grammar
+  level: B1
+  order: 15
+  title_target: Konzessive und kausale Adverbien
+  title_l1: Concessive and causal sentence adverbs
+  can_do: I can use trotzdem, dennoch, deswegen, deshalb, and daher correctly to link
+    ideas across sentences.
+  prereqs:
+  - de.a2.g21
+  skill: grammar
+  explain:
+  - These adverbs are Konjunktionaladverbien — they join ideas but live inside a main
+    clause.
+  - 'When they start a sentence, they trigger subject-verb inversion: Trotzdem kam
+    er.'
+  - 'Causal: deswegen, deshalb, daher = therefore/that is why (result of previous
+    statement).'
+  - 'Concessive: trotzdem, dennoch = nevertheless/however (contrast with previous
+    statement).'
+  - Daher is slightly more formal than deshalb; all three are interchangeable in most
+    contexts.
+  - 'They can also appear mid-sentence: Er kam trotzdem. (He came nevertheless.)'
+  - Compare with weil (subordinating — verb goes last) and denn (coordinating — no
+    inversion).
+  examples:
+  - target: Es regnete stark. Trotzdem gingen wir spazieren.
+    gloss: It was raining hard. Nevertheless, we went for a walk.
+  - target: Er hat hart gearbeitet. Deshalb hat er die Prüfung bestanden.
+    gloss: He worked hard. That is why he passed the exam.
+  - target: Das Restaurant war teuer. Dennoch war es jeden Cent wert.
+    gloss: The restaurant was expensive. However, it was worth every cent.
+  pitfalls:
+  - English speakers treat these as conjunctions and don't invert — inversion is mandatory
+    when first.
+  - Don't confuse trotzdem (adverb, inversion) with obwohl (subordinating conjunction,
+    verb last).
+  - Don't confuse deshalb (adverb) with weil (conjunction) — they express the same
+    logic but differently.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:e662cac46f4853d3
+- id: de.b1.g16
+  kind: grammar
+  level: B1
+  order: 16
+  title_target: Modalpartikeln
+  title_l1: Modal particles
+  can_do: I can understand and use common modal particles to convey attitude and nuance
+    in spoken German.
+  prereqs: []
+  skill: grammar
+  explain:
+  - Modal particles are unstressed words that colour the speaker's attitude — untranslatable
+    directly.
+  - 'doch: contradicts assumption or gives encouragement. Komm doch rein! (Go on,
+    come in!)'
+  - 'mal: softens a request. Kannst du mal helfen? (Can you help — just quickly?)'
+  - 'ja: shared knowledge marker. Das ist ja interessant! (That''s interesting, as
+    we both see.)'
+  - 'eigentlich: actually/by the way — marks a slight shift. Was machst du eigentlich
+    beruflich?'
+  - 'schon: reassures or concedes. Das wird schon klappen. (It''ll work out, don''t
+    worry.)'
+  - 'wohl: indicates probability/uncertainty. Er ist wohl krank. (He''s probably ill.)'
+  - Particles appear in specific positions (middle field) and cannot be stressed or
+    negated.
+  examples:
+  - target: Kannst du mir mal kurz helfen?
+    gloss: Can you help me for just a moment? (softening request)
+  - target: Das weißt du doch!
+    gloss: You know that, after all! (reminding of shared knowledge)
+  - target: Er wird wohl noch unterwegs sein.
+    gloss: He is probably still on his way. (uncertainty/probability)
+  pitfalls:
+  - English has no direct equivalent — learners either ignore particles or translate
+    them literally.
+  - Modal particles cannot start a sentence and cannot be negated or stressed.
+  - Each particle has multiple uses depending on context — learn them in full example
+    sentences.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:82fecbab33c044f8
+- id: de.b1.g17
+  kind: grammar
+  level: B1
+  order: 17
+  title_target: Wortbildung — Substantivsuffixe
+  title_l1: Noun suffixes and gender patterns
+  can_do: I can form nouns using common suffixes and predict their gender from the
+    suffix.
+  prereqs: []
+  skill: grammar
+  explain:
+  - '-ung (die): Lösung, Meinung, Erfahrung — always feminine. From verb stems.'
+  - '-heit / -keit (die): Freiheit, Möglichkeit, Freundlichkeit — always feminine.'
+  - '-schaft (die): Freundschaft, Gesellschaft, Mannschaft — always feminine.'
+  - '-ling (der): Frühling, Lehrling, Liebling — always masculine.'
+  - '-er (der, usually): Lehrer, Bäcker, Computer — usually masculine for persons/tools.'
+  - '-in (die): Lehrerin, Ärztin, Freundin — feminine counterpart to -er nouns for
+    persons.'
+  - '-nis (das or die): Ergebnis (das), Kenntnis (die) — must be memorised individually.'
+  examples:
+  - target: Die Entscheidung des Vorstands wurde gestern bekannt gegeben.
+    gloss: The board's decision was announced yesterday. (-ung → die)
+  - target: Seine Freundlichkeit hat alle beeindruckt.
+    gloss: His friendliness impressed everyone. (-keit → die)
+  - target: Der Lehrling arbeitet seit drei Monaten in der Bäckerei.
+    gloss: The apprentice has been working at the bakery for three months. (-ling
+      → der)
+  pitfalls:
+  - English has no reliable gender system — learners must use German suffix rules
+    actively.
+  - Don't assume -er nouns are always masculine (das Zimmer, die Mutter are exceptions).
+  - Nouns with -nis are unpredictable — memorise the gender with each word.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:5832074c55eec93e
+- id: de.b1.g18
+  kind: grammar
+  level: B1
+  order: 18
+  title_target: Negation — Skopus und Stellung
+  title_l1: Negation — scope and position of nicht
+  can_do: I can place nicht correctly to negate a whole sentence or a specific element.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'Sentence negation (nicht negates the whole predicate): nicht goes to the end
+    — before Partizip/Inf.'
+  - 'Constituent negation (nicht negates one element): nicht immediately precedes
+    that element.'
+  - 'Sentence negation position: Ich gehe heute nicht. (nicht before nothing — no
+    inf/partizip here.)'
+  - 'Before Partizip II: Ich habe das nicht gesehen. (nicht before gesehen.)'
+  - 'Before infinitive: Ich werde nicht kommen. (nicht before kommen.)'
+  - 'Constituent: Er wohnt nicht in Berlin. (nicht before prepositional phrase = not
+    in Berlin, elsewhere.)'
+  - Use kein- (not kein) to negate nouns directly: Ich habe kein Geld (not "nicht
+      Geld").
+  examples:
+  - target: Ich habe das Buch leider nicht gelesen.
+    gloss: Unfortunately I have not read the book. (sentence negation — nicht before
+      Partizip)
+  - target: Er wohnt nicht in München, sondern in Hamburg.
+    gloss: He doesn't live in Munich but in Hamburg. (constituent negation — not Munich)
+  - target: Sie hat keine Zeit, mit uns zu kommen.
+    gloss: She has no time to come with us. (kein- negates the noun directly)
+  pitfalls:
+  - English places "not" after the auxiliary; German places nicht at or near the clause
+    end.
+  - Confusing kein and nicht — use kein before nouns, nicht before verbs/adjectives/adverbs/PPs.
+  - Moving nicht changes meaning — "Ich liebe dich nicht" ≠ "Nicht ich liebe dich"
+    (not me who loves you).
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:8779016311108e02
+- id: de.b1.g19
+  kind: grammar
+  level: B1
+  order: 19
+  title_target: Wunschsätze mit Konjunktiv II
+  title_l1: Wish clauses with Konjunktiv II
+  can_do: I can express wishes and regrets about present and past situations using
+    Konjunktiv II wish structures.
+  prereqs:
+  - de.b1.g03
+  - de.b1.g04
+  skill: grammar
+  explain:
+  - 'Wish for present/future: Wenn ich doch mehr Zeit hätte! (If only I had more time!)'
+  - 'The particle "doch" (or "nur") intensifies the wish: Wenn ich doch…!'
+  - 'Wish for past: Wenn ich das doch gewusst hätte! (If only I had known that!)'
+  - 'Alternative: Ich wünschte, ich hätte mehr Zeit. (I wish I had more time.) — no
+    dass.'
+  - 'Also: Ich wünschte, es wäre anders. (I wish it were different.)'
+  - The verb is Konjunktiv II — present wishes use wäre/hätte/könnte; past uses hätte/wäre
+    + Partizip.
+  - These are incomplete conditional sentences — the then-clause is implied or absent.
+  examples:
+  - target: Wenn ich doch Klavier spielen könnte!
+    gloss: If only I could play the piano!
+  - target: Ich wünschte, ich wäre nicht so müde.
+    gloss: I wish I weren't so tired.
+  - target: Wenn wir doch früher abgefahren wären!
+    gloss: If only we had left earlier!
+  pitfalls:
+  - English "I wish + past tense" maps onto German Konjunktiv II, not Indikativ past
+    tense.
+  - Don't use Indikativ in wish clauses — "Wenn ich Zeit habe" is a real condition,
+    not a wish.
+  - Remember doch/nur for wish clauses — they signal that the wish is unfulfilled.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:b5a871a2bc69a72f
+- id: de.b1.g20
+  kind: grammar
+  level: B1
+  order: 20
+  title_target: Temporale Präpositionen
+  title_l1: Temporal prepositions
+  can_do: I can use temporal prepositions correctly with the right case to express
+    when, how long, and for how long.
+  prereqs:
+  - de.a2.g03
+  skill: grammar
+  explain:
+  - 'seit + Dativ: ongoing from the past to now. Ich lerne seit drei Jahren Deutsch.'
+  - 'vor + Dativ: ago / before. Vor drei Jahren zog ich nach Berlin.'
+  - 'nach + Dativ: after an event. Nach dem Essen gehen wir spazieren.'
+  - 'während + Genitiv (or Dativ colloquially): during. Während des Unterrichts.'
+  - 'innerhalb + Genitiv: within. Innerhalb einer Woche wurde alles erledigt.'
+  - 'bis + Akkusativ (or bare): until/by. Bis nächste Woche, bis zum Montag.'
+  - 'ab + Dativ: from a point on. Ab nächstem Montag arbeite ich von zu Hause.'
+  examples:
+  - target: Seit dem Umzug fahre ich jeden Tag mit dem Fahrrad zur Arbeit.
+    gloss: Since the move I cycle to work every day.
+  - target: Innerhalb der nächsten zwei Wochen müssen die Formulare eingereicht werden.
+    gloss: The forms must be submitted within the next two weeks.
+  - target: Vor einem Jahr hätte ich das nicht für möglich gehalten.
+    gloss: A year ago I wouldn't have thought that possible.
+  pitfalls:
+  - Seit is ongoing (present or past tense with present meaning) — not to be confused
+    with vor (ago).
+  - During = während (+ Genitive in writing), not während dem in formal contexts.
+  - Bis can take bare nouns (bis morgen) or bis zu + Dativ (bis zum Montag) — both
+    are correct.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:ae94245393b1afc7
+- id: de.b1.g21
+  kind: grammar
+  level: B1
+  order: 21
+  title_target: Trennbare vs. untrennbare Präfixe (Paare)
+  title_l1: Separable vs. inseparable prefix pairs
+  can_do: I can distinguish and use separable and inseparable uses of the same prefix
+    to express different meanings.
+  prereqs:
+  - de.a2.g23
+  skill: grammar
+  explain:
+  - Some prefixes exist in both separable and inseparable forms with different meanings.
+  - 'über-: übersetzen (sep.) = to ferry across; übersetzen (insep.) = to translate.'
+  - 'unter-: untergehen (sep.) = to sink/set; unterhalten (insep.) = to entertain/maintain.'
+  - 'durch-: durchschauen (sep.) = to look through; durchschauen (insep.) = to see
+    through (fig.).'
+  - 'um-: umfahren (sep.) = to knock over; umfahren (insep.) = to drive around.'
+  - 'Separable: stressed prefix, splits in main clause, ge- goes between prefix and
+    stem in Partizip.'
+  - 'Inseparable: unstressed prefix, never splits, no ge- in Partizip.'
+  - Stress distinguishes them in speech: ÜBERsetzen (sep.) vs. überSETZen (insep.).
+  examples:
+  - target: Der Fahrer hat den Radfahrer umgefahren. (sep. — knocked over)
+    gloss: The driver knocked the cyclist over.
+  - target: Wir umfahren die Stadt, um den Stau zu vermeiden. (insep. — drive around)
+    gloss: We drive around the city to avoid the traffic jam.
+  - target: Kannst du diesen Text übersetzen? (insep. — translate)
+    gloss: Can you translate this text?
+  pitfalls:
+  - English speakers can't rely on stress to detect the prefix type — must learn each
+    pair separately.
+  - 'Separable prefix verbs split in the Perfekt: er hat umgefahren (ge- inside);
+    inseparable: er hat übersetzt.'
+  - The same spelling can mean opposite things depending on stress — dictionary lookup
+    is essential.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:7a3ffbac88f5e915
+- id: de.b1.g22
+  kind: grammar
+  level: B1
+  order: 22
+  title_target: Adverbiale Konzessivsätze
+  title_l1: Concessive adverbial clauses
+  can_do: I can use obwohl and related conjunctions to express concession in complex
+    sentences.
+  prereqs:
+  - de.a2.g21
+  - de.b1.g15
+  skill: grammar
+  explain:
+  - 'obwohl (although): most common concessive subordinating conjunction. Verb goes
+    to the end.'
+  - Obwohl es regnete, gingen wir spazieren. (Although it rained, we went for a walk.)
+  - 'obgleich: literary/formal equivalent of obwohl — same grammar, higher register.'
+  - 'wenngleich: slightly archaic/formal — used in formal writing and literature.'
+  - 'wenn auch: concessive with Konjunktiv or modal: Wenn auch das Wetter schlecht
+    war, ...'
+  - Contrast with trotzdem (Konjunktivaladverb) — trotzdem starts a new main clause.
+  - 'Wenn der Konzessivsatz first, invert main clause: Obwohl er müde war, arbeitete
+    er weiter.'
+  examples:
+  - target: Obwohl er krank war, ist er zur Arbeit gegangen.
+    gloss: Although he was ill, he went to work.
+  - target: Sie kaufte das Kleid, obgleich es sehr teuer war.
+    gloss: She bought the dress even though it was very expensive.
+  - target: Wenngleich die Situation schwierig ist, bleiben wir optimistisch.
+    gloss: Even though the situation is difficult, we remain optimistic.
+  pitfalls:
+  - Don't use obwohl like "however" — it introduces a clause, not a standalone sentence
+    connector.
+  - After obwohl, the verb goes to the end — English speakers put it in the middle.
+  - Don't confuse obwohl (subordinating, verb last) with trotzdem (adverb, inversion
+    in main clause).
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:e43df95ef9e0122d
+- id: de.b1.g23
+  kind: grammar
+  level: B1
+  order: 23
+  title_target: Komplexe Relativsätze (Dativ/Genitiv)
+  title_l1: Complex relative clauses — dative and genitive
+  can_do: I can form relative clauses using dative and genitive relative pronouns
+    correctly.
+  prereqs:
+  - de.a2.g12
+  skill: grammar
+  explain:
+  - Relative pronouns match the gender/number of their antecedent but take the case
+    of their role.
+  - 'Dativ relative pronouns: dem (m/n), der (f), denen (pl).'
+  - 'Genitive relative pronouns: dessen (m/n), deren (f/pl).'
+  - 'Dativ example: Der Mann, dem ich geholfen habe, ist mein Nachbar. (helfen takes
+    Dativ.)'
+  - 'Genitive example: Das ist die Frau, deren Tochter ich kenne. (deren = whose,
+    f.)'
+  - 'Genitive example m/n: Das ist der Mann, dessen Auto vor der Tür steht.'
+  - The relative clause is a Nebensatz — conjugated verb goes to the very end.
+  examples:
+  - target: Die Studentin, der ich das Buch geliehen habe, hat es noch nicht zurückgegeben.
+    gloss: The student to whom I lent the book has not returned it yet.
+  - target: Das Unternehmen, dessen Produkte weltweit bekannt sind, feiert Jubiläum.
+    gloss: The company whose products are known worldwide is celebrating its anniversary.
+  - target: Die Kollegen, denen er geholfen hat, sind sehr dankbar.
+    gloss: The colleagues he helped are very grateful.
+  pitfalls:
+  - English "whose" maps to dessen (m/n) or deren (f/pl) — not "wessen" which is interrogative.
+  - Don't use the definite article (der/das/die) as a relative pronoun — use the relative
+    pronoun forms.
+  - The relative pronoun's case is determined by its function in the relative clause,
+    not by the antecedent.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:3e96384eb9d8fc57
+- id: de.b1.g24
+  kind: grammar
+  level: B1
+  order: 24
+  title_target: Konnektoren für Argumentation
+  title_l1: Argumentative connectors
+  can_do: I can structure a written argument using paired and contrastive connectors.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'einerseits…andererseits: on the one hand…on the other hand. (Both trigger inversion.)'
+  - 'zum einen…zum anderen: firstly…secondly — lists two aspects. (Inversion too.)'
+  - 'zwar…aber: it is true that…but. "Zwar" in first clause, "aber" starts second.'
+  - 'sowohl…als auch: both…and. (Coordinating — no inversion.) Sowohl A als auch B.'
+  - 'weder…noch: neither…nor. Weder er noch sie war dabei.'
+  - 'nicht nur…sondern auch: not only…but also. (Coordinating.)'
+  - These connectors signal structured, formal argumentation — common in essays and
+    presentations.
+  examples:
+  - target: Einerseits ist die Stadt teuer, andererseits bietet sie viele Vorteile.
+    gloss: On the one hand the city is expensive; on the other hand it offers many
+      advantages.
+  - target: Das Produkt ist zwar teuer, aber die Qualität ist ausgezeichnet.
+    gloss: The product is admittedly expensive, but the quality is excellent.
+  - target: Sowohl Herr Müller als auch Frau Schmidt haben zugestimmt.
+    gloss: Both Mr Müller and Ms Schmidt have agreed.
+  pitfalls:
+  - After einerseits/andererseits, inversion is required — English speakers omit it.
+  - Zwar does not mean "truly/certainly" in modern usage — it is a concessive marker
+    (admittedly).
+  - Sowohl…als auch takes plural agreement when combining two subjects: Sowohl A als
+      auch B sind…
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:7439a2eb2b727938
+- id: de.b1.g25
+  kind: grammar
+  level: B1
+  order: 25
+  title_target: Präpositionale Ergänzungen
+  title_l1: Verb + preposition collocations and da-compounds
+  can_do: I can use common verb + preposition collocations and replace prepositional
+    phrases with da-compounds.
+  prereqs:
+  - de.a2.g19
+  skill: grammar
+  explain:
+  - 'German verbs often require a fixed preposition: warten auf (+ Akk), denken an
+    (+ Akk).'
+  - 'Other key pairs: sich freuen über (+ Akk), sich erinnern an (+ Akk), gehören
+    zu (+ Dat).'
+  - 'Also: sich interessieren für (+ Akk), sprechen über (+ Akk), leiden an (+ Dat).'
+  - 'Da-compounds replace prepositional phrases with non-personal referents: darauf,
+    daran, darüber.'
+  - 'Da + r + preposition (for vowel-initial prepositions): darauf, darunter, darüber.'
+  - 'Da-compound as forward reference: Ich freue mich darauf, dich zu sehen. (auf
+    = anticipating inf. clause.)'
+  - Ask "worauf?" for things (da-compound reply); ask "auf wen?" for people (preposition
+    + pronoun reply).
+  examples:
+  - target: Ich warte schon seit einer Stunde auf den Bus.
+    gloss: I have been waiting for the bus for an hour already.
+  - target: Sie freut sich sehr darüber, die Prüfung bestanden zu haben.
+    gloss: She is very happy about having passed the exam.
+  - target: Erinnerst du dich noch an unseren ersten Schultag?
+    gloss: Do you still remember our first day of school?
+  pitfalls:
+  - English prepositions do not match German ones — "wait for" = warten auf, not warten
+    für.
+  - Use da-compound for things/ideas, not for people — "Ich warte auf ihn" not "Ich
+    warte darauf".
+  - Da-compounds are required before infinitive and dass clauses as forward references.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:67eafe2bd5639d05
+- id: de.b1.g26
+  kind: grammar
+  level: B1
+  order: 26
+  title_target: Idiome mit Körperteilen
+  title_l1: Idiomatic expressions with body parts
+  can_do: I can understand and use common German idioms involving body-part nouns
+    in context.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'auf die Nerven gehen (+ Dativ): to get on someone''s nerves. Das geht mir auf
+    die Nerven.'
+  - 'ins Auge fallen: to catch one''s eye / to be noticeable. Das fiel sofort ins
+    Auge.'
+  - 'die Hand reichen: to extend a hand / to help. Er reichte ihr die Hand.'
+  - 'die Nase voll haben (von): to be fed up with. Ich habe die Nase voll davon.'
+  - 'die Ohren spitzen: to prick up one''s ears / to listen carefully.'
+  - 'Hals über Kopf: head over heels / in a great rush. Sie verliebte sich Hals über
+    Kopf.'
+  - 'auf eigene Faust: on one''s own initiative. Er handelte auf eigene Faust.'
+  examples:
+  - target: Das laute Musik geht mir total auf die Nerven.
+    gloss: The loud music is really getting on my nerves.
+  - target: Sein ungewöhnlicher Hut fiel sofort ins Auge.
+    gloss: His unusual hat caught the eye immediately.
+  - target: Nach dem Streit reichte er ihr versöhnlich die Hand.
+    gloss: After the argument he extended his hand to her in reconciliation.
+  pitfalls:
+  - Idioms cannot be translated word for word — learn each as a fixed chunk with its
+    grammar.
+  - The dative in "Das geht mir auf die Nerven" must be correct — the person is always
+    Dativ.
+  - Don't confuse ins Auge fallen (catch the eye) with in die Augen stechen (to be
+    blatantly obvious).
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:f75b706169bd0421
+- id: de.b1.g27
+  kind: grammar
+  level: B1
+  order: 27
+  title_target: Formelles vs. informelles Register
+  title_l1: Formal vs. informal register
+  can_do: I can adjust my language between formal and informal contexts in both speech
+    and writing.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'Formal address: Sie (always capitalized) with third-person plural verb forms.'
+  - 'Informal address: du (singular), ihr (plural) — used with family, friends, peers
+    of same age.'
+  - Switching from du to Sie or vice versa is a social act — always follow the other
+    person's lead.
+  - 'Formal writing: complete sentences, Konjunktiv II for requests, no contractions,
+    formal vocabulary.'
+  - 'Informal speech: contractions (n'' for ein), du-form, direct questions, colloquial
+    vocabulary.'
+  - 'Emails: formal = Sehr geehrte/r …, Mit freundlichen Grüßen; informal = Hallo/Liebe/r,
+    Viele Grüße.'
+  - 'False friends of register: "Hey" or "Tschüss" in formal letters, or "Sehr geehrte"
+    to a friend.'
+  examples:
+  - target: Könnten Sie mir bitte Ihre Kontaktdaten mitteilen? (formal)
+    gloss: Could you please give me your contact details?
+  - target: Kannst du mir deine Nummer geben? (informal)
+    gloss: Can you give me your number?
+  - target: Sehr geehrte Frau Müller, ich schreibe Ihnen bezüglich Ihres Angebots.
+      (formal letter)
+    gloss: Dear Ms Müller, I am writing to you regarding your offer.
+  pitfalls:
+  - English dropped formal "thou" long ago — German Sie/du distinction is still very
+    much alive.
+  - Don't capitalise "sie" (they/she) — only "Sie" (formal you) is capitalised in
+    writing.
+  - Using du with a stranger in Germany can be perceived as rude — err on the side
+    of Sie.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:5f09dc69826a51aa
+- id: de.b1.g28
+  kind: grammar
+  level: B1
+  order: 28
+  title_target: Vertiefung Lese- und Hörstrategien
+  title_l1: Reading and listening comprehension strategies
+  can_do: I can apply skimming, scanning, and inference strategies to understand German
+    texts and audio.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'Skimming: read for the gist — look at headings, first sentences of paragraphs,
+    keywords.'
+  - 'Scanning: search for specific information — dates, names, numbers — without reading
+    everything.'
+  - 'Inference: use context, word-formation knowledge, and logic to guess unknown
+    words.'
+  - 'Cognates and near-cognates: Telefon, Musik, interessant — use English/Latin knowledge.'
+  - 'Compound nouns: break them down — Handschuh = Hand + Schuh = hand + shoe = glove.'
+  - 'Listening: focus on stressed words; function words can often be missed without
+    losing meaning.'
+  - Use the text's structure (topic sentence, examples, conclusion) to predict what
+    comes next.
+  examples:
+  - target: Ich überfliege den Artikel zuerst, um das Thema zu verstehen.
+    gloss: I skim the article first to understand the topic.
+  - target: Beim Hören konzentriere ich mich auf die betonten Schlüsselwörter.
+    gloss: When listening, I focus on the stressed key words.
+  - target: Aus dem Kontext schließe ich, dass „Unwetter" ein schlimmes Wetter bedeutet.
+    gloss: From the context I infer that "Unwetter" means bad weather.
+  pitfalls:
+  - Don't try to understand every word — focus on meaning and accept some ambiguity.
+  - English speakers over-rely on vocabulary size; strategy use can compensate for
+    unknown words.
+  - Compound nouns look intimidating but are just two or more words joined — always
+    break them down.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:c3127bce838bcfd1

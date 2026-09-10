@@ -1,3 +1,270 @@
+- id: de.a2.g01
+  kind: grammar
+  level: A2
+  order: 1
+  title_target: Dativkasus
+  title_l1: The dative case
+  can_do: I can say who receives something or benefits from an action.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'The dative marks the indirect object — the person who receives or benefits: Ich
+    gebe dem Mann das Buch.'
+  - 'Definite articles change in dative: der → dem, die → der, das → dem, plural die
+    → den.'
+  - 'Indefinite articles change: ein/eine/ein → einem/einer/einem.'
+  - 'Personal pronouns also change: mir (me), dir (you), ihm (him/it), ihr (her),
+    uns (us), euch (you pl.), ihnen (them).'
+  - 'Dative nouns in the plural add -n if they do not already end in -n or -s: die
+    Männer → den Männern.'
+  - 'Certain verbs always take a dative object: helfen, danken, gehören, gefallen,
+    glauben (a person).'
+  examples:
+  - target: Ich gebe dem Kind einen Apfel.
+    gloss: I give the child an apple.
+  - target: Das Buch gehört meiner Schwester.
+    gloss: The book belongs to my sister.
+  - target: Kannst du mir helfen?
+    gloss: Can you help me?
+  pitfalls:
+  - English uses word order (I give the child a book) to show indirect objects; German
+    uses dative case endings — don't skip them.
+  - 'Don''t confuse dative ''der'' with nominative ''der'': in ''Ich helfe der Frau'',
+    ''der'' is dative feminine, not a masculine article.'
+  - Plural dative always adds -n to the noun unless it already ends in -n or -s —
+    learners often forget this.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:2690e613d4903008
+- id: de.a2.g02
+  kind: grammar
+  level: A2
+  order: 2
+  title_target: Akkusativpräpositionen
+  title_l1: Accusative prepositions
+  can_do: I can describe movement, purpose, and relationships using accusative prepositions.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'Five prepositions always take the accusative: durch, für, gegen, ohne, um.'
+  - 'durch = through/across: Wir fahren durch den Tunnel.'
+  - 'für = for: Das Geschenk ist für meinen Vater.'
+  - 'gegen = against / around (time): gegen die Wand, gegen acht Uhr.'
+  - 'ohne = without: Ich trinke Kaffee ohne Zucker.'
+  - 'um = around / at (time): um den See, um drei Uhr.'
+  - The accusative changes der → den and ein → einen (masculine); other genders look
+    the same as nominative.
+  examples:
+  - target: Das Geschenk ist für meinen Bruder.
+    gloss: The gift is for my brother.
+  - target: Wir gehen ohne den Regenschirm.
+    gloss: We're going without the umbrella.
+  - target: Das Auto fährt durch einen Tunnel.
+    gloss: The car drives through a tunnel.
+  pitfalls:
+  - English speakers forget that masculine articles change (der → den, ein → einen)
+    after these prepositions.
+  - '"Gegen" has multiple meanings — learners confuse "gegen die Wand" (against the
+    wall) with time use "gegen Abend" (around evening).'
+  - 'Do not use ''für'' with time duration the English way: ''for three years'' =
+    ''seit drei Jahren'' (dative), not ''für''.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:6e6dac4965558e4d
+- id: de.a2.g03
+  kind: grammar
+  level: A2
+  order: 3
+  title_target: Dativpräpositionen
+  title_l1: Dative prepositions
+  can_do: I can describe location, accompaniment, origin, and time relationships using
+    dative prepositions.
+  prereqs:
+  - de.a2.g01
+  skill: grammar
+  explain:
+  - 'Eight prepositions always take the dative: aus, bei, mit, nach, seit, von, zu,
+    gegenüber.'
+  - 'aus = out of / from (origin): aus der Küche, aus Deutschland.'
+  - 'bei = at / near / at the home of: beim Arzt, bei meiner Oma.'
+  - 'mit = with / by (transport): mit dem Bus, mit einem Freund.'
+  - 'nach = after / to (cities, countries): nach Hause, nach Berlin.'
+  - 'seit = since / for (ongoing): seit einem Jahr — use present tense, not past!'
+  - 'von = from / of / by: von der Arbeit, ein Buch von Kafka.'
+  - 'zu = to (people, places): zu meiner Schwester, zum Bahnhof.'
+  examples:
+  - target: Ich fahre mit dem Zug nach München.
+    gloss: I'm travelling to Munich by train.
+  - target: Seit zwei Jahren lerne ich Deutsch.
+    gloss: I have been learning German for two years.
+  - target: Das Paket kommt von meiner Tante.
+    gloss: The parcel is from my aunt.
+  pitfalls:
+  - 'Seit + present tense describes an ongoing situation: ''Ich lerne seit drei Jahren
+    Deutsch'' — don''t switch to past tense.'
+  - '"Nach" goes to cities and countries but "zu" goes to people and specific places:
+    nach Hause but zu meiner Mutter.'
+  - In speech, "bei dem" contracts to "beim" and "zu dem" to "zum", "zu der" to "zur"
+    — these contractions are standard.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:9c6830fdc486e860
+- id: de.a2.g04
+  kind: grammar
+  level: A2
+  order: 4
+  title_target: Wechselpräpositionen
+  title_l1: Two-way prepositions
+  can_do: I can describe where something is (location) and where it is going (direction).
+  prereqs:
+  - de.a2.g01
+  - de.a2.g02
+  - de.a2.g03
+  skill: grammar
+  explain:
+  - 'Nine prepositions take dative (location) or accusative (direction): an, auf,
+    hinter, in, neben, über, unter, vor, zwischen.'
+  - 'Location (dative): Das Buch liegt auf dem Tisch. (Where is it? On the table.)'
+  - 'Direction (accusative): Ich lege das Buch auf den Tisch. (Where does it go? Onto
+    the table.)'
+  - 'Location verbs (dative): liegen, stehen, hängen, sein. Motion verbs (accusative):
+    legen, stellen, gehen.'
+  - '"an dem" contracts to "am" and "in dem" to "im" in everyday speech.'
+  - Über can mean "over/above" (location, dative) or "across" (motion, accusative)
+    — check for movement.
+  examples:
+  - target: Das Café ist an der Ecke.
+    gloss: The café is on the corner. (location → dative)
+  - target: Wir gehen in den Park.
+    gloss: We're going into the park. (direction → accusative)
+  - target: Das Bild hängt über dem Sofa.
+    gloss: The picture is hanging above the sofa. (location → dative)
+  pitfalls:
+  - English uses the same preposition for both location and direction (in the room
+    / into the room); German changes the case.
+  - 'The verb is the clue: ''legen'' always triggers accusative, ''liegen'' always
+    dative — memorise pairs: legen/liegen, stellen/stehen.'
+  - Learners often use accusative everywhere; remember dative is the default for static
+    situations.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:71724949716bf54e
+- id: de.a2.g05
+  kind: grammar
+  level: A2
+  order: 5
+  title_target: Komparativ und Superlativ
+  title_l1: Comparative and superlative
+  can_do: I can compare people, things, and actions and say which is the best or most.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'Comparative: add -er to the adjective/adverb. schnell → schneller, billig → billiger.'
+  - 'Superlative predicative: am + adjective + -sten. schnell → am schnellsten.'
+  - 'Superlative attributive (before noun): add definite article + adjective + -ste/-sten
+    endings: der schnellste Zug.'
+  - 'Many one-syllable adjectives add an umlaut: alt → älter → am ältesten; groß →
+    größer → am größten.'
+  - 'Irregulars to memorise: gut → besser → am besten; viel → mehr → am meisten; gern
+    → lieber → am liebsten.'
+  - Use 'als' for unequal comparisons (bigger than) and 'so … wie' for equal comparisons
+    (as big as).
+  examples:
+  - target: Mein Bruder ist größer als ich.
+    gloss: My brother is taller than me.
+  - target: Der ICE ist der schnellste Zug in Deutschland.
+    gloss: The ICE is the fastest train in Germany.
+  - target: Ich lerne Deutsch lieber als Mathe.
+    gloss: I prefer learning German to Maths.
+  pitfalls:
+  - English says "more expensive" for longer adjectives; German always adds -er regardless
+    of length (interessanter, not mehr interessant).
+  - 'Use ''als'' (not ''wie'') after a comparative: ''Sie ist größer als ich'', not
+    ''größer wie ich''.'
+  - Umlaut adjectives trip up English speakers — alt/älter/älteste must be learned
+    individually.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:e148c2069bc85b35
+- id: de.a2.g06
+  kind: grammar
+  level: A2
+  order: 6
+  title_target: Futur I mit werden
+  title_l1: Future tense with werden
+  can_do: I can talk about future plans and make predictions.
+  prereqs: []
+  skill: grammar
+  explain:
+  - Futur I = conjugated werden + infinitive at the end of the clause.
+  - 'werden conjugation: ich werde, du wirst, er/sie/es wird, wir werden, ihr werdet,
+    sie/Sie werden.'
+  - Ich werde morgen einkaufen. — werden is in position 2, infinitive goes to the
+    end.
+  - 'In practice, Germans often use present tense + future time word instead: Morgen
+    kaufe ich ein.'
+  - 'Futur I can also express confident prediction or intention: Das wird klappen.'
+  - Do not confuse 'werden' as future auxiliary with 'werden' as a full verb meaning
+    'to become'.
+  examples:
+  - target: Ich werde nächste Woche nach Berlin fahren.
+    gloss: I will travel to Berlin next week.
+  - target: Es wird morgen regnen.
+    gloss: It will rain tomorrow.
+  - target: Sie wird eine gute Ärztin werden.
+    gloss: She will become a good doctor.
+  pitfalls:
+  - The infinitive goes to the very end of the clause — don't leave it directly next
+    to werden.
+  - '"Werden" is both the future auxiliary and the verb "to become" — ''Er wird Arzt''
+    means ''He will become a doctor''.'
+  - English speakers sometimes try to combine ''will'' with werden — only werden is
+    needed in German.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:c24494391a2d510c
 - id: de.a2.g07
   kind: grammar
   level: A2
@@ -46,3 +313,760 @@
   - type: produce
     n: 2
   spine_hash: sha256:5ac8b9dc3ce22df3
+- id: de.a2.g08
+  kind: grammar
+  level: A2
+  order: 8
+  title_target: Reflexive Verben
+  title_l1: Reflexive verbs
+  can_do: I can talk about daily routines and personal feelings using reflexive verbs.
+  prereqs:
+  - de.a2.g01
+  skill: grammar
+  explain:
+  - 'Reflexive verbs use a reflexive pronoun that refers back to the subject: Ich
+    wasche mich. (I wash myself.)'
+  - 'Accusative reflexive pronouns: mich, dich, sich, uns, euch, sich.'
+  - 'Dative reflexive pronouns: mir, dir, sich, uns, euch, sich — used when there
+    is another accusative object.'
+  - Ich wasche mich (acc) vs. Ich wasche mir die Hände (dat — die Hände is the accusative
+    object).
+  - 'Many German reflexives have no reflexive equivalent in English: sich freuen (to
+    be glad), sich beeilen (to hurry).'
+  - 'The pronoun usually follows the conjugated verb: Ich freue mich sehr.'
+  examples:
+  - target: Ich ziehe mich schnell an.
+    gloss: I get dressed quickly.
+  - target: Er wäscht sich jeden Morgen die Haare.
+    gloss: He washes his hair every morning.
+  - target: Wir freuen uns auf den Urlaub.
+    gloss: We are looking forward to the holiday.
+  pitfalls:
+  - 'When there is a body-part object, use dative ''mir/dir/sich'', not accusative:
+    ''Ich wasche mir die Hände'', not ''mich''.'
+  - Many truly reflexive German verbs (sich bewerben, sich erinnern) have no reflexive
+    form in English — the pronoun cannot be dropped.
+  - 'In subordinate clauses the reflexive pronoun comes right after the subject: ''weil
+    ich mich beeile'', not at the end.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:c7637f2d02610b99
+- id: de.a2.g09
+  kind: grammar
+  level: A2
+  order: 9
+  title_target: Konjunktiv II mit würde
+  title_l1: Conditional with würde
+  can_do: I can make polite requests and talk about hypothetical situations.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'würde + infinitive = conditional / polite form: Ich würde gern Kaffee bestellen.'
+  - 'würde is the Konjunktiv II of werden. Conjugation: ich würde, du würdest, er
+    würde, wir würden, ihr würdet, sie würden.'
+  - Use it for polite requests (Würden Sie mir helfen?), wishes (Ich würde gern…),
+    and hypotheticals.
+  - 'For sein, haben and modal verbs, use their own Konjunktiv II forms instead of
+    würde: wäre, hätte, könnte, müsste.'
+  - The infinitive goes to the end of the clause, just like with modal verbs.
+  examples:
+  - target: Würden Sie mir bitte helfen?
+    gloss: Would you please help me?
+  - target: Ich würde gern in Spanien wohnen.
+    gloss: I would love to live in Spain.
+  - target: Wenn ich mehr Zeit hätte, würde ich mehr lesen.
+    gloss: If I had more time, I would read more.
+  pitfalls:
+  - Do not use ''würde'' with sein and haben — say ''wäre'' and ''hätte'' instead.
+  - 'The infinitive must go to the end: ''Ich würde morgen kommen'', not ''Ich würde
+    kommen morgen''.'
+  - English 'would' can also express past habits ('I would go there every summer');
+    German uses Präteritum for that, not würde.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:2ac79c8ce89e1973
+- id: de.a2.g10
+  kind: grammar
+  level: A2
+  order: 10
+  title_target: Passiv Präsens
+  title_l1: Present passive voice
+  can_do: I can describe processes and situations where the actor is unknown or unimportant.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'Present passive: conjugated werden + past participle at the end. Das Buch wird
+    gelesen.'
+  - 'werden conjugation (same as future): wird (er/sie/es), werden (wir/sie), wirst
+    (du), werdet (ihr).'
+  - 'The agent (the doer) is optional and introduced with von + dative: Das Buch wird
+    von Maria gelesen.'
+  - 'Focus is on the action, not the actor: Hier wird Deutsch gesprochen. (German
+    is spoken here.)'
+  - Do not confuse Passiv 'werden' with the future auxiliary 'werden' — in passive,
+    a past participle follows.
+  - 'Statal passive (Zustandspassiv) uses ''sein'' + participle to describe a result:
+    Die Tür ist geöffnet.'
+  examples:
+  - target: Das Auto wird jeden Tag gewaschen.
+    gloss: The car is washed every day.
+  - target: Hier wird viel Kaffee getrunken.
+    gloss: A lot of coffee is drunk here.
+  - target: Die Pizza wird vom Koch zubereitet.
+    gloss: The pizza is prepared by the chef.
+  pitfalls:
+  - Don't use 'sein' for the process passive — 'Das Auto ist gewaschen' means it's
+    already clean (result); use 'wird' for the action.
+  - The past participle goes to the end of the clause — learners sometimes leave it
+    next to werden.
+  - English often uses passive with an agent ("by X"); German speakers often drop
+    it — both are acceptable in German.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:78c96e46fe5630f5
+- id: de.a2.g11
+  kind: grammar
+  level: A2
+  order: 11
+  title_target: Genitivkasus
+  title_l1: The genitive case
+  can_do: I can express possession and use genitive prepositions in writing and formal
+    speech.
+  prereqs:
+  - de.a2.g01
+  skill: grammar
+  explain:
+  - 'The genitive expresses possession: das Auto meines Vaters (my father''s car).'
+  - 'Definite articles in genitive: des (m/n), der (f/pl). Indefinite: eines (m/n),
+    einer (f).'
+  - 'Masculine and neuter nouns add -s or -es in the genitive: des Mannes, des Kindes.'
+  - 'Four prepositions always take the genitive: trotz (despite), wegen (because of),
+    während (during), innerhalb (within).'
+  - 'In spoken German, von + dative often replaces the genitive: das Auto von meinem
+    Vater.'
+  - 'Proper names simply add -s: Annas Buch, Deutschlands Hauptstadt.'
+  examples:
+  - target: Das ist das Auto meines Vaters.
+    gloss: That is my father's car.
+  - target: Trotz des Regens gingen wir spazieren.
+    gloss: Despite the rain, we went for a walk.
+  - target: Während des Unterrichts darf man nicht telefonieren.
+    gloss: During the lesson you are not allowed to phone.
+  pitfalls:
+  - English uses apostrophe-s for possession; German uses genitive articles and noun
+    endings — don't just add -s without changing the article.
+  - '"Wegen" takes genitive in formal German but dative in speech — both are used;
+    know the formal form.'
+  - Learners forget to add -s/-es to masculine and neuter nouns in the genitive (des
+    Mannes, not des Mann).
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:cbbd3c48e32de40e
+- id: de.a2.g12
+  kind: grammar
+  level: A2
+  order: 12
+  title_target: Relativsätze (Nominativ/Akkusativ)
+  title_l1: Relative clauses (nominative/accusative)
+  can_do: I can describe people and things using relative clauses.
+  prereqs:
+  - de.a2.g01
+  - de.a2.g02
+  skill: grammar
+  explain:
+  - A relative clause describes a noun and is introduced by a relative pronoun + verb
+    at the end.
+  - Relative pronouns match the gender and number of the noun they refer to, and the
+    case they play in the relative clause.
+  - 'Nominative relative pronouns: der (m), die (f), das (n), die (pl) — same as definite
+    articles.'
+  - 'Accusative relative pronouns: den (m), die (f), das (n), die (pl) — only masculine
+    changes (den).'
+  - The relative clause is separated from the main clause by a comma on both sides.
+  - 'The verb goes to the very end of the relative clause: Der Mann, der dort steht,
+    ist mein Lehrer.'
+  examples:
+  - target: Der Mann, der dort steht, ist mein Lehrer.
+    gloss: The man who is standing there is my teacher.
+  - target: Das Buch, das ich lese, ist sehr interessant.
+    gloss: The book (that) I'm reading is very interesting.
+  - target: Die Frau, die ich gestern getroffen habe, heißt Anna.
+    gloss: The woman (that) I met yesterday is called Anna.
+  pitfalls:
+  - English can drop the relative pronoun ("the book I read"); German cannot — the
+    pronoun is always required.
+  - The pronoun must agree in gender with the noun it refers to, not with the subject
+    of the relative clause.
+  - Verb-final order is obligatory in relative clauses — don't leave the verb in second
+    position.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:d0c97cd17c9cd8cd
+- id: de.a2.g13
+  kind: grammar
+  level: A2
+  order: 13
+  title_target: Indirekte Fragen
+  title_l1: Indirect questions
+  can_do: I can report questions and ask politely without sounding abrupt.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'Indirect questions embed a question inside a main clause: Ich weiß nicht, wo
+    er wohnt.'
+  - 'Yes/no questions use ob (whether): Kannst du mir sagen, ob der Zug pünktlich
+    ist?'
+  - 'W-questions keep their question word: Ich frage mich, warum er nicht kommt.'
+  - The verb moves to the end of the indirect question — this is the main difference
+    from direct questions.
+  - 'No question mark at the end if the main clause is a statement: Ich weiß nicht,
+    wer das ist.'
+  - 'Indirect questions are polite; they soften direct requests: Können Sie mir sagen,
+    wo der Bahnhof ist?'
+  examples:
+  - target: Ich weiß nicht, wo der Bahnhof ist.
+    gloss: I don't know where the station is.
+  - target: Kannst du mir sagen, ob der Film gut ist?
+    gloss: Can you tell me whether the film is good?
+  - target: Er fragt mich, warum ich zu spät bin.
+    gloss: He asks me why I am late.
+  pitfalls:
+  - In direct questions the verb comes first ("Wo ist er?"); in indirect questions
+    the verb goes to the end ("wo er ist").
+  - Use 'ob' (not 'wenn' or 'ob dass') for embedded yes/no questions.
+  - English sometimes keeps question word order ("I wonder where is he?"); German
+    always uses verb-final order.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:c88bd1cefa10e926
+- id: de.a2.g14
+  kind: grammar
+  level: A2
+  order: 14
+  title_target: Modalverben im Präteritum
+  title_l1: Modal verbs in the simple past
+  can_do: I can talk about past obligations, abilities, and permissions using modal
+    verbs.
+  prereqs:
+  - de.a2.g07
+  skill: grammar
+  explain:
+  - 'Modal verbs use the Präteritum even in spoken German: konnte, musste, wollte,
+    sollte, durfte, mochte.'
+  - konnte (could / was able to), musste (had to), wollte (wanted to), sollte (was
+    supposed to).
+  - durfte (was allowed to), mochte (liked / used to like) — the umlaut drops in all
+    Präteritum forms.
+  - 'The dependent infinitive still goes to the end: Ich konnte gestern nicht kommen.'
+  - 'Do not use Perfekt for modals in normal speech: ''Ich habe kommen gekonnt'' sounds
+    very formal.'
+  - 'To say "should have done", use Konjunktiv II: Du hättest anrufen sollen.'
+  examples:
+  - target: Als Kind durfte ich keine Cola trinken.
+    gloss: As a child I wasn't allowed to drink cola.
+  - target: Sie musste gestern früh aufstehen.
+    gloss: She had to get up early yesterday.
+  - target: Wir konnten das Konzert leider nicht besuchen.
+    gloss: Unfortunately we couldn't attend the concert.
+  pitfalls:
+  - Don't use Perfekt for modals in everyday speech — Präteritum is always the natural
+    choice.
+  - All Präteritum modal stems drop the umlaut — don't write the umlaut form (könnte
+    = subjunctive, not past).
+  - 'Avoid confusing ''konnte'' (past ability) with ''könnte'' (subjunctive: could/might).'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:19d1d78b1e4d8889
+- id: de.a2.g15
+  kind: grammar
+  level: A2
+  order: 15
+  title_target: Adjektivdeklination
+  title_l1: Adjective endings
+  can_do: I can use adjectives correctly before nouns in all three article types.
+  prereqs: []
+  skill: grammar
+  explain:
+  - Attributive adjectives (before a noun) take endings that depend on the article
+    used and the case.
+  - 'After definite articles (der/die/das) — weak declension: most endings are -e
+    or -en.'
+  - 'Nominative weak: -e for all genders in singular; accusative: masculine -en, others
+    -e.'
+  - 'After indefinite articles (ein/eine) — mixed declension: the adjective supplies
+    the gender signal when the article is ambiguous.'
+  - 'Without any article — strong declension: the adjective itself carries the full
+    case/gender ending.'
+  - 'Predicate adjectives (after sein/werden) never take endings: Das Auto ist schnell.'
+  examples:
+  - target: Das ist der alte Mann.
+    gloss: That is the old man. (definite, nominative → -e)
+  - target: Ich habe einen alten Hund.
+    gloss: I have an old dog. (indefinite, accusative masculine → -en)
+  - target: Frisches Brot schmeckt gut.
+    gloss: Fresh bread tastes good. (no article, nominative neuter → -es)
+  pitfalls:
+  - English adjectives never change; German adjectives have up to five different endings
+    — you must learn the table.
+  - Predicate adjectives (after sein) never change — don't add endings to ''Das Auto
+    ist neu.''
+  - 'Mixed declension: after ein/kein/mein etc., only nom.m, nom.n, and acc.n take
+    ''special'' endings (-er, -es, -es).'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:968b227e8922d91b
+- id: de.a2.g16
+  kind: grammar
+  level: A2
+  order: 16
+  title_target: 'Temporale Konjunktionen: als vs. wenn'
+  title_l1: 'Temporal conjunctions: als vs. wenn'
+  can_do: I can connect past events and describe repeated or present situations using
+    als and wenn.
+  prereqs:
+  - de.a2.g07
+  skill: grammar
+  explain:
+  - 'als = when, referring to a single completed event in the past: Als ich ankam,
+    war sie schon weg.'
+  - wenn = when/whenever, for repeated events in the past, and for all present/future
+    events.
+  - Both send the verb to the end of the subordinate clause.
+  - 'Wenn can also mean if: Wenn du Zeit hast, ruf mich an!'
+  - Use als for childhood memories and one-time past moments; use wenn for habits
+    and routines.
+  - A comma always separates the subordinate clause from the main clause.
+  examples:
+  - target: Als ich jung war, spielte ich jeden Tag Fußball.
+    gloss: When I was young, I played football every day.
+  - target: Wenn ich müde bin, trinke ich Kaffee.
+    gloss: When(ever) I'm tired, I drink coffee.
+  - target: Wenn es regnet, bleiben wir zu Hause.
+    gloss: When(ever) it rains, we stay at home.
+  pitfalls:
+  - English uses "when" for both; German distinguishes als (single past) from wenn
+    (repeated/present/future).
+  - Never use 'als' for present or future events — 'When I grow up' = 'Wenn ich groß
+    bin'.
+  - Both conjunctions require verb-final word order in the subordinate clause — same
+    rule as weil and obwohl.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:4ed8e82d9ebd65e1
+- id: de.a2.g17
+  kind: grammar
+  level: A2
+  order: 17
+  title_target: Infinitivkonstruktionen mit zu
+  title_l1: Infinitive clauses with zu
+  can_do: I can express intentions, attempts, and opinions using infinitive clauses.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'Many verbs and expressions are followed by zu + infinitive: versuchen, vergessen,
+    vorhaben, es ist wichtig/schwer/schön.'
+  - 'The zu + infinitive goes to the end of the clause: Ich versuche, mehr Sport zu
+    machen.'
+  - A comma separates the main clause from the infinitive clause when the clause is
+    long or complex.
+  - 'With separable verbs, zu goes between the prefix and the stem: aufzuhören, anzufangen.'
+  - 'Um…zu expresses purpose (in order to): Ich lerne Deutsch, um in Deutschland zu
+    arbeiten.'
+  - 'No zu after modal verbs or with lassen, sehen, hören: Ich kann schwimmen. Ich
+    lasse ihn kommen.'
+  examples:
+  - target: Ich versuche, jeden Tag Deutsch zu lernen.
+    gloss: I try to learn German every day.
+  - target: Es ist wichtig, genug zu schlafen.
+    gloss: It is important to get enough sleep.
+  - target: Er hat vergessen, die Tür abzuschließen.
+    gloss: He forgot to lock the door.
+  pitfalls:
+  - With separable verbs, zu goes inside the verb (abzuschließen), not in front of
+    the whole word.
+  - 'After modal verbs, never use zu: ''Ich kann Deutsch sprechen'', not ''zu sprechen''.'
+  - A long infinitive clause is separated by a comma, but a short one (verb + zu +
+    infinitive) often is not — both are acceptable.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:5076a0842017857b
+- id: de.a2.g18
+  kind: grammar
+  level: A2
+  order: 18
+  title_target: Ordinale Zahlen und Datumsangaben
+  title_l1: Ordinal numbers and dates
+  can_do: I can say and write dates and talk about the numbered order of things.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'Ordinals 1–19: add -te to the cardinal. Exceptions: erst- (1st), dritt- (3rd),
+    siebt- (7th), acht- (8th).'
+  - 'Ordinals 20+: add -ste. zwanzigste, einundzwanzigste, dreißigste.'
+  - 'Ordinals take adjective endings just like regular adjectives: der erste Tag,
+    am dritten März.'
+  - 'Dates: Heute ist der dritte März (nominative) / Ich schreibe am dritten März
+    (dative after am).'
+  - 'Written dates use a period after the number: 3. März, der 3. Mai.'
+  - 'Years: im Jahr zweitausendvierundzwanzig — say the full number without "und"
+    at the thousand boundary.'
+  examples:
+  - target: Heute ist der fünfte Oktober.
+    gloss: Today is the fifth of October.
+  - target: Mein Geburtstag ist am zwölften Juli.
+    gloss: My birthday is on the twelfth of July.
+  - target: Das ist mein zweiter Besuch in Berlin.
+    gloss: This is my second visit to Berlin.
+  pitfalls:
+  - English uses special words (first, second, third); German irregulars are erst-,
+    zweit-, dritt- — the rest follow the pattern.
+  - Ordinals must take adjective endings — don't use the bare stem without an ending
+    before a noun.
+  - 'Dates after ''am'' require dative: ''am dritten März'', not ''am dritte März''.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:9ec6ba9b448d03df
+- id: de.a2.g19
+  kind: grammar
+  level: A2
+  order: 19
+  title_target: Da- und wo-Komposita
+  title_l1: Da-compounds and wo-compounds
+  can_do: I can replace preposition phrases for things with da-compounds and ask about
+    them with wo-compounds.
+  prereqs:
+  - de.a2.g02
+  - de.a2.g03
+  skill: grammar
+  explain:
+  - 'Da-compounds replace preposition + pronoun when referring to things/ideas (not
+    people): dafür, damit, dabei, daran, darüber, davon.'
+  - 'Use dar- before vowel-initial prepositions: darüber, daran, darauf, darunter.'
+  - 'Use da- before consonant-initial prepositions: dabei, dafür, dagegen, damit,
+    davon.'
+  - 'For persons use preposition + personal pronoun: Ich denke an ihn (not daran,
+    because he is a person).'
+  - 'Wo-compounds form questions about things: Wofür ist das? Worüber sprecht ihr?
+    Wobei kann ich helfen?'
+  - 'Wo-compounds mirror the da-compounds: wofür/dafür, worüber/darüber, wobei/dabei.'
+  examples:
+  - target: Ich freue mich darauf, dich zu sehen.
+    gloss: I'm looking forward to seeing you. (darauf = auf + it)
+  - target: Wofür brauchst du das Geld?
+    gloss: What do you need the money for?
+  - target: Er hat lange darüber nachgedacht.
+    gloss: He thought about it for a long time.
+  pitfalls:
+  - Da-compounds cannot refer to people — ''Ich denke daran'' means thinking about
+    a thing/idea, not a person.
+  - 'Remember dar- before vowels: ''darüber'', not ''daüber''.'
+  - English freely uses "about it", "for it" etc.; German requires the da-compound
+    form for non-persons — you cannot say ''über es''.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:5e95930754e25a5a
+- id: de.a2.g20
+  kind: grammar
+  level: A2
+  order: 20
+  title_target: um…zu vs. damit
+  title_l1: Purpose clauses — um…zu vs. damit
+  can_do: I can express purpose, whether or not the subject changes between clauses.
+  prereqs:
+  - de.a2.g17
+  skill: grammar
+  explain:
+  - Both um…zu and damit express purpose (in order to / so that).
+  - 'um…zu requires the same subject in both clauses: Ich lerne Deutsch, um in Deutschland
+    zu arbeiten.'
+  - 'damit allows a different subject: Ich erkläre es langsam, damit du es verstehst.'
+  - 'um…zu: the infinitive goes to the end of the clause, with zu directly before
+    it.'
+  - damit is a subordinating conjunction → verb goes to the end of the damit-clause.
+  - 'With separable verbs, zu goes inside for um…zu: um aufzustehen; damit is unaffected.'
+  examples:
+  - target: Ich spare Geld, um eine Reise zu machen.
+    gloss: I'm saving money in order to take a trip.
+  - target: Sie spricht langsam, damit ich sie verstehe.
+    gloss: She speaks slowly so that I understand her.
+  - target: Er lernt jeden Tag, um die Prüfung zu bestehen.
+    gloss: He studies every day in order to pass the exam.
+  pitfalls:
+  - If the subjects of both clauses are different, you must use damit — um…zu is ungrammatical
+    with different subjects.
+  - 'Don''t mix them up: ''damit ich verstehe'' (different subjects) vs. ''um zu verstehen''
+    (same subject).'
+  - Learners sometimes use ''um dass'' — this form does not exist in German.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:a151da285cc10ffb
+- id: de.a2.g21
+  kind: grammar
+  level: A2
+  order: 21
+  title_target: Kausale und konzessive Konjunktionen
+  title_l1: Causal and concessive conjunctions
+  can_do: I can give reasons and express surprising contrasts using weil, da, and
+    obwohl.
+  prereqs: []
+  skill: grammar
+  explain:
+  - weil (because) and da (since/as) introduce reason clauses with verb at the end.
+  - weil answers a direct 'why' question; da is used when the reason is already known
+    or obvious.
+  - obwohl (although/even though) introduces a concessive clause — the main clause
+    contradicts what you would expect.
+  - 'All three are subordinating conjunctions: the conjugated verb goes to the very
+    end of their clause.'
+  - A comma always separates the subordinate clause from the main clause.
+  - 'Common mistake: treating weil like ''because'' in English and keeping verb in
+    second position.'
+  examples:
+  - target: Ich bleibe zu Hause, weil ich krank bin.
+    gloss: I'm staying home because I'm sick.
+  - target: Obwohl es regnet, gehen wir spazieren.
+    gloss: Although it's raining, we're going for a walk.
+  - target: Da ich müde war, bin ich früh ins Bett gegangen.
+    gloss: Since I was tired, I went to bed early.
+  pitfalls:
+  - After weil/da/obwohl, the verb MUST go to the end — never say 'weil ich bin krank'.
+  - '"Obwohl" expresses a contradiction; don''t use it where ''weil'' (reason) is
+    meant.'
+  - '"Da" (since/as) is a conjunction here, not the adverb ''there'' — context will
+    clarify, but learners confuse them.'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:d6e443d75d7d219d
+- id: de.a2.g22
+  kind: grammar
+  level: A2
+  order: 22
+  title_target: Plusquamperfekt
+  title_l1: Past perfect
+  can_do: I can describe an event that happened before another past event.
+  prereqs:
+  - de.a2.g07
+  skill: grammar
+  explain:
+  - Plusquamperfekt = hatte/war (Präteritum of haben/sein) + past participle at the
+    end.
+  - 'Use it for events that happened before another past event: Nachdem ich gegessen
+    hatte, ging ich schlafen.'
+  - 'The choice of hatte vs. war follows the same rule as Perfekt: war for motion/change
+    of state verbs.'
+  - '"Nachdem" (after) almost always introduces a Plusquamperfekt clause followed
+    by a Perfekt or Präteritum main clause.'
+  - Bevor (before) and als (when) can also trigger Plusquamperfekt for the earlier
+    of two past events.
+  - In spoken German the Plusquamperfekt is common — unlike English, it is not optional
+    here.
+  examples:
+  - target: Nachdem sie gegessen hatte, machte sie einen Spaziergang.
+    gloss: After she had eaten, she went for a walk.
+  - target: Als ich ankam, war der Zug schon abgefahren.
+    gloss: When I arrived, the train had already left.
+  - target: Er hatte das Buch schon gelesen, bevor der Film herauskam.
+    gloss: He had already read the book before the film came out.
+  pitfalls:
+  - English sometimes allows simple past where German requires Plusquamperfekt — when
+    "before/after" is involved, use it.
+  - The participle still goes to the end; learners sometimes leave it next to hatte/war.
+  - Don't confuse 'hatte gegessen' (Plusquamperfekt) with 'hat gegessen' (Perfekt)
+    — the auxiliary tense carries the time information.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:7b6161ab3b696d7e
+- id: de.a2.g23
+  kind: grammar
+  level: A2
+  order: 23
+  title_target: Trennbare und untrennbare Verben
+  title_l1: Separable and inseparable prefix verbs
+  can_do: I can correctly form the Perfekt of separable and inseparable verbs.
+  prereqs:
+  - de.a2.g07
+  skill: grammar
+  explain:
+  - 'Separable prefixes split off and go to the end of the clause in present/past
+    tenses: anrufen → Ich rufe an.'
+  - 'Common separable prefixes: an-, auf-, aus-, ein-, mit-, vor-, zu-, ab-, weg-,
+    zurück-.'
+  - 'In Perfekt, ge- goes between the prefix and the stem: anrufen → angerufen, aufstehen
+    → aufgestanden.'
+  - 'Inseparable prefixes never split off and the verb never takes ge- in Perfekt:
+    besuchen → besucht, verstehen → verstanden.'
+  - 'Common inseparable prefixes: be-, er-, ge-, miss-, ver-, zer-, emp-, ent-.'
+  - Some prefixes (über-, unter-, um-, durch-, wider-) can be separable or inseparable
+    depending on meaning.
+  examples:
+  - target: Ich rufe dich morgen an.
+    gloss: I'll call you tomorrow.
+  - target: Er hat seinen Onkel in Hamburg besucht.
+    gloss: He visited his uncle in Hamburg. (inseparable → no ge-)
+  - target: Sie ist früh aufgestanden.
+    gloss: She got up early. (separable → ge- inside)
+  pitfalls:
+  - With inseparable verbs, never add ge- in the Perfekt — ''besucht'', not ''gebesucht''.
+  - Separable verbs split in present tense but stay together in infinitive and Perfekt
+    participle form.
+  - 'Ambiguous prefixes like ''über'' change meaning with separability: ''übersetzen''
+    (to translate, inseparable) vs. ''übersetzen'' (to cross, separable).'
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:d1a0f8e2ff5da555
+- id: de.a2.g24
+  kind: grammar
+  level: A2
+  order: 24
+  title_target: Komposita
+  title_l1: Compound nouns
+  can_do: I can form and understand compound nouns and use the correct gender.
+  prereqs: []
+  skill: grammar
+  explain:
+  - 'German freely combines nouns into compound nouns: Haus + Tür = Haustür (front
+    door).'
+  - 'The gender of a compound noun is always the gender of the last (head) component:
+    die Tür → die Haustür.'
+  - 'Stress falls on the first component: HAUStür, not hausTÜR.'
+  - 'Sometimes a linking element is added between components: -s- (Lieblingsfilm),
+    -en- (Sonnenschein), -e- (Hundehütte).'
+  - 'Compounds can combine nouns, verbs, adjectives, or prepositions with nouns: Schlafzimmer,
+    Kühlschrank, Hochhaus.'
+  - In English, compounds are often written as two words (bus stop); in German they
+    are always one word (Bushaltestelle).
+  examples:
+  - target: Das Schlafzimmer ist zu klein.
+    gloss: The bedroom is too small. (schlafen + Zimmer → das Zimmer)
+  - target: Hast du meinen Hausschlüssel gesehen?
+    gloss: Have you seen my house key? (Haus + Schlüssel → der Schlüssel)
+  - target: Die Bushaltestelle ist um die Ecke.
+    gloss: The bus stop is around the corner. (Bus + Haltestelle → die Haltestelle)
+  pitfalls:
+  - English speakers write German compounds as two words (''Bus Haltestelle'') — always
+    write them as one word.
+  - The gender comes from the last component — don't guess from the first element.
+  - Linking elements (-s-, -en-) cannot be predicted by rule — learn common compounds
+    as vocabulary.
+  exercises:
+  - type: mcq
+    n: 5
+  - type: cloze
+    n: 5
+  - type: transform
+    n: 2
+  - type: produce
+    n: 2
+  spine_hash: sha256:0331720bf773a328
