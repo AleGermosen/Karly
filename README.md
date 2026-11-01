@@ -1,5 +1,7 @@
 # Karly 🇩🇪🇬🇧
 
+Telegram bots: @karly19_bot (German) and @speakeasyen_bot (English)
+
 A personal language-tutor Telegram bot — German for English speakers and English for Spanish speakers. You write in the target language, Karly corrects you, drills your vocabulary on a spaced-repetition schedule, runs placement tests, quizzes you on your weak spots, plays roleplay scenes with you, and guides you through a structured A1–C1 course — all inside Telegram, no app install required.
 
 Built for one user (me), deployed on a home OptiPlex server, free to run.
